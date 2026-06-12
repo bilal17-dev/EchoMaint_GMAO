@@ -1,7 +1,12 @@
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
 exports.up = function(knex) {
   return knex.schema.createTable('equipements', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    table.string('code_inventaire').notNullable().unique(); // RG-01
+    // Correction MySQL/XAMPP
+    table.uuid('id').primary().defaultTo(knex.fn.uuid());
+    table.string('code_inventaire').notNullable().unique(); // Exemple : RG-01
     table.string('nom').notNullable();
     table.enum('categorie', ['technique', 'informatique', 'autre']).notNullable();
     table.uuid('batiment_id').references('id').inTable('batiments').onDelete('CASCADE');

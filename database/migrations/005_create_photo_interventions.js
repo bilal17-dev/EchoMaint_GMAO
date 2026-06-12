@@ -1,6 +1,11 @@
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
 exports.up = function(knex) {
   return knex.schema.createTable('photo_interventions', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
+    // Correction MySQL/XAMPP
+    table.uuid('id').primary().defaultTo(knex.fn.uuid());
     table.string('url').notNullable();
     table.enum('type_cliche', ['avant', 'apres']).notNullable();
     table.uuid('intervention_id').references('id').inTable('interventions').onDelete('CASCADE');
