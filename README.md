@@ -83,6 +83,70 @@ La gestion des structures de données utilise Knex.js pour tracer historiquement
 └── package.json                   # Dépendances du projet backend
 
 
+## 4. — Infrastructure & Securite  (Auth, roles, jobs, config, deploiement)
+## Taches
+
+- Mise en place de l'authentification JWT
+- Contrôle d'accès par rôle (admin, technicien, client)
+- Configuration des variables d'environnement
+- Validation des données entrantes
+- Génération automatique des interventions préventives (cron job)
+- Stockage des photos
+- Documentation technique et déploiement
+
+---
+
+## Structure des fichiers
+echomaint_backend/
+
+│
+
+├── .env                          # Variables sensibles (jamais sur Git)
+
+├── .env.example                  # Modèle de configuration à partager
+
+├── .gitignore                    # Fichiers exclus de Git
+
+├── server.js                     # Point d'entrée du serveur
+
+├── package.json                  # Dépendances du projet
+
+│
+
+├── app/
+
+│   ├── middlewares/
+
+│   │   ├── auth.js               # Vérifie le token JWT
+
+│   │   ├── isAdmin.js            # Vérifie le rôle admin
+
+│   │   ├── isTechnicien.js       # Vérifie le rôle technicien ou admin
+
+│   │   └── isClient.js           # Vérifie le rôle client
+
+│   │
+
+│   └── validators/
+
+│       ├── batiment.validator.js  # Valide les données d'un bâtiment
+
+│       └── equipement.validator.js # Valide les données d'un équipement
+
+│
+
+├── jobs/
+
+│   └── preventive.job.js         # Cron job — génération automatique
+
+│                                   des interventions préventives
+
+│
+
+└── storage/
+
+└── photos/                   # Dossier de stockage des photos uploadées
+
 
 ## Structure du token JWT
 
