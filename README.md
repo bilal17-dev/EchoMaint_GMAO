@@ -81,3 +81,18 @@ La gestion des structures de données utilise Knex.js pour tracer historiquement
 │       └── demo.seeder.js
 ├── knexfile.js                    # Fichier central de configuration Knex
 └── package.json                   # Dépendances du projet backend
+
+
+
+## Structure du token JWT
+
+Après connexion, le serveur retourne un token contenant :
+
+{
+  "id": "uuid de l'utilisateur",
+  "email": "email de l'utilisateur",
+  "role": "admin | technicien | client"
+}
+
+Header Authorization attendu dans toutes les requêtes protégées :
+Authorization: Bearer <token>
