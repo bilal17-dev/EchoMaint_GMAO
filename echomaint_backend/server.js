@@ -1,27 +1,33 @@
-// On charge les variables d'environnement depuis le fichier .env
+// 1. On charge les variables d'environnement depuis le fichier .env
 require('dotenv').config();
 
-// On importe Express pour créer notre serveur
+// 2. On importe Express et les outils globaux
 const express = require('express');
-
-// On importe CORS pour autoriser le frontend à communiquer avec le backend
 const cors = require('cors');
 
-// On crée l'application Express
+// 3. On importe les fichiers de routes (Dev 1)
+const authRoutes = require('./app/routes/auth.routes');
+const batimentRoutes = require('./app/routes/batiment.routes');
+const equipementRoutes = require('./app/routes/equipement.routes'); // Ajouté !
+
+// 4. On crée l'application Express
 const app = express();
 
-// On dit à Express d'accepter les données JSON dans les requêtes
-app.use(express.json());
+// 5. MIDDLEWARES GLOBAUX (Obligatoirement AVANT les routes !)
+app.use(cors()); // Autorise le frontend à communiquer
+app.use(express.json()); // Traduit les données JSON entrantes pour req.body
 
-// On autorise les requêtes venant d'autres origines (frontend sur port 5173 par exemple)
-app.use(cors());
+// 6. BRANCHEMENT DES ROUTES DE L'API
+app.use('/api/auth', authRoutes);         // Routes d'authentification (Inscriptions, Login)
+app.use('/api/batiments', batimentRoutes); // Routes des bâtiments (CRUD)
+app.use('/api/equipements', equipementRoutes); // Ajouté !
 
-// Route de test: pour vérifier que le serveur fonctionne
+// 7. Route de test principale
 app.get('/', (req, res) => {
   res.json({ message: 'Serveur EchoMaint opérationnel ✓' });
 });
 
-// On démarre le serveur sur le port défini dans .env
+// 8. On démarre le serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Serveur démarré sur http://localhost:${PORT}`);

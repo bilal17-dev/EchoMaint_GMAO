@@ -63,6 +63,25 @@ Contient les fichiers images téléversés par les techniciens pour attester de 
 * `intervention_id` : `UUID` (Clé Étrangère pointant vers `interventions.id`)
 
 ---
+##  Installation Rapide (Backend)
+
+Suivez ces étapes pour installer et lancer le projet localement après avoir récupéré la dernière version du code :
+
+```bash
+# 1. Allez dans le dossier du backend
+cd echomaint_backend
+
+# 2. Installez l'ensemble des dépendances (Express, JWT, Knex, MySQL2, etc.)
+npm install
+
+# 3. Configurez vos variables d'environnement locales
+cp .env.example .env
+
+# 4. Appliquez la structure de la base de données sur XAMPP
+npx knex migrate:latest --knexfile knexfile.js
+
+# 5. Lancez le serveur de développement
+npm start
 ## TRAVAIL EFFECTUE DURANT LE JOUR 1
 ## 3. Structure des Fichiers de la Base de Données et des Migrations
 La gestion des structures de données utilise Knex.js pour tracer historiquement les évolutions de la base de données.
