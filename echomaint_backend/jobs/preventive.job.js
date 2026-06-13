@@ -1,34 +1,36 @@
 // Ce fichier contient le cron job qui génère automatiquement
 // les interventions préventives selon la périodicité de chaque équipement
 
-// node-cron permet de programmer des tâches automatiques
-// On l'installe avec : npm install node-cron
 const cron = require('node-cron');
 
-// On importe le service qui contient la logique métier (RG-02)
-// Ce service est créé par Dev 1 — on l'appelle ici
-const preventiveService = require('../app/services/preventive.service');
+// Ce cron job s'exécute tous les jours à minuit (00h00)
+// Il vérifie les équipements dont la maintenance préventive est due
+// et crée automatiquement les interventions selon la règle RG-02
 
-// On programme la tâche pour qu'elle s'exécute tous les jours à minuit
-// Le format cron "0 0 * * *" signifie : minute 0, heure 0, tous les jours
 cron.schedule('0 0 * * *', async () => {
 
-  console.log(`[CRON] Démarrage de la vérification des interventions préventives — ${new Date().toISOString()}`);
+  console.log(`[CRON] Démarrage vérification préventive — ${new Date().toISOString()}`);
 
   try {
-    // On appelle le service de Dev 1 qui contient la logique RG-02 :
-    // Pour chaque équipement, si date_acquisition + periodicite_preventive_jours
-    // est dépassée et qu'aucune intervention préventive n'est planifiée,
-    // on en crée une automatiquement
-    const resultat = await preventiveService.genererInterventionsPreventives();
+    // On charge le service ICI à l'intérieur du cron (pas en haut du fichier)
+    // Comme ça le serveur démarre normalement même si Dev 1 n'a pas encore
+    // rempli preventive.service.js
+    const preventiveService = require('../app/services/preventive.service');
 
-    console.log(`[CRON] Interventions générées : ${resultat.nombreCreees}`);
-    console.log(`[CRON] Vérification terminée avec succès.`);
+    // On vérifie que la fonction existe avant de l'appeler
+    if (typeof preventiveService.genererInterventionsPreventives !== 'function') {
+      console.warn('[CRON] genererInterventionsPreventives pas encore disponible — Dev 1 doit remplir preventive.service.js');
+      return;
+    }
+
+    const resultat = await preventiveService.genererInterventionsPreventives();
+    console.log(`[CRON] Interventions créées : ${resultat.nombreCreees}`);
+    console.log(`[CRON] Terminé avec succès.`);
 
   } catch (error) {
-    console.error('[CRON] Erreur lors de la génération des interventions préventives :', error.message);
+    console.warn('[CRON] Erreur génération préventive :', error.message);
   }
 
 });
 
-console.log('[CRON] Planificateur d\'interventions préventives actif (exécution tous les jours à minuit)');
+console.log('[CRON] Planificateur actif — exécution tous les jours à minuit.');
