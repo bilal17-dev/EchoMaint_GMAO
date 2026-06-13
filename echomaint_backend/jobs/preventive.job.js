@@ -19,7 +19,7 @@ cron.schedule('0 0 * * *', async () => {
 
     // On vérifie que la fonction existe avant de l'appeler
     if (typeof preventiveService.genererInterventionsPreventives !== 'function') {
-      console.warn('[CRON] genererInterventionsPreventives pas encore disponible — Dev 1 doit remplir preventive.service.js');
+      console.warn('[CRON] genererInterventionsPreventives pas encore disponible');
       return;
     }
 
