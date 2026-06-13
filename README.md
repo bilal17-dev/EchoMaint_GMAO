@@ -49,7 +49,7 @@ Centralise l'ensemble des tickets de maintenance.
 * `equipement_id` : `UUID` (Clé Étrangère pointant vers `equipements.id`)
 * `type` : `Enum` (`preventive`, `curative`)
 * `priorite` : `Enum` (`basse`, `moyenne`, `haute`)
-* `statut` : `Enum` (`a_planifier`, `planifie`, `en_cours`, `realise`, `annule`)
+* **statut** : `Enum` (`'ouverte'`, `'assignee'`, `'en_cours'`, `'cloturee'`)
 * `technicien_id` : `UUID` (Clé Étrangère pointant vers `users.id`, nullable)
 * `description` : `Text`
 * `date_planifiee` : `DateTime`
