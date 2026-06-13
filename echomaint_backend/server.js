@@ -18,7 +18,7 @@ app.use(cors());
 
 // Route de test: pour vérifier que le serveur fonctionne
 app.get('/', (req, res) => {
-  res.json({ message: 'Serveur EchoBuild opérationnel ✓' });
+  res.json({ message: 'Serveur EchoMaint opérationnel ✓' });
 });
 
 // On démarre le serveur sur le port défini dans .env
