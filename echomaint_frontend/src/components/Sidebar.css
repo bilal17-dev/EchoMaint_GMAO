@@ -1,0 +1,244 @@
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
+  height: calc(100vh - 24px);
+  flex-shrink: 0;
+  overflow: hidden;
+  margin: 12px;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.1);
+}
+
+.sidebar-collapsed {
+  width: 76px;
+  min-width: 76px;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1.25rem 1rem;
+  min-height: 68px;
+  overflow: hidden;
+  border-bottom: 0.5px solid #E2E8F0;
+}
+
+.sidebar-logo-img {
+  width: 200px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin-left: 0%;
+}
+
+.sidebar-logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.logo-echo {
+  color: #1E293B;
+}
+
+.logo-maint {
+  color: #2563EB;
+}
+
+.sidebar-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #F4F7FC;
+  border: 1px solid #E2E8F0;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.sidebar-collapse-btn:hover {
+  transform: scale(1.08);
+  background: #EFF6FF;
+  border-color: #2563EB;
+}
+
+.sidebar-collapse-btn .ti {
+  font-size: 17px;
+  color: #64748B;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #080808;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.2s, background 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar-link:hover {
+  color: #1E293B;
+  background: #F4F7FC;
+}
+
+.sidebar-link-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.sidebar-link-icon .ti {
+  font-size: 19px;
+  color: #080808;
+}
+
+.sidebar-link-active {
+  color: #2563EB !important;
+  background: #EFF6FF !important;
+}
+
+.sidebar-link-active .sidebar-link-icon {
+  background: #2563EB;
+}
+
+.sidebar-link-active .sidebar-link-icon .ti {
+  color: #ffffff !important;
+}
+
+.sidebar-link-active .sidebar-link-label {
+  color: #2563EB;
+  font-weight: 600;
+}
+
+.sidebar-link-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-footer {
+  padding: 0.75rem;
+  border-top: 0.5px solid #E2E8F0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-divider {
+  height: 0.5px;
+  background: #E2E8F0;
+  margin: 4px 0;
+}
+
+.sidebar-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.sidebar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.sidebar-user-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sidebar-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+  font-size: 11px;
+  color: #64748B;
+  margin: 0;
+}
+
+.sidebar-notif .sidebar-link-icon .ti,
+.sidebar-logout .sidebar-link-icon .ti {
+  color: #64748B;
+}
+
+.sidebar-notif .sidebar-link-label,
+.sidebar-logout .sidebar-link-label {
+  color: #64748B;
+}
+
+.sidebar-logout:hover .sidebar-link-label {
+  color: #ef4444;
+}
+
+.sidebar-logout:hover .sidebar-link-icon .ti {
+  color: #ef4444;
+}
