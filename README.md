@@ -429,7 +429,8 @@ Après connexion, le serveur retourne un token contenant :
 {
   "id": "uuid de l'utilisateur",
   "email": "email de l'utilisateur",
-  "role": "admin | technicien | client"
+  "role": "admin | technicien | client",
+  "langue": "fr | en"
 }
 
 Header Authorization attendu dans toutes les requêtes protégées :
