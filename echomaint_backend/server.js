@@ -7,8 +7,8 @@ const express = require('express');
 // On importe CORS pour autoriser le frontend à communiquer avec le backend
 const cors = require('cors');
 
-// Démarre le cron job des interventions préventives au démarrage du serveur
-require('./jobs/preventive.job');
+// Démarre le service des interventions préventives au démarrage du serveur (Tâche CRON)
+require('./app/services/preventive.service');
 
 // Import des routes créées par Dev 1
 const authRoutes         = require('./app/routes/auth.routes');
@@ -32,6 +32,7 @@ app.use('/api/batiments',     batimentRoutes);
 app.use('/api/equipements',   equipementRoutes);
 app.use('/api/interventions', interventionRoutes);
 app.use('/api/stats',         statsRoutes);
+
 
 // Route de test: pour vérifier que le serveur fonctionne
 app.get('/', (req, res) => {
