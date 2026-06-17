@@ -1,0 +1,152 @@
+.navbar {
+  height: 70px;
+  background: transparent;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  padding: 1rem 2rem 0;
+  gap: 1rem;
+  flex-shrink: 0;
+  margin-bottom: 0.5rem;
+}
+
+.navbar-left {
+  flex: 1;
+}
+
+.navbar-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0;
+}
+
+.navbar-subtitle {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Fond bleuté pour les boutons topbar */
+.navbar-darkmode,
+.navbar-notif,
+.navbar-profile {
+  background: rgba(241, 245, 249, 0.8);
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.navbar-darkmode {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.navbar-darkmode:hover {
+  background: #EFF6FF;
+  border-color: #2563EB;
+}
+
+.navbar-darkmode .ti {
+  font-size: 18px;
+  color: #64748B;
+}
+
+.navbar-notif {
+  position: relative;
+  cursor: pointer;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.navbar-notif:hover {
+  background: #EFF6FF;
+  border-color: #2563EB;
+}
+
+.navbar-notif .ti {
+  font-size: 20px;
+  color: #64748B;
+}
+
+.navbar-notif-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 14px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.navbar-profile:hover {
+  background: #EFF6FF;
+  border-color: #2563EB;
+}
+
+.navbar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.navbar-profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-profile-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+}
+
+.navbar-profile-role {
+  font-size: 11px;
+  color: #64748B;
+  margin: 0;
+}
+
+.navbar-profile .ti-chevron-down {
+  font-size: 14px;
+  color: #94a3b8;
+}

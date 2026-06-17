@@ -1,0 +1,163 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.dashboard-kpi {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.1);
+}
+
+.kpi-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon .ti {
+  font-size: 22px;
+}
+
+.kpi-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.kpi-label {
+  font-size: 11px;
+  color: #64748B;
+  margin: 0 0 4px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 2px;
+  line-height: 1.2;
+}
+
+.kpi-subtitle {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.kpi-bar {
+  height: 3px;
+  border-radius: 2px;
+  width: 100%;
+  opacity: 0.6;
+}
+
+.dashboard-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.dashboard-chart {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.chart-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chart-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #EFF6FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-icon-wrap .ti {
+  font-size: 18px;
+  color: #2563EB;
+}
+
+.chart-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0;
+}
+
+.chart-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.chart-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #F4F7FC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #64748B;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  white-space: nowrap;
+}
+
+.chart-filter:hover {
+  border-color: #2563EB;
+  color: #2563EB;
+}
+
+.chart-filter .ti {
+  font-size: 13px;
+}
