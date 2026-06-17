@@ -70,7 +70,7 @@ class AuthController {
       // Réponse envoyée au Frontend (Dev 2)
       return res.status(200).json({
         message: 'Connexion réussie',
-        token: `Bearer ${token}`,
+        token: token,
         user: {
           id: user.id,
           nom: user.nom,

@@ -9,3 +9,6 @@ storage/photos/
 
 # Fichiers système Mac
 .DS_Store
+
+#knexfile
+knexfile.js
