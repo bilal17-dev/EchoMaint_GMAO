@@ -1,45 +1,31 @@
- const knex = require('knex');
-const config = require('../../knexfile');
-const db = knex(config.development);
+const express = require('express');
+const router = express.Router();
+const EquipementController = require('../controllers/EquipementController');
 
-class Equipement {
-  // Lister les équipements (avec filtrage par client si nécessaire)
-  static async getAll(userRole, userId) {
-    let query = db('equipements')
-      .join('batiments', 'equipements.batiment_id', '=', 'batiments.id')
-      .select('equipements.*', 'batiments.nom as batiment_nom');
+// Import des middlewares de sécurité (Briques de Dev 3)
+const auth = require('../middlewares/auth');
+const isAdmin = require('../middlewares/isAdmin');
 
-    if (userRole === 'client') {
-      // RG-06: Filtre pour ne prendre que les équipements des bâtiments du client connecté
-      query = query.where('batiments.client_id', userId);
-    }
+/**
+ * 1. ROUTES DE LECTURE
+ * Accessibles à tout utilisateur connecté (Admin, Technicien, Client)
+ */
+// Lire tous les équipements
+router.get('/', auth, EquipementController.index);
 
-    return query;
-  }
+// Lire un équipement précis par son ID
+router.get('/:id', auth, EquipementController.show);
 
-  // Fiche détaillée d'un équipement avec les infos de son bâtiment
-  static async getById(id) {
-    return db('equipements')
-      .join('batiments', 'equipements.batiment_id', '=', 'batiments.id')
-      .select('equipements.*', 'batiments.nom as batiment_nom', 'batiments.adresse as batiment_adresse', 'batiments.client_id')
-      .where('equipements.id', id)
-      .first();
-  }
+/**
+ * 2. ROUTES D'ÉCRITURE & CONFIGURATION
+ */
+// Créer un équipement (Strictement réservé à l'Admin)
+router.post('/', auth, isAdmin, EquipementController.store);
 
-  // Créer un équipement
-  static async create(data) {
-    return db('equipements').insert(data);
-  }
+// Modifier un équipement (Accessible à l'Admin et au Technicien pour changer le statut ou mettre à jour)
+router.put('/:id', auth, EquipementController.update);
 
-  // Modifier un équipement ou changer son statut
-  static async update(id, data) {
-    return db('equipements').where({ id }).update(data);
-  }
+// Supprimer un équipement (Strictement réservé à l'Admin)
+router.delete('/:id', auth, isAdmin, EquipementController.destroy);
 
-  // Supprimer un équipement
-  static async delete(id) {
-    return db('equipements').where({ id }).del();
-  }
-}
-
-module.exports = Equipement;
+module.exports = router;

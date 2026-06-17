@@ -1,6 +1,4 @@
- const knex = require('knex');
-const config = require('../../knexfile');
-const db = knex(config.development);
+const db = require('../../database/connection');
 
 class Batiment {
   // Récupérer tous les bâtiments (avec filtre par client si nécessaire)
