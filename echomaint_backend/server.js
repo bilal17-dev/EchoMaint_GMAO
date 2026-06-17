@@ -15,6 +15,7 @@ const authRoutes         = require('./app/routes/auth.routes');
 const batimentRoutes     = require('./app/routes/batiment.routes');
 const equipementRoutes   = require('./app/routes/equipement.routes');
 const interventionRoutes = require('./app/routes/intervention.routes');
+const statsRoutes        = require('./app/routes/stats.routes');
 
 // On crée l'application Express
 const app = express();
@@ -30,6 +31,8 @@ app.use('/api/auth',          authRoutes);
 app.use('/api/batiments',     batimentRoutes);
 app.use('/api/equipements',   equipementRoutes);
 app.use('/api/interventions', interventionRoutes);
+app.use('/api/stats',         statsRoutes);
+
 
 // Route de test: pour vérifier que le serveur fonctionne
 app.get('/', (req, res) => {
