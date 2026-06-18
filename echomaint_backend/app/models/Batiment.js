@@ -1,35 +1,75 @@
 const db = require('../../database/connection');
+const { v4: uuidv4 } = require('uuid');
 
-class Batiment {
-  // Récupérer tous les bâtiments (avec filtre par client si nécessaire)
-  static async getAll(userRole, userId) {
+const Batiment = {
+
+  // Récupérer tous les bâtiments avec jointure client et gestion des rôles (RG-06)
+  findAll: async (userRole, userClientId, filters = {}) => {
+    let query = db('batiments')
+      .select('batiments.id', 'batiments.nom', 'batiments.adresse', 'batiments.client_id', 'clients.nom as client_nom')
+      .join('clients', 'batiments.client_id', 'clients.id');
+    
+    // RÈGLE MÉTIER (RG-06) : Si l'utilisateur est un client, il ne voit QUE ses bâtiments
     if (userRole === 'client') {
-      // Un client ne voit que ses bâtiments rattachés (RG-06)
-      return db('batiments').where({ client_id: userId });
+      query = query.where('batiments.client_id', userClientId);
+    } else if (filters.client_id) {
+      // Si c'est un admin/tech, il peut filtrer par un client spécifique s'il le souhaite
+      query = query.where('batiments.client_id', filters.client_id);
     }
-    // L'admin et le technicien voient tout
-    return db('batiments');
-  }
+    
+    return query;
+  },
 
-  // Trouver un bâtiment par son ID
-  static async getById(id) {
-    return db('batiments').where({ id }).first();
-  }
+  // Trouver un bâtiment par son ID (avec le nom de son client)
+  findById: async (id) => {
+    return db('batiments')
+      .select('batiments.*', 'clients.nom as client_nom')
+      .join('clients', 'batiments.client_id', 'clients.id')
+      .where('batiments.id', id)
+      .first();
+  },
 
-  // Créer un bâtiment
-  static async create(data) {
-    return db('batiments').insert(data);
-  }
+  // Créer un bâtiment avec UUID
+  create: async (data) => {
+    const id = uuidv4();
+    
+    await db('batiments').insert({
+      id,
+      nom: data.nom,
+      adresse: data.adresse || null,
+      client_id: data.client_id // Clé étrangère vers la table clients
+    });
+    
+    return Batiment.findById(id);
+  },
 
   // Modifier un bâtiment
-  static async update(id, data) {
-    return db('batiments').where({ id }).update(data);
-  }
+  update: async (id, data) => {
+    await db('batiments').where({ id }).update({
+      nom: data.nom,
+      adresse: data.adresse,
+      client_id: data.client_id
+    });
+    
+    return Batiment.findById(id);
+  },
+
+  // Sécurité GMAO : Vérifie si le bâtiment a des équipements actifs avant suppression
+  hasEquipementsActifs: async (id) => {
+    const count = await db('equipements')
+      .where({ batiment_id: id })
+      .whereIn('statut', ['actif', 'en_panne'])
+      .whereNull('deleted_at') // Utile si vous faites du soft delete plus tard
+      .count('id as total')
+      .first();
+      
+    return count.total > 0;
+  },
 
   // Supprimer un bâtiment
-  static async delete(id) {
-    return db('batiments').where({ id }).del();
-  }
-}
+  delete: async (id) => {
+    return db('batiments').where({ id }).delete();
+  },
+};
 
 module.exports = Batiment;
