@@ -42,14 +42,32 @@ export default function Login() {
     return () => clearInterval(timer)
   }, [])
 
+  const navigate = useNavigate()
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
-    setTimeout(() => {
+
+    try {
+      // 1. On tente l'appel API
+      const data = await login(email, password)
+      
+      // 2. Si ça réussit, on enregistre la session et on redirige
+      saveSession(data)
+      navigate('/dashboard')
+    } catch (err) {
+      console.error("Erreur d'authentification :", err)
+      
+      // 3. On extrait la clé '.error' renvoyée par le AuthController.js de ton groupe
+      const messageServeur = err.response?.data?.error 
+        || err.response?.data?.message 
+        || "Impossible de se connecter au serveur.";
+        
+      setError(messageServeur)
+    } finally {
       setLoading(false)
-      setError('Identifiants incorrects.')
-    }, 1000)
+    }
   }
 
   return (

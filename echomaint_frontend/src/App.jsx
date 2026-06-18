@@ -12,6 +12,7 @@ import Utilisateurs from './pages/Utilisateurs'
 import Layout from './components/Layout'
 import PrivateRoute from './routes/PrivateRoute'
 import AdminRoute from './routes/AdminRoute'
+import DemandesIntervention from './pages/DemandesIntervention'
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
             {/* Routes admin uniquement */}
             <Route element={<AdminRoute />}>
               <Route path="/utilisateurs" element={<Utilisateurs />} />
+              <Route path="/demandes-intervention" element={<DemandesIntervention />} />
             </Route>
           </Route>
         </Route>

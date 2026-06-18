@@ -1,0 +1,329 @@
+.fiche-equipement {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Header */
+.fiche-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #F4F7FC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #64748B;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+
+.btn-back:hover {
+  background: #E2E8F0;
+}
+
+.fiche-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.fiche-icon {
+  width: 48px;
+  height: 48px;
+  background: #EFF6FF;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fiche-icon .ti {
+  font-size: 24px;
+  color: #2563EB;
+}
+
+.fiche-header-title h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0;
+}
+
+.fiche-header-title p {
+  font-size: 12px;
+  color: #64748B;
+  margin: 2px 0 0;
+}
+
+/* Statut badges (réutilisés depuis Equipements) */
+.statut-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-actif {
+  background: #F0FDF4;
+  color: #22C55E;
+}
+
+.badge-en-panne {
+  background: #FEF2F2;
+  color: #ef4444;
+}
+
+.badge-hors-service {
+  background: #F4F7FC;
+  color: #64748B;
+}
+
+/* Stats 30 jours */
+.fiche-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.fiche-stat-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fiche-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fiche-stat-icon .ti {
+  font-size: 22px;
+}
+
+.fiche-stat-label {
+  font-size: 11px;
+  color: #64748B;
+  margin: 0 0 4px;
+  font-weight: 500;
+}
+
+.fiche-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0;
+}
+
+/* Caractéristiques + Localisation */
+.fiche-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.fiche-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.fiche-card h2 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 1.25rem;
+}
+
+.fiche-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fiche-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  border-bottom: 1px solid #F1F5F9;
+  padding-bottom: 10px;
+}
+
+.fiche-detail:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.fiche-detail span {
+  color: #64748B;
+}
+
+.fiche-detail strong {
+  color: #1E293B;
+  font-weight: 600;
+  text-align: right;
+}
+
+.fiche-description {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #F1F5F9;
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.6;
+}
+
+/* Historique */
+.fiche-historique-empty {
+  font-size: 13px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 1.5rem 0;
+  margin: 0;
+}
+
+.historique-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.historique-item {
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.historique-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.historique-titre {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0 0 4px;
+}
+
+.historique-meta {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+}
+
+.historique-commentaire {
+  font-size: 13px;
+  color: #64748B;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #F1F5F9;
+  line-height: 1.5;
+}
+
+/* Badges OT */
+.ot-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ot-badge-planifiee {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+
+.ot-badge-assignee {
+  background: #FFFBEB;
+  color: #F59E0B;
+}
+
+.ot-badge-en-cours {
+  background: #FFFBEB;
+  color: #F59E0B;
+}
+
+.ot-badge-terminee {
+  background: #F0FDF4;
+  color: #22C55E;
+}
+
+.ot-badge-annulee {
+  background: #F4F7FC;
+  color: #64748B;
+}
+
+/* Empty state (équipement introuvable) */
+.fiche-empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fiche-empty .ti {
+  font-size: 48px;
+}
+
+.fiche-empty p {
+  font-size: 15px;
+  margin: 0;
+}
+
+.btn-outline {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid #2563EB;
+  background: transparent;
+  color: #2563EB;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+
+.btn-outline:hover {
+  background: #EFF6FF;
+}
+
+@media (max-width: 900px) {
+  .fiche-grid {
+    grid-template-columns: 1fr;
+  }
+  .fiche-stats {
+    grid-template-columns: 1fr;
+  }
+}
