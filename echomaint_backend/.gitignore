@@ -12,3 +12,5 @@ storage/photos/
 
 #knexfile
 knexfile.js
+
+package-lock.json
