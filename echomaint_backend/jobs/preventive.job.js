@@ -19,12 +19,12 @@ cron.schedule('0 0 * * *', async () => {
 
     // On vérifie que la fonction existe avant de l'appeler
     if (typeof preventiveService.genererInterventionsPreventives !== 'function') {
-      console.warn('[CRON] genererInterventionsPreventives pas encore disponible');
+      console.warn('[CRON] Service non disponible');
       return;
     }
 
     const resultat = await preventiveService.genererInterventionsPreventives();
-    console.log(`[CRON] Interventions créées : ${resultat.nombreCreees}`);
+    console.log(`[CRON] Ordre de travail crée : ${resultat.nombreCreees}`);
     console.log(`[CRON] Terminé avec succès.`);
 
   } catch (error) {
@@ -33,4 +33,4 @@ cron.schedule('0 0 * * *', async () => {
 
 });
 
-console.log('[CRON] Planificateur actif — exécution tous les jours à minuit.');
+console.log('[CRON] Planificateur actif : sexécution tous les jours à minuit.');

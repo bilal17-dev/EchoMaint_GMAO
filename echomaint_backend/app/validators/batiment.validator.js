@@ -4,7 +4,7 @@
 const validerBatiment = (req, res, next) => {
 
   // On récupère les données envoyées dans le corps de la requête
-  const { nom, adresse, client_id } = req.body;
+  const { nom, adresse, ville, client_id } = req.body;
 
   // Liste pour collecter toutes les erreurs trouvées
   const erreurs = [];
@@ -27,9 +27,12 @@ const validerBatiment = (req, res, next) => {
     erreurs.push('L\'adresse ne peut pas dépasser 255 caractères.');
   }
 
+  // Vérification du champ ville 
+  if (!ville) erreurs.push('La ville est obligatoire.');
+    
   // Vérification du champ "client_id"
   if (!client_id) {
-    erreurs.push('L\'identifiant du client (client_id) est obligatoire.');
+    erreurs.push('L\'identifiant du client est obligatoire.');
   } else {
     // Vérification que le format est bien un UUID
     // Un UUID ressemble à : a3f8c2d1-4b5e-6f7a-8b9c-0d1e2f3a4b5c
