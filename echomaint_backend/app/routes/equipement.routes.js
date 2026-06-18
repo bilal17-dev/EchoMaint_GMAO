@@ -2,30 +2,24 @@ const express = require('express');
 const router = express.Router();
 const EquipementController = require('../controllers/EquipementController');
 
-// Import des middlewares de sécurité (Briques de Dev 3)
+// Import des middlewares de sécurité et de validation
 const auth = require('../middlewares/auth');
 const isAdmin = require('../middlewares/isAdmin');
+const validerEquipement = require('../validators/equipement.validator'); // Gardé de la V1 !
 
-/**
- * 1. ROUTES DE LECTURE
- * Accessibles à tout utilisateur connecté (Admin, Technicien, Client)
- */
-// Lire tous les équipements
+// 1. ROUTES DE LECTURE (Ordre correct de la V2)
 router.get('/', auth, EquipementController.index);
-
-// Lire un équipement précis par son ID
+router.get('/:id/historique', auth, EquipementController.historique);
 router.get('/:id', auth, EquipementController.show);
 
-/**
- * 2. ROUTES D'ÉCRITURE & CONFIGURATION
- */
-// Créer un équipement (Strictement réservé à l'Admin)
-router.post('/', auth, isAdmin, EquipementController.store);
+// 2. ROUTES D'ÉCRITURE & CONFIGURATION
+// Création : Sécurisée + Validation du Body (V1)
+router.post('/', auth, isAdmin, validerEquipement, EquipementController.store);
 
-// Modifier un équipement (Accessible à l'Admin et au Technicien pour changer le statut ou mettre à jour)
+// Modification : Accessible au Tech et à l'Admin (V2)
 router.put('/:id', auth, EquipementController.update);
 
-// Supprimer un équipement (Strictement réservé à l'Admin)
+// Suppression : Strictement Admin (V1 & V2)
 router.delete('/:id', auth, isAdmin, EquipementController.destroy);
 
 module.exports = router;
