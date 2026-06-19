@@ -27,6 +27,7 @@ const AuthController = {
 
   // 1. INSCRIPTION (Register) - Accessible par l'Admin pour ajouter des techniciens/clients
   register: async (req, res) => {
+    console.log(req.body)
     const lang = req.headers['accept-language'] === 'en' ? 'en' : 'fr';
     const m = messages[lang];
 
