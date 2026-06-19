@@ -4,33 +4,30 @@ const { v4: uuidv4 } = require('uuid');
 
 const User = {
 
-  // Trouver un utilisateur par son email (Utile pour le Login)
   findByEmail: async (email) => {
-    return db('users').where({ email }).first();
+    // Ajoute .select('*') pour être sûr de récupérer TOUS les champs dont mot_de_passe
+    return db('users').select('*').where({ email }).first();
   },
 
-  // Trouver un utilisateur par son id
   findById: async (id) => {
     return db('users').where({ id }).first();
   },
 
-  // Récupérer tous les utilisateurs (avec l'id_client pour la cohérence globale)
   findAll: async () => {
     return db('users').select('id', 'nom', 'prenom', 'email', 'role', 'id_client', 'langue', 'actif');
   },
 
-  // Récupérer uniquement les techniciens actifs (indispensable pour assigner des interventions !)
   findTechniciens: async () => {
     return db('users').where({ role: 'technicien', actif: true })
       .select('id', 'nom', 'prenom', 'email');
   },
 
-  // Créer un nouvel utilisateur avec cryptage du mot de passe
   create: async (data) => {
     const id = uuidv4();
-    
-    // On extrait le mot de passe peu importe comment il est écrit depuis le front
     const passwordSaisi = data.password || data.mot_de_passe;
+    // On s'assure que le mot de passe est bien présent
+    if (!passwordSaisi) throw new Error("Le mot de passe est requis");
+    
     const mot_de_passe_hash = await bcrypt.hash(passwordSaisi, 12);
     
     await db('users').insert({
@@ -38,9 +35,9 @@ const User = {
       nom: data.nom,
       prenom: data.prenom,
       email: data.email,
-      mot_de_passe: mot_de_passe_hash, // CORRIGÉ : correspond exactement à ton script de migration
-      role: data.role,
-      id_client: data.id_client || null, // COHÉRENCE : s'associe proprement à ta nouvelle table clients
+      mot_de_passe: mot_de_passe_hash,
+      role: data.role || 'client',
+      id_client: data.id_client || null,
       langue: data.langue || 'fr',
       actif: true,
     });
@@ -48,15 +45,28 @@ const User = {
     return User.findById(id);
   },
 
-  // Vérifier le mot de passe lors de la connexion
-  verifierMotDePasse: async (motDePasseSaisi, hashEnBase) => {
-    return bcrypt.compare(motDePasseSaisi, hashEnBase);
+  // AJOUT UTILE : Mise à jour générique du profil
+  update: async (id, data) => {
+    // Si un nouveau mot de passe est fourni, on le re-hache
+    if (data.password) {
+      data.mot_de_passe = await bcrypt.hash(data.password, 12);
+      delete data.password;
+    }
+    return db('users').where({ id }).update(data);
   },
 
-  // Mettre à jour la langue d'un utilisateur
-  updateLangue: async (id, langue) => {
-    return db('users').where({ id }).update({ langue });
+  // AJOUT UTILE : Désactivation (Soft delete logique)
+  toggleActif: async (id, etat) => {
+    return db('users').where({ id }).update({ actif: etat });
   },
+
+  verifierMotDePasse: async (motDePasseSaisi, hashEnBase) => { 
+    console.log("Comparaison entre:", motDePasseSaisi, "et", hashEnBase);
+    const resultat = await bcrypt.compare(motDePasseSaisi, hashEnBase);
+    console.log("Résultat de bcrypt :", resultat);
+    return resultat;
+   
+  }
 };
 
 module.exports = User;

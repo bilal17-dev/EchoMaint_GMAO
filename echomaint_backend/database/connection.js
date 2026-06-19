@@ -1,8 +1,8 @@
 const knex = require('knex');
 const config = require('../knexfile');
 
-// Initialisation de l'instance Knex avec la configuration de développement
-const db = knex(config.development);
+// Utilise NODE_ENV (dev ou prod), par défaut sur 'development'
+const environment = process.env.NODE_ENV || 'development';
+const db = knex(config[environment]);
 
-// Export de l'instance unique pour tout le projet
 module.exports = db;

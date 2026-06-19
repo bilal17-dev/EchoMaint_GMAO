@@ -45,7 +45,8 @@ const BatimentController = {
   // POST /api/v1/batiments — Créer un bâtiment
   store: async (req, res) => {
     try {
-      const { nom, adresse, client_id } = req.body;
+      // AJOUT : Récupération de ville et description depuis le corps de la requête
+      const { nom, adresse, client_id, ville, description } = req.body;
 
       if (!nom || !client_id) {
         return res.status(400).json({ message: 'Le nom et le client_id sont obligatoires.' });
@@ -57,7 +58,8 @@ const BatimentController = {
         return res.status(404).json({ message: 'Client introuvable.' });
       }
 
-      const batiment = await Batiment.create({ nom, adresse, client_id });
+      // AJOUT : Transmission de ville et description à la méthode de création du modèle
+      const batiment = await Batiment.create({ nom, adresse, client_id, ville, description });
       return res.status(201).json({ data: batiment, message: 'Bâtiment créé avec succès !' });
     } catch (error) {
       console.error('[BatimentController.store]', error);
@@ -68,7 +70,8 @@ const BatimentController = {
   // PUT /api/v1/batiments/:id — Modifier un bâtiment
   update: async (req, res) => {
     try {
-      const { nom, adresse, client_id } = req.body;
+      // AJOUT : Récupération de ville et description ici aussi
+      const { nom, adresse, client_id, ville, description } = req.body;
 
       const batiment = await Batiment.findById(req.params.id);
       if (!batiment) {
@@ -81,7 +84,8 @@ const BatimentController = {
         if (!client) return res.status(404).json({ message: 'Le nouveau client spécifié est introuvable.' });
       }
 
-      const updated = await Batiment.update(req.params.id, { nom, adresse, client_id });
+      // AJOUT : Transmission des nouveaux champs à la méthode de mise à jour du modèle
+      const updated = await Batiment.update(req.params.id, { nom, adresse, client_id, ville, description });
       return res.status(200).json({ data: updated, message: 'Bâtiment mis à jour avec succès !' });
     } catch (error) {
       console.error('[BatimentController.update]', error);

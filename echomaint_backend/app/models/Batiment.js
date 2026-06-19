@@ -6,7 +6,16 @@ const Batiment = {
   // Récupérer tous les bâtiments avec jointure client et gestion des rôles (RG-06)
   findAll: async (userRole, userClientId, filters = {}) => {
     let query = db('batiments')
-      .select('batiments.id', 'batiments.nom', 'batiments.adresse', 'batiments.client_id', 'clients.nom as client_nom')
+      // AJOUT : Sélection explicite de batiments.ville et batiments.description
+      .select(
+        'batiments.id', 
+        'batiments.nom', 
+        'batiments.adresse', 
+        'batiments.ville', 
+        'batiments.description', 
+        'batiments.client_id', 
+        'clients.nom as client_nom'
+      )
       .join('clients', 'batiments.client_id', 'clients.id');
     
     // RÈGLE MÉTIER (RG-06) : Si l'utilisateur est un client, il ne voit QUE ses bâtiments
@@ -23,7 +32,7 @@ const Batiment = {
   // Trouver un bâtiment par son ID (avec le nom de son client)
   findById: async (id) => {
     return db('batiments')
-      .select('batiments.*', 'clients.nom as client_nom')
+      .select('batiments.*', 'clients.nom as client_nom') // batiments.* prendra automatiquement ville et description
       .join('clients', 'batiments.client_id', 'clients.id')
       .where('batiments.id', id)
       .first();
@@ -37,6 +46,8 @@ const Batiment = {
       id,
       nom: data.nom,
       adresse: data.adresse || null,
+      ville: data.ville || null,              // AJOUT : Prise en compte de la ville
+      description: data.description || null,  // AJOUT : Prise en compte de la description
       client_id: data.client_id // Clé étrangère vers la table clients
     });
     
@@ -48,6 +59,8 @@ const Batiment = {
     await db('batiments').where({ id }).update({
       nom: data.nom,
       adresse: data.adresse,
+      ville: data.ville,                      // AJOUT : Mise à jour de la ville
+      description: data.description,          // AJOUT : Mise à jour de la description
       client_id: data.client_id
     });
     

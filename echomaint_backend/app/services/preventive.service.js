@@ -1,106 +1,100 @@
 const db = require('../../database/connection');
 const Intervention = require('../models/Intervention');
 const crypto = require('crypto');
-const cron = require('node-cron');
 
 /**
- * Fonction 1 : Scanner les équipements pour générer les interventions initiales (via CRON)
+ * Service de maintenance préventive
+ * Conforme v2.1 : Utilise 'plans_maintenance' comme source de vérité
  */
-const genererInterventionsPreventives = async () => {
-  let nombreCreees = 0;
+const preventiveService = {
 
-  try {
-    const equipements = await db('equipements')
-      .where('statut', 'en_service')
-      .whereNotNull('periodicite_preventive_jours')
-      .where('periodicite_preventive_jours', '>', 0);
+  /**
+   * Scan nocturne (CRON) : Génère les OT préventifs en attente
+   */
+  genererInterventionsPreventives: async () => {
+    let nombreCreees = 0;
 
-    for (const equipement of equipements) {
+    try {
+      // 1. Récupérer tous les plans actifs
+      const plans = await db('plans_maintenance').where({ actif: true });
 
-      // Utilisation du modèle Intervention pour vérifier l'existence
-      const interventionExistante = await Intervention.getActiveIntervention(equipement.id, 'preventive');
+      for (const plan of plans) {
+        // 2. RG-PM-01 : Vérifier s'il existe déjà un OT préventif actif pour ce plan
+        // On vérifie le plan_maintenance_id pour éviter les doublons sur un même plan
+        const interventionExistante = await db('interventions')
+          .where({ plan_maintenance_id: plan.id })
+          .whereIn('statut', ['planifiee', 'assignee', 'en_cours'])
+          .first();
 
-      if (interventionExistante) {
-        continue;
+        if (interventionExistante) continue;
+
+        // 3. Calcul de l'échéance
+        const derniereGen = plan.derniere_generation ? new Date(plan.derniere_generation) : new Date(plan.created_at);
+        const dateProchaine = new Date(derniereGen);
+        dateProchaine.setDate(dateProchaine.getDate() + plan.periodicite_jours);
+
+        // Si la date est passée ou égale à aujourd'hui, on génère l'OT
+        if (dateProchaine <= new Date()) {
+          const otId = crypto.randomUUID();
+
+          await Intervention.create({
+            id: otId,
+            equipement_id: plan.equipement_id,
+            plan_maintenance_id: plan.id, // Lien vers le plan
+            type: 'preventif',
+            priorite: 'normale',
+            statut: 'planifiee',
+            titre: `[Préventif] ${plan.label}`,
+            description: `Maintenance préventive automatique générée via plan : ${plan.label}`,
+            date_planifiee: dateProchaine,
+            // Injection de la gamme de tâches (JSON) du plan vers l'OT
+            gamme_taches: plan.gamme_taches 
+          });
+
+          // 4. Mise à jour de la dernière génération sur le plan
+          await db('plans_maintenance').where({ id: plan.id }).update({
+            derniere_generation: new Date()
+          });
+
+          nombreCreees++;
+        }
       }
+    } catch (erreur) {
+      console.error('[preventiveService] Erreur lors du scan automatique :', erreur);
+    }
 
-      const datePlanifiee = new Date(equipement.date_acquisition);
-      datePlanifiee.setDate(datePlanifiee.getDate() + equipement.periodicite_preventive_jours);
+    return { nombreCreees };
+  },
 
-      // Utilisation du modèle Intervention pour la création
+  /**
+   * Régénération automatique après clôture (RG-02)
+   */
+  planifierProchaineIntervention: async (planId, dateCloture) => {
+    try {
+      const plan = await db('plans_maintenance').where({ id: planId }).first();
+      if (!plan || !plan.actif) return;
+
+      const futureDate = new Date(dateCloture);
+      futureDate.setDate(futureDate.getDate() + plan.periodicite_jours);
+
       await Intervention.create({
         id: crypto.randomUUID(),
-        equipement_id: equipement.id,
-        type: 'preventive',
-        priorite: 'moyenne',
-        statut: 'ouverte',
-        description: `Maintenance préventive automatique — périodicité : ${equipement.periodicite_preventive_jours} jours`,
-        date_planifiee: datePlanifiee,
-        date_cloture: null,
-        technicien_id: null
+        equipement_id: plan.equipement_id,
+        plan_maintenance_id: plan.id,
+        type: 'preventif',
+        priorite: 'normale',
+        statut: 'planifiee',
+        titre: `[Préventif] ${plan.label}`,
+        description: `Maintenance préventive régénérée suite à clôture.`,
+        date_planifiee: futureDate,
+        gamme_taches: plan.gamme_taches
       });
 
-      nombreCreees++;
+      console.log(`[GMAO] Cycle préventif relancé pour le plan ${planId}`);
+    } catch (erreur) {
+      console.error('[preventiveService] Erreur lors de la régénération :', erreur);
     }
-  } catch (erreur) {
-    console.error('Erreur lors du scan des équipements préventifs :', erreur);
-  }
-
-  return { nombreCreees };
-};
-
-/**
- * Fonction 2 : Régénérer une intervention préventive dès qu'une autre vient d'être clôturée (RG-02)
- */
-const planifierProchaineIntervention = async (equipementId, dateCloture) => {
-  try {
-    const equipement = await db('equipements')
-      .where('id', equipementId)
-      .first();
-
-    if (!equipement || !equipement.periodicite_preventive_jours) {
-      return null;
-    }
-
-    const futureDatePlanifiee = new Date(dateCloture);
-    futureDatePlanifiee.setDate(futureDatePlanifiee.getDate() + equipement.periodicite_preventive_jours);
-
-    // Utilisation du modèle Intervention pour la création
-    await Intervention.create({
-      id: crypto.randomUUID(),
-      equipement_id: equipementId,
-      type: 'preventive',
-      priorite: 'moyenne',
-      statut: 'ouverte',
-      description: `Maintenance préventive régénérée suite à clôture — périodicité : ${equipement.periodicite_preventive_jours} jours`,
-      date_planifiee: futureDatePlanifiee,
-      date_cloture: null,
-      technicien_id: null
-    });
-
-    console.log(`[Système] Prochaine intervention planifiée automatiquement pour l'équipement ${equipementId}`);
-  } catch (erreur) {
-    console.error('Erreur lors de la régénération automatique de l’intervention :', erreur);
   }
 };
 
-/**
- * LE PLANIFICATEUR AUTOMATIQUE (CRON)
- * Il tourne toutes les nuits à minuit pile : '0 0 * * *'
- */
-cron.schedule('0 0 * * *', async () => {
-  console.log('[CRON] Lancement automatique de la vérification des équipements...');
-  try {
-    const resultat = await genererInterventionsPreventives();
-    console.log(`[CRON] Fin du scan automatique. Interventions préventives créées : ${resultat.nombreCreees}`);
-  } catch (erreur) {
-    console.error('[CRON] Erreur lors de l’exécution du scan automatique :', erreur);
-  }
-});
-
-console.log('[Système] Tâche planifiée CRON intégrée avec succès dans le service préventif.');
-
-module.exports = { 
-  genererInterventionsPreventives,
-  planifierProchaineIntervention 
-};
+module.exports = preventiveService;

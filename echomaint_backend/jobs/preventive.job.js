@@ -3,34 +3,36 @@
 
 const cron = require('node-cron');
 
-// Ce cron job s'exécute tous les jours à minuit (00h00)
-// Il vérifie les équipements dont la maintenance préventive est due
-// et crée automatiquement les interventions selon la règle RG-02
+/**
+ *  PLANIFICATEUR AUTOMATIQUE (CRON JOB)
+ * CORRIGÉ v2.1 : S'exécute désormais chaque nuit à 00h01 pile ('1 0 * * *') 
+ * comme exigé par la Section 5 du cahier des charges.
+ */
+cron.schedule('1 0 * * *', async () => {
 
-cron.schedule('0 0 * * *', async () => {
-
-  console.log(`[CRON] Démarrage vérification préventive — ${new Date().toISOString()}`);
+  console.log(`[CRON] Lancement nocturne à 00h01 du scan des plans de maintenance — ${new Date().toISOString()}`);
 
   try {
-    // On charge le service ICI à l'intérieur du cron (pas en haut du fichier)
-    // Comme ça le serveur démarre normalement même si Dev 1 n'a pas encore
-    // rempli preventive.service.js
+    // Chargement dynamique du service à l'intérieur du cron pour éviter les dépendances circulaires
+    // ou les plantages si le service est en cours d'édition.
     const preventiveService = require('../app/services/preventive.service');
 
     // On vérifie que la fonction existe avant de l'appeler
     if (typeof preventiveService.genererInterventionsPreventives !== 'function') {
-      console.warn('[CRON] Service non disponible');
+      console.warn('[CRON] Service de maintenance préventive non disponible ou incomplet.');
       return;
     }
 
+    // Exécution du scan et de la génération des OT au statut 'planifiee'
     const resultat = await preventiveService.genererInterventionsPreventives();
-    console.log(`[CRON] Ordre de travail crée : ${resultat.nombreCreees}`);
-    console.log(`[CRON] Terminé avec succès.`);
+    
+    console.log(`[CRON] Fin du scan. Nouveaux ordres de travail (OT) créés : ${resultat.nombreCreees}`);
+    console.log(`[CRON] Traitement de maintenance préventive terminé avec succès.`);
 
   } catch (error) {
-    console.warn('[CRON] Erreur génération préventive :', error.message);
+    console.error('[CRON] Échec critique lors de la génération automatique :', error.message);
   }
 
 });
 
-console.log('[CRON] Planificateur actif : sexécution tous les jours à minuit.');
+console.log('[CRON] Planificateur actif : exécution programmée toutes les nuits à 00h01 [Validé v2.1] ✓');

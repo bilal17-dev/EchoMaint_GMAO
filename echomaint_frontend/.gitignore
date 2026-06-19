@@ -22,3 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Dossier de stockage des fichiers uploadés
+storage/

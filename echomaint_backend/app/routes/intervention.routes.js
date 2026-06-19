@@ -1,49 +1,36 @@
 const express = require('express');
 const router = express.Router();
-const InterventionController = require('../controllers/InterventionController');
 
-// Import des middlewares de sécurité et de contrôle d'accès
+const InterventionController = require('../controllers/InterventionController');
+const ExportController = require('../controllers/ExportController'); // Import du contrôleur d'export
+
 const auth = require('../middlewares/auth');
 const isAdmin = require('../middlewares/isAdmin');
-const isTechnicien = require('../middlewares/isTechnicien');
-
-// Import des validateurs de données
+const handleUploadPhoto = require('../middlewares/upload.middleware');
 const { validerCloture, validerReouverture } = require('../validators/intervention.validator');
 
-// =========================================================================
-// 1. ROUTES DE LECTURE (Accessibles à tout utilisateur connecté)
-// =========================================================================
-// Lister toutes les interventions avec filtres
+// 1. LECTURE
 router.get('/', auth, InterventionController.index);
-
-// Afficher les détails d'une intervention précise
+router.get('/export/csv', auth, ExportController.exportOT); // Route pour exporter les interventions en CSV
 router.get('/:id', auth, InterventionController.show);
+router.get('/:id/rapport', auth, InterventionController.telechargerRapport);
+router.get('/:id/photos', auth, InterventionController.recupererPhotos);
 
-// Téléchargement du rapport de restitution PDF (Seulement si cloturée)
-router.get('/:id/rapport', auth, InterventionController.rapport);
-
-// =========================================================================
-// 2. ROUTES DE CRÉATION ET CONFIGURATION (Réservées à l'Administrateur)
-// =========================================================================
-// Créer un nouvel ordre de travail
+// 2. ADMINISTRATION
 router.post('/', auth, isAdmin, InterventionController.store);
-
-// Assigner un technicien qualifié à un OT
+router.delete('/:id', auth, isAdmin, InterventionController.destroy);
 router.post('/:id/assigner', auth, isAdmin, InterventionController.assigner);
-
-// Réouverture motivée suite à un contrôle qualité (Nécessite une validation du motif)
 router.post('/:id/rouvrir', auth, isAdmin, validerReouverture, InterventionController.rouvrir);
-
-// Abandon ou annulation définitive d'une intervention
 router.post('/:id/annuler', auth, isAdmin, InterventionController.annuler);
 
-// =========================================================================
-// 3. ROUTES TERRAIN / CYCLE DE VIE (Réservées aux Techniciens)
-// =========================================================================
-// Lancement des travaux sur le terrain
-router.post('/:id/demarrer', auth, isTechnicien, InterventionController.demarrer);
+// 3. TERRAIN / CYCLE DE VIE
+router.post('/:id/demarrer', auth, InterventionController.demarrer);
+router.post('/:id/cloturer', auth, validerCloture, InterventionController.cloturer);
+// Nouvelle route pour les commentaires
+router.post('/:id/commentaires', auth, InterventionController.ajouterCommentaire);
 
-// Clôture technique et rapport d'intervention (Nécessite la validation des KPI comme la durée)
-router.post('/:id/cloturer', auth, isTechnicien, validerCloture, InterventionController.cloturer);
+// 4. PHOTOS
+router.post('/:id/photos', auth, handleUploadPhoto, InterventionController.uploaderPhoto);
+router.delete('/photos/:id', auth, InterventionController.supprimerPhoto);
 
 module.exports = router;
