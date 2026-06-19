@@ -1,0 +1,128 @@
+.photo-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.photo-uploader-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E293B;
+  margin: 0;
+}
+
+.photo-dropzone {
+  border: 2px dashed #E2E8F0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.photo-dropzone:hover {
+  border-color: #2563EB;
+  background: #EFF6FF;
+}
+
+.photo-dropzone .ti {
+  font-size: 28px;
+  color: #94a3b8;
+}
+
+.photo-dropzone p {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0;
+  font-weight: 500;
+}
+
+.photo-dropzone span {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.photo-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.photo-preview img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+}
+
+.photo-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.photo-uploader-blocked {
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  color: #94a3b8;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-uploader-blocked .ti {
+  font-size: 16px;
+}
+
+.photo-uploader-blocked p {
+  font-size: 12px;
+  margin: 0;
+}
+
+.photo-error {
+  font-size: 12px;
+  color: #ef4444;
+  margin: 0;
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #2563EB;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn-primary:hover { background: #1D4ED8; }
+.btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+
+.btn-cancel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  background: #F4F7FC;
+  font-size: 13px;
+  color: #64748B;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+
+.btn-cancel:hover { background: #E2E8F0; }

@@ -1,0 +1,174 @@
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stats-section {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.stats-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stats-section-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 4px;
+}
+
+.stats-section-header p {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0;
+}
+
+.stats-export-btns {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E293B;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  text-decoration: none;
+}
+
+.btn-export:hover {
+  background: #F4F7FC;
+  border-color: #2563EB;
+  color: #2563EB;
+}
+
+.btn-export .ti { font-size: 16px; }
+
+.btn-export-pdf:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.stats-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stats-filters select,
+.stats-filters input[type="date"] {
+  padding: 8px 14px;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #1E293B;
+  background: #ffffff;
+  outline: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.stats-empty {
+  font-size: 13px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 1.5rem 0;
+  margin: 0;
+}
+
+.stats-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.stats-table th {
+  background: #F8FAFC;
+  color: #64748B;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid #E2E8F0;
+  white-space: nowrap;
+}
+
+.stats-table td {
+  padding: 10px 14px;
+  color: #1E293B;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+}
+
+.stats-table tr:last-child td {
+  border-bottom: none;
+}
+
+.stats-table tr:hover td {
+  background: #F8FAFC;
+}
+
+.stats-td-titre {
+  font-weight: 500;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats-td-center { text-align: center; }
+
+/* Chips type */
+.stats-chip {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip-prev { background: #EFF6FF; color: #2563EB; }
+.chip-cur  { background: #FFFBEB; color: #F59E0B; }
+
+/* Chips statut */
+.stats-chip-a_planifier { background: #F4F7FC; color: #64748B; }
+.stats-chip-planifiee   { background: #F4F7FC; color: #64748B; }
+.stats-chip-assignee    { background: #FFFBEB; color: #F59E0B; }
+.stats-chip-en_cours    { background: #F5F3FF; color: #8B5CF6; }
+.stats-chip-terminee    { background: #F0FDF4; color: #22C55E; }
+.stats-chip-annulee     { background: #FEF2F2; color: #ef4444; }
+
+.stats-section-kpi {
+  border: 1px dashed #E2E8F0;
+  background: #F8FAFC;
+  box-shadow: none;
+}
