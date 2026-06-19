@@ -3,10 +3,9 @@ const { v4: uuidv4 } = require('uuid');
 
 const Batiment = {
 
-  // Récupérer tous les bâtiments avec jointure client et gestion des rôles (RG-06)
+  // Récupérer tous les bâtiments
   findAll: async (userRole, userClientId, filters = {}) => {
     let query = db('batiments')
-      // AJOUT : Sélection explicite de batiments.ville et batiments.description
       .select(
         'batiments.id', 
         'batiments.nom', 
@@ -16,29 +15,27 @@ const Batiment = {
         'batiments.client_id', 
         'clients.nom as client_nom'
       )
-      .join('clients', 'batiments.client_id', 'clients.id');
+      .leftJoin('clients', 'batiments.client_id', 'clients.id'); // leftJoin est plus sûr si un bâtiment n'a pas de client
     
-    // RÈGLE MÉTIER (RG-06) : Si l'utilisateur est un client, il ne voit QUE ses bâtiments
     if (userRole === 'client') {
       query = query.where('batiments.client_id', userClientId);
     } else if (filters.client_id) {
-      // Si c'est un admin/tech, il peut filtrer par un client spécifique s'il le souhaite
       query = query.where('batiments.client_id', filters.client_id);
     }
     
     return query;
   },
 
-  // Trouver un bâtiment par son ID (avec le nom de son client)
+  // Trouver un bâtiment par son ID
   findById: async (id) => {
     return db('batiments')
-      .select('batiments.*', 'clients.nom as client_nom') // batiments.* prendra automatiquement ville et description
-      .join('clients', 'batiments.client_id', 'clients.id')
+      .select('batiments.*', 'clients.nom as client_nom')
+      .leftJoin('clients', 'batiments.client_id', 'clients.id')
       .where('batiments.id', id)
       .first();
   },
 
-  // Créer un bâtiment avec UUID
+  // Créer un bâtiment
   create: async (data) => {
     const id = uuidv4();
     
@@ -46,37 +43,39 @@ const Batiment = {
       id,
       nom: data.nom,
       adresse: data.adresse || null,
-      ville: data.ville || null,              // AJOUT : Prise en compte de la ville
-      description: data.description || null,  // AJOUT : Prise en compte de la description
-      client_id: data.client_id // Clé étrangère vers la table clients
+      ville: data.ville || null,
+      description: data.description || null,
+      client_id: data.client_id || null
     });
     
     return Batiment.findById(id);
   },
 
-  // Modifier un bâtiment
+  // Modifier un bâtiment (version sécurisée)
   update: async (id, data) => {
-    await db('batiments').where({ id }).update({
-      nom: data.nom,
-      adresse: data.adresse,
-      ville: data.ville,                      // AJOUT : Mise à jour de la ville
-      description: data.description,          // AJOUT : Mise à jour de la description
-      client_id: data.client_id
-    });
+    // On construit l'objet de mise à jour dynamiquement
+    const updateData = {};
+    if (data.nom !== undefined) updateData.nom = data.nom;
+    if (data.adresse !== undefined) updateData.adresse = data.adresse;
+    if (data.ville !== undefined) updateData.ville = data.ville;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.client_id !== undefined) updateData.client_id = data.client_id;
+
+    await db('batiments').where({ id }).update(updateData);
     
     return Batiment.findById(id);
   },
 
-  // Sécurité GMAO : Vérifie si le bâtiment a des équipements actifs avant suppression
+  // Vérifie si le bâtiment a des équipements actifs
   hasEquipementsActifs: async (id) => {
-    const count = await db('equipements')
+    const result = await db('equipements')
       .where({ batiment_id: id })
       .whereIn('statut', ['actif', 'en_panne'])
-      .whereNull('deleted_at') // Utile si vous faites du soft delete plus tard
+      .whereNull('deleted_at')
       .count('id as total')
       .first();
       
-    return count.total > 0;
+    return parseInt(result.total) > 0;
   },
 
   // Supprimer un bâtiment
