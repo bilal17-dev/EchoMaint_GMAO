@@ -9,7 +9,6 @@ export async function logout() {
   try {
     await api.post('/auth/logout')
   } catch (error) {
-    // On déconnecte quand même côté frontend
     console.warn('Logout backend échoué:', error.message)
   }
 }

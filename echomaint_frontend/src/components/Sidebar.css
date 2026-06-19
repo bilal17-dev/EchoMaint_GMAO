@@ -242,3 +242,9 @@
 .sidebar-logout:hover .sidebar-link-icon .ti {
   color: #ef4444;
 }
+
+.sidebar-lang {
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+}

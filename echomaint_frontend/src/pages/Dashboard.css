@@ -161,3 +161,70 @@
 .chart-filter .ti {
   font-size: 13px;
 }
+
+.dashboard-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-filters-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.dashboard-select {
+  padding: 8px 14px;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #1E293B;
+  background: #ffffff;
+  outline: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.dashboard-exports {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E293B;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-export:hover {
+  background: #F4F7FC;
+  border-color: #2563EB;
+  color: #2563EB;
+}
+
+.btn-export .ti { font-size: 16px; }
+
+.btn-export-pdf:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* 9 KPI cards en 3 colonnes */
+.dashboard-kpi {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}

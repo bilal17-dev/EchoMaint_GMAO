@@ -1,15 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getBatiments, deleteBatiment } from '../api/batiments.api'
 import './Batiments.css'
 
+// Mock clients — à remplacer par GET /clients une fois l'endpoint de Dev 1 disponible
+const mockClients = [
+  { id: 'c1', nom: 'DGS Africa' },
+  { id: 'c2', nom: 'SCI Almadies' },
+  { id: 'c3', nom: 'Logistique SN' },
+  { id: 'c4', nom: 'Agence Sud' },
+]
+
+// Mock bâtiments — modèle v2.1 : client_id (FK vers Client), ville, description
 const mockBatiments = [
-  { id: '1', nom: 'Siège Social DGS Africa', adresse: 'Route de Ngor, Dakar', client_nom: 'DGS Africa', nb_equipements: 24 },
-  { id: '2', nom: 'Tour Almadies', adresse: 'Route des Almadies, Dakar', client_nom: 'SCI Almadies', nb_equipements: 18 },
-  { id: '3', nom: 'Entrepôt Mbao', adresse: 'Zone industrielle, Mbao', client_nom: 'Logistique SN', nb_equipements: 42 },
-  { id: '4', nom: 'Immeuble Plateau', adresse: 'Plateau, Dakar', client_nom: 'DGS Africa', nb_equipements: 15 },
-  { id: '5', nom: 'Agence Thiès', adresse: 'Centre ville, Thiès', client_nom: 'Agence Sud', nb_equipements: 8 },
-  { id: '6', nom: 'Centre Technique', adresse: 'Almadies, Dakar', client_nom: 'DGS Africa', nb_equipements: 12 },
+  { id: '1', nom: 'Siège Social DGS Africa', adresse: 'Route de Ngor', ville: 'Dakar', client_id: 'c1', description: '', nb_equipements: 24 },
+  { id: '2', nom: 'Tour Almadies', adresse: 'Route des Almadies', ville: 'Dakar', client_id: 'c2', description: '', nb_equipements: 18 },
+  { id: '3', nom: 'Entrepôt Mbao', adresse: 'Zone industrielle', ville: 'Mbao', client_id: 'c3', description: '', nb_equipements: 42 },
+  { id: '4', nom: 'Immeuble Plateau', adresse: 'Plateau', ville: 'Dakar', client_id: 'c1', description: '', nb_equipements: 15 },
+  { id: '5', nom: 'Agence Thiès', adresse: 'Centre ville', ville: 'Thiès', client_id: 'c4', description: '', nb_equipements: 8 },
+  { id: '6', nom: 'Centre Technique', adresse: 'Almadies', ville: 'Dakar', client_id: 'c1', description: '', nb_equipements: 12 },
 ]
 
 const ITEMS_PER_PAGE = 6
@@ -17,19 +25,22 @@ const ITEMS_PER_PAGE = 6
 export default function Batiments() {
   const navigate = useNavigate()
   const [batiments, setBatiments] = useState(mockBatiments)
+  const [clients] = useState(mockClients)
   const [search, setSearch] = useState('')
   const [filterClient, setFilterClient] = useState('')
   const [page, setPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
   const [editBatiment, setEditBatiment] = useState(null)
-  const [form, setForm] = useState({ nom: '', adresse: '', client_id: '' })
+  const [form, setForm] = useState({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
 
-  const clients = [...new Set(mockBatiments.map(b => b.client_nom))]
+  const getClientNom = (clientId) => clients.find(c => c.id === clientId)?.nom || '—'
 
   const filtered = batiments.filter(b => {
-    const matchSearch = b.nom.toLowerCase().includes(search.toLowerCase()) ||
-      b.adresse.toLowerCase().includes(search.toLowerCase())
-    const matchClient = filterClient ? b.client_nom === filterClient : true
+    const matchSearch =
+      b.nom.toLowerCase().includes(search.toLowerCase()) ||
+      b.adresse.toLowerCase().includes(search.toLowerCase()) ||
+      b.ville.toLowerCase().includes(search.toLowerCase())
+    const matchClient = filterClient ? b.client_id === filterClient : true
     return matchSearch && matchClient
   })
 
@@ -37,6 +48,11 @@ export default function Batiments() {
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
   const handleDelete = (id) => {
+    const batiment = batiments.find(b => b.id === id)
+    if (batiment.nb_equipements > 0) {
+      window.alert('Impossible de supprimer ce bâtiment : il a encore des équipements rattachés.')
+      return
+    }
     if (window.confirm('Supprimer ce bâtiment ?')) {
       setBatiments(prev => prev.filter(b => b.id !== id))
     }
@@ -44,7 +60,13 @@ export default function Batiments() {
 
   const handleEdit = (batiment) => {
     setEditBatiment(batiment)
-    setForm({ nom: batiment.nom, adresse: batiment.adresse, client_id: batiment.client_nom })
+    setForm({
+      nom: batiment.nom,
+      adresse: batiment.adresse,
+      ville: batiment.ville,
+      client_id: batiment.client_id,
+      description: batiment.description || ''
+    })
     setShowModal(true)
   }
 
@@ -53,7 +75,7 @@ export default function Batiments() {
     if (editBatiment) {
       setBatiments(prev => prev.map(b =>
         b.id === editBatiment.id
-          ? { ...b, nom: form.nom, adresse: form.adresse }
+          ? { ...b, nom: form.nom, adresse: form.adresse, ville: form.ville, client_id: form.client_id, description: form.description }
           : b
       ))
     } else {
@@ -61,14 +83,16 @@ export default function Batiments() {
         id: Date.now().toString(),
         nom: form.nom,
         adresse: form.adresse,
-        client_nom: form.client_id,
+        ville: form.ville,
+        client_id: form.client_id,
+        description: form.description,
         nb_equipements: 0
       }
       setBatiments(prev => [...prev, newBatiment])
     }
     setShowModal(false)
     setEditBatiment(null)
-    setForm({ nom: '', adresse: '', client_id: '' })
+    setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
   }
 
   return (
@@ -92,13 +116,13 @@ export default function Batiments() {
           >
             <option value="">Tous les clients</option>
             {clients.map(c => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c.id} value={c.id}>{c.nom}</option>
             ))}
           </select>
         </div>
         <button className="btn-primary" onClick={() => {
           setEditBatiment(null)
-          setForm({ nom: '', adresse: '', client_id: '' })
+          setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
           setShowModal(true)
         }}>
           <i className="ti ti-plus" aria-hidden="true" />
@@ -134,13 +158,13 @@ export default function Batiments() {
                 <p className="batiment-nom">{batiment.nom}</p>
                 <p className="batiment-adresse">
                   <i className="ti ti-map-pin" aria-hidden="true" />
-                  {batiment.adresse}
+                  {batiment.adresse}, {batiment.ville}
                 </p>
               </div>
 
               <div className="batiment-meta">
                 <span><strong>{batiment.nb_equipements}</strong> équipements</span>
-                <span>Client: <strong>{batiment.client_nom}</strong></span>
+                <span>Client: <strong>{getClientNom(batiment.client_id)}</strong></span>
               </div>
 
               <button
@@ -200,26 +224,54 @@ export default function Batiments() {
                   required
                 />
               </div>
-              <div className="form-group">
-                <label>Adresse</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Route de Ngor, Dakar"
-                  value={form.adresse}
-                  onChange={e => setForm(f => ({ ...f, adresse: e.target.value }))}
-                  required
-                />
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Adresse</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Route de Ngor"
+                    value={form.adresse}
+                    onChange={e => setForm(f => ({ ...f, adresse: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Ville</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Dakar"
+                    value={form.ville}
+                    onChange={e => setForm(f => ({ ...f, ville: e.target.value }))}
+                    required
+                  />
+                </div>
               </div>
+
               <div className="form-group">
                 <label>Client associé</label>
-                <input
-                  type="text"
-                  placeholder="Ex: DGS Africa"
+                <select
                   value={form.client_id}
                   onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))}
                   required
+                >
+                  <option value="">Sélectionner un client</option>
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id}>{c.nom}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Description (optionnel)</label>
+                <textarea
+                  placeholder="Notes ou précisions sur le bâtiment"
+                  value={form.description}
+                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  rows={3}
                 />
               </div>
+
               <div className="modal-footer">
                 <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>
                   Annuler

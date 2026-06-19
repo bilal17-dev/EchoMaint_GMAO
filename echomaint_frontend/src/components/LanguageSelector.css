@@ -1,0 +1,32 @@
+.lang-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.15s, background 0.15s;
+}
+
+.lang-btn:hover {
+  color: #1E293B;
+  background: #F4F7FC;
+}
+
+.lang-btn-active {
+  color: #2563EB;
+}
+
+.lang-divider {
+  color: #E2E8F0;
+  font-size: 12px;
+}

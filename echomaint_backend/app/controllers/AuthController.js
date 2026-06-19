@@ -5,8 +5,12 @@ const AuthController = {
 
   // 1. INSCRIPTION
   register: async (req, res) => {
+    // Fusion : on garde le log et la gestion de langue distante
+    console.log(req.body);
+    const lang = req.headers['accept-language'] === 'en' ? 'en' : 'fr';
+    // Note : assure-toi que l'objet 'messages' est bien importé ou accessible ici
+    
     try {
-      // On récupère les deux noms possibles pour le mot de passe
       const { nom, prenom, email, password, mot_de_passe, role, id_client, langue } = req.body;
       const passFinal = password || mot_de_passe;
 
@@ -23,10 +27,10 @@ const AuthController = {
         nom,
         prenom,
         email,
-        mot_de_passe: passFinal, // On force le nom de colonne correct
+        mot_de_passe: passFinal,
         role: role || 'client',
         id_client: id_client || null,
-        langue: langue || 'fr'
+        langue: langue || lang // On utilise la langue détectée par défaut
       });
 
       return res.status(201).json({ message: res.translate('inscription_succes') });
@@ -48,7 +52,7 @@ const AuthController = {
       }
 
       const user = await User.findByEmail(email);
-     
+      
       if (!user) {
         return res.status(401).json({ message: res.translate('mot_de_passe_incorrect') });
       }
@@ -57,7 +61,6 @@ const AuthController = {
         return res.status(403).json({ message: res.translate('compte_desactive') });
       }
 
-      // Utilisation du champ correct 'mot_de_passe' pour la vérification
       const valide = await User.verifierMotDePasse(passwordSaisi, user.mot_de_passe);
       if (!valide) {
         return res.status(401).json({ message: res.translate('mot_de_passe_incorrect') });
