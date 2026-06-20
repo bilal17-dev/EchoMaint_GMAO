@@ -3,11 +3,6 @@ const { v4: uuidv4 } = require('uuid');
 
 const Equipement = {
   findAll: async (userRole, userClientId, filters = {}) => {
-    // 1. Débogage : Nombre total brut sans aucun filtre
-    const totalBrut = await db('equipements').count('id as total').first();
-    console.log('--- DEBUG FIND ALL ---');
-    console.log('Total équipements en base (brut) :', totalBrut.total);
-
     let query = db('equipements')
       .select('equipements.*', 'batiments.nom as batiment_nom', 'clients.nom as client_nom')
       .leftJoin('batiments', 'equipements.batiment_id', 'batiments.id')
@@ -24,17 +19,10 @@ const Equipement = {
     if (filters.statut) query = query.where('equipements.statut', filters.statut);
     if (filters.search) query = query.where('equipements.nom', 'like', `%${filters.search}%`);
 
-    // 2. Débogage : Afficher la requête SQL générée
-    console.log('Requête SQL générée :', query.toString());
-
     const page = parseInt(filters.page, 10) || 1;
     const limit = parseInt(filters.limit, 10) || 20;
     
-    const results = await query.limit(limit).offset((page - 1) * limit);
-    console.log('Nombre de résultats après filtres :', results.length);
-    console.log('----------------------');
-
-    return results;
+    return query.limit(limit).offset((page - 1) * limit);
   },
 
   findById: async (id) => {
@@ -49,30 +37,41 @@ const Equipement = {
 
   create: async (data) => {
     const id = uuidv4();
-    const now = new Date();
     const equipementData = {
       id,
       nom: data.nom,
-      code_inventaire: data.code_inventaire || null,
-      categorie: data.categorie || 'technique',
       batiment_id: data.batiment_id,
-      statut: data.statut || 'en_service',
-      created_at: now,
-      updated_at: now
+      reference: data.reference || null,
+      type: data.type || null,
+      marque: data.marque || null,
+      modele: data.modele || null,
+      numero_serie: data.numero_serie || null,
+      date_installation: data.date_installation || null,
+      statut: data.statut || 'actif',
+      description: data.description || null
     };
     await db('equipements').insert(equipementData);
     return Equipement.findById(id);
   },
     
-  update: async (id, data) => {
-    await db('equipements').where({ id }).update({
-      nom: data.nom,
-      code_inventaire: data.code_inventaire,
-      categorie: data.categorie,
-      statut: data.statut,
-      batiment_id: data.batiment_id,
-      updated_at: db.fn.now()
+ update: async (id, data) => {
+    // Liste des champs autorisés à la modification
+    const allowedFields = [
+      'nom', 'batiment_id', 'reference', 'type', 'marque', 
+      'modele', 'numero_serie', 'date_installation', 'statut', 'description'
+    ];
+
+    // Création d'un objet filtré pour ne garder que les champs autorisés
+    const updateData = {};
+    allowedFields.forEach(field => {
+      if (data[field] !== undefined) {
+        updateData[field] = data[field];
+      }
     });
+
+    updateData.updated_at = db.fn.now();
+
+    await db('equipements').where({ id }).update(updateData);
     return Equipement.findById(id);
   },
 

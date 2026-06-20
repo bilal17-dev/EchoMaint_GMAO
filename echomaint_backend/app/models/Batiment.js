@@ -2,7 +2,6 @@ const db = require('../../database/connection');
 const { v4: uuidv4 } = require('uuid');
 
 const Batiment = {
-
   // Récupérer tous les bâtiments
   findAll: async (userRole, userClientId, filters = {}) => {
     let query = db('batiments')
@@ -15,7 +14,7 @@ const Batiment = {
         'batiments.client_id', 
         'clients.nom as client_nom'
       )
-      .leftJoin('clients', 'batiments.client_id', 'clients.id'); // leftJoin est plus sûr si un bâtiment n'a pas de client
+      .leftJoin('clients', 'batiments.client_id', 'clients.id');
     
     if (userRole === 'client') {
       query = query.where('batiments.client_id', userClientId);
@@ -38,31 +37,30 @@ const Batiment = {
   // Créer un bâtiment
   create: async (data) => {
     const id = uuidv4();
-    
     await db('batiments').insert({
       id,
       nom: data.nom,
       adresse: data.adresse || null,
       ville: data.ville || null,
       description: data.description || null,
-      client_id: data.client_id || null
+      client_id: data.client_id || null,
+      created_at: db.fn.now()
     });
-    
     return Batiment.findById(id);
   },
 
-  // Modifier un bâtiment (version sécurisée)
+  // Modifier un bâtiment
   update: async (id, data) => {
-    // On construit l'objet de mise à jour dynamiquement
     const updateData = {};
-    if (data.nom !== undefined) updateData.nom = data.nom;
-    if (data.adresse !== undefined) updateData.adresse = data.adresse;
-    if (data.ville !== undefined) updateData.ville = data.ville;
-    if (data.description !== undefined) updateData.description = data.description;
-    if (data.client_id !== undefined) updateData.client_id = data.client_id;
+    const fields = ['nom', 'adresse', 'ville', 'description', 'client_id'];
+    
+    fields.forEach(field => {
+      if (data[field] !== undefined) updateData[field] = data[field];
+    });
+
+    updateData.updated_at = db.fn.now();
 
     await db('batiments').where({ id }).update(updateData);
-    
     return Batiment.findById(id);
   },
 
@@ -74,11 +72,9 @@ const Batiment = {
       .whereNull('deleted_at')
       .count('id as total')
       .first();
-      
     return parseInt(result.total) > 0;
   },
 
-  // Supprimer un bâtiment
   delete: async (id) => {
     return db('batiments').where({ id }).delete();
   },
