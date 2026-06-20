@@ -8,7 +8,7 @@ export const demarrer  = async (id) => (await api.post(`/interventions/${id}/dem
 export const cloturer  = async (id, data) => (await api.post(`/interventions/${id}/cloturer`, data)).data;
 export const rouvrir   = async (id, motif) => (await api.post(`/interventions/${id}/rouvrir`, { motif })).data;
 export const annuler   = async (id) => (await api.post(`/interventions/${id}/annuler`)).data;
-export const getRapportUrl = (id) => `/api/v1/interventions/${id}/rapport`;
+export const getRapportUrl = (id) => `${import.meta.env.VITE_API_URL}/interventions/${id}/rapport`;
 
 export const uploadPhoto = async (id, file, type_photo) => {
   const formData = new FormData();
