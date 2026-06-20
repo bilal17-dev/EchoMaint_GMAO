@@ -22,6 +22,17 @@ const InterventionController = {
     }
   },
 
+  show: async (req, res) => {
+    try {
+      const intervention = await Intervention.findById(req.params.id);
+      if (!intervention) return res.status(404).json({ message: "Intervention non trouvée." });
+      return res.status(200).json({ data: intervention });
+    } catch (error) {
+      console.error('[InterventionController.show]', error);
+      return res.status(500).json({ message: "Erreur serveur." });
+    }
+  },
+
   store: async (req, res) => {
     try {
       const { equipement_id, type, priorite, titre, description, date_planifiee, technicien_id, plan_maintenance_id } = req.body;
@@ -72,14 +83,28 @@ const InterventionController = {
     }
   },
 
-  // ... (Autres méthodes conservées telles quelles)
   destroy: async (req, res) => {
-    const { id } = req.params;
-    await db('photos_intervention').where({ intervention_id: id }).delete();
-    await db('commentaires_intervention').where({ intervention_id: id }).delete();
-    await db('interventions').where({ id }).delete();
-    return res.status(200).json({ message: "Supprimé avec succès." });
-  }
+    try {
+      const { id } = req.params;
+      await db('photos_intervention').where({ intervention_id: id }).delete();
+      await db('commentaires_intervention').where({ intervention_id: id }).delete();
+      await db('interventions').where({ id }).delete();
+      return res.status(200).json({ message: "Supprimé avec succès." });
+    } catch (error) {
+      return res.status(500).json({ message: "Erreur serveur lors de la suppression." });
+    }
+  },
+
+  // Méthodes ajoutées pour satisfaire les routes et permettre le démarrage du serveur
+  telechargerRapport: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
+  recupererPhotos: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
+  assigner: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
+  rouvrir: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
+  annuler: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
+  demarrer: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
+  ajouterCommentaire: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
+  uploaderPhoto: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
+  supprimerPhoto: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
 };
 
 module.exports = InterventionController;
