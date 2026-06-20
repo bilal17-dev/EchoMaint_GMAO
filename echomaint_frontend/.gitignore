@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 # Dossier de stockage des fichiers uploadés
 storage/
+.env
