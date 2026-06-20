@@ -1,18 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const StatsController = require('../controllers/StatsController');
-const ExportController = require('../controllers/ExportController'); // Import nécessaire
-
-// Import du middleware d'authentification global
+const ExportController = require('../controllers/ExportController');
 const auth = require('../middlewares/auth');
 
 /**
- * ROUTES DE STATISTIQUES & TABLEAUX DE BORD (KPI)
- * Accessibles à tout utilisateur connecté
+ * ROUTES DE STATISTIQUES & KPI
  */
 router.get('/resume', auth, StatsController.kpiResume);
 
-// Nouvelle route pour l'export PDF du rapport KPI
-router.get('/export/pdf', auth, ExportController.exportKpiPdf);
+// Vérifie bien que exportKpiPdf existe dans ExportController.js !
+router.get('/export/pdf', auth, (req, res, next) => {
+    if (typeof ExportController.exportKpiPdf !== 'function') {
+        return res.status(501).json({ message: "La méthode d'export PDF n'est pas encore implémentée dans le contrôleur." });
+    }
+    ExportController.exportKpiPdf(req, res, next);
+});
 
 module.exports = router;
