@@ -1,26 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import './Equipements.css'
 
-// Mock bâtiments — à remplacer par GET /batiments
-const mockBatiments = [
-  { id: '1', nom: 'Siège Social DGS Africa' },
-  { id: '2', nom: 'Tour Almadies' },
-  { id: '3', nom: 'Entrepôt Mbao' },
-  { id: '4', nom: 'Immeuble Plateau' },
-  { id: '5', nom: 'Agence Thiès' },
-  { id: '6', nom: 'Centre Technique' },
-]
-
-// Mock équipements — modèle v2.1 (reference, type, marque, modele, numero_serie, date_installation, statut)
-const mockEquipements = [
-  { id: 'e1', batiment_id: '1', nom: 'Climatiseur Hall A', reference: 'CLIM-001', type: 'Climatisation', marque: 'Daikin', modele: 'FTXM50', numero_serie: 'SN-2024-001', date_installation: '2024-03-12', statut: 'actif', description: '' },
-  { id: 'e2', batiment_id: '1', nom: 'Groupe Électrogène', reference: 'GE-002', type: 'Énergie', marque: 'Caterpillar', modele: 'C15', numero_serie: 'SN-2023-114', date_installation: '2023-06-01', statut: 'en_panne', description: '' },
-  { id: 'e3', batiment_id: '2', nom: 'Ascenseur Tour A', reference: 'ASC-003', type: 'Ascenseur', marque: 'Otis', modele: 'Gen2', numero_serie: 'SN-2022-067', date_installation: '2022-11-20', statut: 'actif', description: '' },
-  { id: 'e4', batiment_id: '3', nom: 'Pompe à Eau', reference: 'POM-004', type: 'Hydraulique', marque: 'Grundfos', modele: 'CR15', numero_serie: 'SN-2024-090', date_installation: '2024-01-15', statut: 'hors_service', description: '' },
-  { id: 'e5', batiment_id: '3', nom: 'Compresseur', reference: 'COMP-005', type: 'Pneumatique', marque: 'Atlas Copco', modele: 'GA22', numero_serie: 'SN-2023-201', date_installation: '2023-09-08', statut: 'actif', description: '' },
-  { id: 'e6', batiment_id: '4', nom: 'Onduleur', reference: 'OND-006', type: 'Énergie', marque: 'APC', modele: 'SRT3000', numero_serie: 'SN-2024-045', date_installation: '2024-05-02', statut: 'actif', description: '' },
-]
+// On importe les vraies fonctions qui parlent au backend
+// Ces fonctions remplacent les données mockées qui étaient en dur dans le fichier
+import { getEquipements, createEquipement, updateEquipement, deleteEquipement } from '../api/equipements.api'
+import { getBatiments } from '../api/batiments.api'
 
 const STATUTS = [
   { value: 'actif', label: 'Actif', className: 'badge-actif' },
@@ -40,7 +25,15 @@ export default function Equipements() {
   const [searchParams, setSearchParams] = useSearchParams()
   const batimentFilterFromUrl = searchParams.get('batiment') || ''
 
-  const [equipements, setEquipements] = useState(mockEquipements)
+  // On remplace useState(mockEquipements) par un tableau vide au départ
+  // Les vraies données seront chargées depuis le backend avec useEffect ci-dessous
+  const [equipements, setEquipements] = useState([])
+  const [batiments, setBatiments] = useState([])
+
+  // On ajoute un état de chargement pour informer l'utilisateur que les données arrivent
+  const [loading, setLoading] = useState(true)
+  const [erreur, setErreur] = useState('')
+
   const [search, setSearch] = useState('')
   const [filterBatiment, setFilterBatiment] = useState(batimentFilterFromUrl)
   const [filterStatut, setFilterStatut] = useState('')
@@ -49,7 +42,37 @@ export default function Equipements() {
   const [editEquipement, setEditEquipement] = useState(null)
   const [form, setForm] = useState(emptyForm)
 
-  const getBatimentNom = (id) => mockBatiments.find(b => b.id === id)?.nom || '—'
+  // ─── Chargement des données au montage de la page ──────────────────────────
+  // useEffect avec un tableau vide [] en deuxième argument signifie :
+  // "exécute cette fonction une seule fois, quand la page s'affiche pour la première fois"
+  useEffect(() => {
+    chargerDonnees()
+  }, [])
+
+  const chargerDonnees = async () => {
+    setLoading(true)
+    setErreur('')
+    try {
+      // On lance les deux requêtes en parallèle avec Promise.all
+      // pour ne pas attendre l'une puis l'autre, mais les deux en même temps
+      const [resEquipements, resBatiments] = await Promise.all([
+        getEquipements(),
+        getBatiments()
+      ])
+
+      // Le backend retourne toujours { data: [...] }
+      // donc on prend .data pour récupérer juste le tableau
+      setEquipements(resEquipements.data)
+      setBatiments(resBatiments.data)
+    } catch (error) {
+      console.error('Erreur de chargement des équipements:', error)
+      setErreur('Impossible de charger les équipements. Vérifiez que le serveur backend est démarré.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getBatimentNom = (id) => batiments.find(b => b.id === id)?.nom || '—'
   const getStatutInfo = (statut) => STATUTS.find(s => s.value === statut) || STATUTS[0]
 
   const filtered = equipements.filter(eq => {
@@ -70,10 +93,20 @@ export default function Equipements() {
     setSearchParams(value ? { batiment: value } : {})
   }
 
-  const handleDelete = (id) => {
-    // Reflète RG-REF-02 côté backend : soft delete impossible si OT actifs sur l'équipement
-    if (window.confirm('Supprimer cet équipement ?')) {
+  // ─── Suppression connectée au backend ──────────────────────────────────────
+  const handleDelete = async (id) => {
+    if (!window.confirm('Supprimer cet équipement ?')) return
+
+    try {
+      // On appelle le vrai endpoint DELETE /equipements/:id
+      await deleteEquipement(id)
+      // Si la suppression a réussi, on retire l'équipement de la liste affichée
       setEquipements(prev => prev.filter(eq => eq.id !== id))
+    } catch (error) {
+      // Le backend peut refuser la suppression si l'équipement a des interventions
+      // en cours (RG-REF-02) — on affiche le message d'erreur exact du backend
+      const message = error.response?.data?.message || 'Erreur lors de la suppression.'
+      window.alert(message)
     }
   }
 
@@ -83,36 +116,62 @@ export default function Equipements() {
     setShowModal(true)
   }
 
-  const handleSubmit = (e) => {
+  // ─── Création / modification connectée au backend ──────────────────────────
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     // RG-REF-04 : date_installation ne peut pas être dans le futur
-    if (new Date(form.date_installation) > new Date()) {
+    // Cette vérification est aussi faite côté backend, mais on la garde ici
+    // pour donner un retour immédiat à l'utilisateur sans attendre le serveur
+    if (form.date_installation && new Date(form.date_installation) > new Date()) {
       window.alert("La date d'installation ne peut pas être dans le futur.")
       return
     }
 
-    // RG-REF-01 : référence unique par bâtiment
-    const doublon = equipements.find(eq =>
-      eq.reference === form.reference &&
-      eq.batiment_id === form.batiment_id &&
-      eq.id !== editEquipement?.id
-    )
-    if (doublon) {
-      window.alert('Cette référence existe déjà pour ce bâtiment.')
-      return
+    try {
+      if (editEquipement) {
+        // Modification d'un équipement existant
+        const res = await updateEquipement(editEquipement.id, form)
+        setEquipements(prev => prev.map(eq =>
+          eq.id === editEquipement.id ? res.data : eq
+        ))
+      } else {
+        // Création d'un nouvel équipement
+        const res = await createEquipement(form)
+        setEquipements(prev => [...prev, res.data])
+      }
+      setShowModal(false)
+      setEditEquipement(null)
+      setForm(emptyForm)
+    } catch (error) {
+      // Le backend peut refuser la création si :
+      // - la référence existe déjà pour ce bâtiment (RG-REF-01, erreur 409)
+      // - un champ obligatoire manque (erreur 400)
+      const message = error.response?.data?.message || 'Erreur lors de l\'enregistrement.'
+      window.alert(message)
     }
+  }
 
-    if (editEquipement) {
-      setEquipements(prev => prev.map(eq =>
-        eq.id === editEquipement.id ? { ...eq, ...form } : eq
-      ))
-    } else {
-      setEquipements(prev => [...prev, { id: `e${Date.now()}`, ...form }])
-    }
-    setShowModal(false)
-    setEditEquipement(null)
-    setForm(emptyForm)
+  // ─── Affichage pendant le chargement ────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="equipements">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+          Chargement des équipements...
+        </p>
+      </div>
+    )
+  }
+
+  // ─── Affichage en cas d'erreur de connexion au backend ──────────────────────
+  if (erreur) {
+    return (
+      <div className="equipements">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#ef4444' }}>
+          {erreur}
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -132,7 +191,7 @@ export default function Equipements() {
           </div>
           <select value={filterBatiment} onChange={e => handleBatimentFilterChange(e.target.value)}>
             <option value="">Tous les bâtiments</option>
-            {mockBatiments.map(b => (
+            {batiments.map(b => (
               <option key={b.id} value={b.id}>{b.nom}</option>
             ))}
           </select>
@@ -269,7 +328,6 @@ export default function Equipements() {
                     placeholder="Ex: Climatisation"
                     value={form.type}
                     onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-                    required
                   />
                 </div>
                 <div className="form-group">
@@ -280,7 +338,7 @@ export default function Equipements() {
                     required
                   >
                     <option value="">Sélectionner un bâtiment</option>
-                    {mockBatiments.map(b => (
+                    {batiments.map(b => (
                       <option key={b.id} value={b.id}>{b.nom}</option>
                     ))}
                   </select>
@@ -325,7 +383,6 @@ export default function Equipements() {
                     value={form.date_installation}
                     max={new Date().toISOString().split('T')[0]}
                     onChange={e => setForm(f => ({ ...f, date_installation: e.target.value }))}
-                    required
                   />
                 </div>
               </div>

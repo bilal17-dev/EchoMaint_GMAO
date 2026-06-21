@@ -3,11 +3,16 @@ const router = express.Router();
 const StatsController = require('../controllers/StatsController');
 const ExportController = require('../controllers/ExportController');
 const auth = require('../middlewares/auth');
+const isAdmin = require('../middlewares/isAdmin');
 
 /**
  * ROUTES DE STATISTIQUES & KPI
  */
 router.get('/resume', auth, StatsController.kpiResume);
+
+// Nouvelles routes à ajouter
+router.get('/par-equipement', auth, isAdmin, StatsController.kpiParEquipement);
+router.get('/evolution', auth, isAdmin, StatsController.kpiEvolution);
 
 // Vérifie bien que exportKpiPdf existe dans ExportController.js !
 router.get('/export/pdf', auth, (req, res, next) => {

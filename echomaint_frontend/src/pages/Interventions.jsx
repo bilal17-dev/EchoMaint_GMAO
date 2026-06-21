@@ -1,127 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Interventions.css'
 
-// ─── MOCKS ───────────────────────────────────────────────────────────────────
-const mockTechniciens = [
-  { id: 't1', nom: 'Diallo', prenom: 'Mamadou' },
-  { id: 't2', nom: 'Sow', prenom: 'Aminata' },
-]
-
-const mockInterventions = [
-  {
-    id: 'ot1',
-    titre: 'Révision climatisation centrale',
-    type: 'preventif',
-    priorite: 'normale',
-    statut: 'planifiee',
-    date_planifiee: '2026-06-20T09:00:00',
-    date_debut_reelle: null,
-    date_fin_reelle: null,
-    duree_reelle_minutes: null,
-    commentaire_cloture: null,
-    rapport_pdf_chemin: null,
-    equipement_nom: 'Climatisation centrale',
-    equipement_reference: 'CLIM-001',
-    batiment_nom: 'Siège DGS Africa',
-    technicien_id: null,
-    technicien_nom: null,
-    commentaires: [],
-    reouvertures: [],
-  },
-  {
-    id: 'ot2',
-    titre: 'Remplacement filtre groupe électrogène',
-    type: 'preventif',
-    priorite: 'basse',
-    statut: 'assignee',
-    date_planifiee: '2026-06-18T08:00:00',
-    date_debut_reelle: null,
-    date_fin_reelle: null,
-    duree_reelle_minutes: null,
-    commentaire_cloture: null,
-    rapport_pdf_chemin: null,
-    equipement_nom: 'Groupe électrogène',
-    equipement_reference: 'GE-001',
-    batiment_nom: 'Entrepôt Mbao',
-    technicien_id: 't1',
-    technicien_nom: 'Mamadou Diallo',
-    commentaires: [
-      { id: 'c1', contenu: 'Pièces commandées', auteur: 'Mamadou Diallo', created_at: '2026-06-17T10:00:00' }
-    ],
-    reouvertures: [],
-  },
-  {
-    id: 'ot3',
-    titre: 'Panne ascenseur bâtiment B',
-    type: 'curatif',
-    priorite: 'urgente',
-    statut: 'en_cours',
-    date_planifiee: '2026-06-17T14:00:00',
-    date_debut_reelle: '2026-06-17T14:30:00',
-    date_fin_reelle: null,
-    duree_reelle_minutes: null,
-    commentaire_cloture: null,
-    rapport_pdf_chemin: null,
-    equipement_nom: 'Ascenseur',
-    equipement_reference: 'ASC-002',
-    batiment_nom: 'Tour Almadies',
-    technicien_id: 't2',
-    technicien_nom: 'Aminata Sow',
-    commentaires: [
-      { id: 'c2', contenu: 'Câble de traction défectueux', auteur: 'Aminata Sow', created_at: '2026-06-17T15:00:00' }
-    ],
-    reouvertures: [],
-  },
-  {
-    id: 'ot4',
-    titre: 'Maintenance pompe à eau',
-    type: 'preventif',
-    priorite: 'normale',
-    statut: 'terminee',
-    date_planifiee: '2026-06-10T09:00:00',
-    date_debut_reelle: '2026-06-10T09:15:00',
-    date_fin_reelle: '2026-06-10T11:30:00',
-    duree_reelle_minutes: 135,
-    commentaire_cloture: 'Maintenance effectuée, pompe opérationnelle.',
-    rapport_pdf_chemin: '/storage/rapports/rapport_ot4.pdf',
-    equipement_nom: 'Pompe à eau',
-    equipement_reference: 'POMPE-001',
-    batiment_nom: 'Siège DGS Africa',
-    technicien_id: 't1',
-    technicien_nom: 'Mamadou Diallo',
-    commentaires: [],
-    reouvertures: [
-      {
-        id: 'r1',
-        motif: 'Fuite détectée après clôture, intervention incomplète.',
-        auteur: 'Super Admin',
-        statut_precedent: 'terminee',
-        created_at: '2026-06-11T08:00:00'
-      }
-    ],
-  },
-  {
-    id: 'ot5',
-    titre: 'Remplacement batterie onduleur',
-    type: 'curatif',
-    priorite: 'haute',
-    statut: 'annulee',
-    date_planifiee: '2026-06-15T10:00:00',
-    date_debut_reelle: null,
-    date_fin_reelle: null,
-    duree_reelle_minutes: null,
-    commentaire_cloture: null,
-    rapport_pdf_chemin: null,
-    equipement_nom: 'Onduleur salle serveur',
-    equipement_reference: 'UPS-001',
-    batiment_nom: 'Siège DGS Africa',
-    technicien_id: null,
-    technicien_nom: null,
-    commentaires: [],
-    reouvertures: [],
-  },
-]
+// On importe les vraies fonctions connectées au backend
+// Elles remplacent mockInterventions et mockTechniciens
+import {
+  getInterventions, createIntervention, assigner, demarrer,
+  cloturer, rouvrir, annuler, getRapportUrl
+} from '../api/interventions.api'
+import { getTechniciens } from '../api/utilisateurs.api'
+import { getBatiments } from '../api/batiments.api'
 
 // ─── COULEURS ─────────────────────────────────────────────────────────────────
 const STATUT_COLORS = {
@@ -139,12 +27,21 @@ const PRIORITE_COLORS = {
   urgente:  { bg: '#FEF2F2', color: '#EF4444' },
 }
 
-// Mock user — à remplacer par useAuth() plus tard
-const mockUser = { role: 'admin', id: 'admin1' }
-
 export default function Interventions() {
   const navigate = useNavigate()
-  const [interventions, setInterventions] = useState(mockInterventions)
+
+  // On récupère l'utilisateur connecté depuis le localStorage
+  // (sauvegardé lors de la connexion dans Login.jsx)
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+  // Données chargées depuis le backend
+  const [interventions, setInterventions] = useState([])
+  const [techniciens, setTechniciens] = useState([])
+  const [batiments, setBatiments] = useState([])
+
+  const [loading, setLoading] = useState(true)
+  const [erreurChargement, setErreurChargement] = useState('')
+
   const [selected, setSelected] = useState(null)
   const [modal, setModal] = useState(null) // 'assigner' | 'cloturer' | 'rouvrir' | 'annuler' | 'creer'
   const [filterStatut, setFilterStatut] = useState('')
@@ -160,13 +57,39 @@ export default function Interventions() {
   const [formRouvrir, setFormRouvrir] = useState({ motif: '' })
   const [formCreer, setFormCreer] = useState({
     titre: '', type: 'preventif', priorite: 'normale',
-    description: '', date_planifiee: '', technicien_id: ''
+    description: '', date_planifiee: '', technicien_id: '', equipement_id: ''
   })
   const [erreurs, setErreurs] = useState([])
 
-  // ─── FILTRES ───────────────────────────────────────────────────────────────
-  const batiments = [...new Set(mockInterventions.map(i => i.batiment_nom))]
+  // ─── Chargement initial des données ──────────────────────────────────────────
+  useEffect(() => {
+    chargerDonnees()
+  }, [])
 
+  const chargerDonnees = async () => {
+    setLoading(true)
+    setErreurChargement('')
+    try {
+      // On charge les 3 sources de données nécessaires à la page en parallèle
+      const [resInterventions, resTechniciens, resBatiments] = await Promise.all([
+        getInterventions(),
+        getTechniciens(),
+        getBatiments()
+      ])
+
+      setInterventions(resInterventions.data)
+      setTechniciens(resTechniciens.data)
+      setBatiments(resBatiments.data)
+    } catch (error) {
+      console.error('Erreur de chargement des interventions:', error)
+      setErreurChargement('Impossible de charger les interventions. Vérifiez que le serveur backend est démarré.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ─── FILTRES ───────────────────────────────────────────────────────────────
+  // On garde le filtrage côté frontend pour la réactivité immédiate de l'interface
   const filtered = interventions.filter(i => {
     if (filterStatut && i.statut !== filterStatut) return false
     if (filterType && i.type !== filterType) return false
@@ -178,28 +101,50 @@ export default function Interventions() {
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
-  // ─── ACTIONS ───────────────────────────────────────────────────────────────
-  const updateIntervention = (id, data) => {
+  // Liste unique des noms de bâtiments pour le filtre, calculée depuis les interventions chargées
+  const batimentsNoms = [...new Set(interventions.map(i => i.batiment_nom).filter(Boolean))]
+
+  // ─── ACTIONS CONNECTÉES AU BACKEND ───────────────────────────────────────────
+
+  /**
+   * Met à jour une intervention dans la liste affichée ET dans le panneau de détail
+   * sans recharger toute la page. data vient de la réponse du backend.
+   */
+  const mettreAJourLocalement = (id, data) => {
     setInterventions(prev => prev.map(i => i.id === id ? { ...i, ...data } : i))
     if (selected?.id === id) setSelected(prev => ({ ...prev, ...data }))
   }
 
-  const handleAssigner = () => {
+  const handleAssigner = async () => {
     if (!formAssigner.technicien_id) { setErreurs(['Sélectionnez un technicien.']); return }
-    const tech = mockTechniciens.find(t => t.id === formAssigner.technicien_id)
-    updateIntervention(selected.id, {
-      statut: 'assignee',
-      technicien_id: tech.id,
-      technicien_nom: `${tech.prenom} ${tech.nom}`
-    })
-    setModal(null); setErreurs([])
+
+    try {
+      // Appel réel à POST /interventions/:id/assigner
+      const res = await assigner(selected.id, formAssigner.technicien_id)
+      mettreAJourLocalement(selected.id, res.data)
+      setModal(null); setErreurs([])
+    } catch (error) {
+      // Le backend peut refuser si le technicien n'a pas le bon rôle (RG-OT-02)
+      // ou si la transition n'est pas valide (RG-OT-01)
+      const message = error.response?.data?.message || 'Erreur lors de l\'assignation.'
+      setErreurs([message])
+    }
   }
 
-  const handleDemarrer = (id) => {
-    updateIntervention(id, { statut: 'en_cours', date_debut_reelle: new Date().toISOString() })
+  const handleDemarrer = async (id) => {
+    try {
+      // Appel réel à POST /interventions/:id/demarrer
+      const res = await demarrer(id)
+      mettreAJourLocalement(id, res.data)
+    } catch (error) {
+      const message = error.response?.data?.message || 'Erreur lors du démarrage.'
+      window.alert(message)
+    }
   }
 
-  const handleCloturer = () => {
+  const handleCloturer = async () => {
+    // Validation côté frontend pour un retour immédiat
+    // (le backend valide aussi ces règles RG-OT-03, donc double sécurité)
     const errs = []
     if (!formCloturer.commentaire_cloture || formCloturer.commentaire_cloture.length < 10)
       errs.push('Le commentaire doit contenir au moins 10 caractères.')
@@ -207,77 +152,87 @@ export default function Interventions() {
       errs.push('La durée doit être un entier positif.')
     if (errs.length) { setErreurs(errs); return }
 
-    updateIntervention(selected.id, {
-      statut: 'terminee',
-      date_fin_reelle: new Date().toISOString(),
-      commentaire_cloture: formCloturer.commentaire_cloture,
-      duree_reelle_minutes: parseInt(formCloturer.duree_reelle_minutes),
-      rapport_pdf_chemin: `/storage/rapports/rapport_${selected.id}.pdf`
-    })
-    setModal(null); setFormCloturer({ commentaire_cloture: '', duree_reelle_minutes: '' }); setErreurs([])
+    try {
+      // Appel réel à POST /interventions/:id/cloturer
+      // Le backend génère automatiquement le rapport PDF à ce moment-là
+      const res = await cloturer(selected.id, {
+        commentaire_cloture: formCloturer.commentaire_cloture,
+        duree_reelle_minutes: parseInt(formCloturer.duree_reelle_minutes),
+        resolu: true
+      })
+      mettreAJourLocalement(selected.id, res.data)
+      setModal(null)
+      setFormCloturer({ commentaire_cloture: '', duree_reelle_minutes: '' })
+      setErreurs([])
+    } catch (error) {
+      const message = error.response?.data?.message || 'Erreur lors de la clôture.'
+      setErreurs([message])
+    }
   }
 
-  const handleRouvrir = () => {
+  const handleRouvrir = async () => {
     const errs = []
     if (!formRouvrir.motif || formRouvrir.motif.length < 20)
       errs.push('Le motif doit contenir au moins 20 caractères.')
     if (errs.length) { setErreurs(errs); return }
 
-    const reouverture = {
-      id: `r${Date.now()}`,
-      motif: formRouvrir.motif,
-      auteur: 'Super Admin',
-      statut_precedent: 'terminee',
-      created_at: new Date().toISOString()
+    try {
+      // Appel réel à POST /interventions/:id/rouvrir
+      // Le backend invalide automatiquement le rapport PDF (RG-OT-07)
+      // et enregistre la réouverture dans l'historique (RG-OT-06)
+      const res = await rouvrir(selected.id, formRouvrir.motif)
+      mettreAJourLocalement(selected.id, res.data)
+      setModal(null)
+      setFormRouvrir({ motif: '' })
+      setErreurs([])
+    } catch (error) {
+      // Le backend refuse si l'utilisateur n'est pas admin (RG-OT-04)
+      const message = error.response?.data?.message || 'Erreur lors de la réouverture.'
+      setErreurs([message])
     }
-    updateIntervention(selected.id, {
-      statut: 'en_cours',
-      rapport_pdf_chemin: null,
-      date_fin_reelle: null,
-      commentaire_cloture: null,
-      duree_reelle_minutes: null,
-      reouvertures: [...(selected.reouvertures || []), reouverture]
-    })
-    setModal(null); setFormRouvrir({ motif: '' }); setErreurs([])
   }
 
-  const handleAnnuler = () => {
-    updateIntervention(selected.id, { statut: 'annulee' })
-    setModal(null)
+  const handleAnnuler = async () => {
+    try {
+      // Appel réel à POST /interventions/:id/annuler
+      const res = await annuler(selected.id)
+      mettreAJourLocalement(selected.id, res.data)
+      setModal(null)
+    } catch (error) {
+      const message = error.response?.data?.message || 'Erreur lors de l\'annulation.'
+      window.alert(message)
+    }
   }
 
-  const handleCreer = () => {
+  const handleCreer = async () => {
     const errs = []
     if (!formCreer.titre) errs.push('Le titre est obligatoire.')
     if (!formCreer.date_planifiee) errs.push('La date planifiée est obligatoire.')
+    if (!formCreer.equipement_id) errs.push('L\'équipement est obligatoire.')
     if (errs.length) { setErreurs(errs); return }
 
-    const nouvel = {
-      id: `ot${Date.now()}`,
-      ...formCreer,
-      statut: 'planifiee',
-      date_debut_reelle: null, date_fin_reelle: null,
-      duree_reelle_minutes: null, commentaire_cloture: null,
-      rapport_pdf_chemin: null,
-      equipement_nom: 'Équipement mock', equipement_reference: 'EQ-XXX',
-      batiment_nom: 'Bâtiment mock',
-      technicien_nom: formCreer.technicien_id
-        ? mockTechniciens.find(t => t.id === formCreer.technicien_id)?.prenom + ' ' +
-          mockTechniciens.find(t => t.id === formCreer.technicien_id)?.nom
-        : null,
-      commentaires: [], reouvertures: []
+    try {
+      // Appel réel à POST /interventions
+      // Si type = curatif, le backend passe automatiquement l'équipement en "en_panne"
+      const res = await createIntervention(formCreer)
+
+      // On ajoute la nouvelle intervention en tête de liste
+      setInterventions(prev => [res.data, ...prev])
+
+      setModal(null)
+      setFormCreer({ titre: '', type: 'preventif', priorite: 'normale', description: '', date_planifiee: '', technicien_id: '', equipement_id: '' })
+      setErreurs([])
+    } catch (error) {
+      const message = error.response?.data?.message || 'Erreur lors de la création.'
+      setErreurs([message])
     }
-    setInterventions(prev => [nouvel, ...prev])
-    setModal(null)
-    setFormCreer({ titre: '', type: 'preventif', priorite: 'normale', description: '', date_planifiee: '', technicien_id: '' })
-    setErreurs([])
   }
 
   // ─── BOUTONS CONTEXTUELS ──────────────────────────────────────────────────
   const renderActions = (ot) => {
-    const isAssignedTech = mockUser.id === ot.technicien_id
-    const isAdmin = mockUser.role === 'admin'
-    const isTech = mockUser.role === 'technicien'
+    const isAssignedTech = user.id === ot.technicien_id
+    const isAdmin = user.role === 'admin'
+    const isTech = user.role === 'technicien'
 
     return (
       <div className="ot-actions">
@@ -313,6 +268,27 @@ export default function Interventions() {
     )
   }
 
+  // ─── Affichage pendant le chargement ────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="interventions">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+          Chargement des interventions...
+        </p>
+      </div>
+    )
+  }
+
+  if (erreurChargement) {
+    return (
+      <div className="interventions">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#ef4444' }}>
+          {erreurChargement}
+        </p>
+      </div>
+    )
+  }
+
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
     <div className="interventions">
@@ -340,10 +316,10 @@ export default function Interventions() {
           </select>
           <select value={filterBatiment} onChange={e => { setFilterBatiment(e.target.value); setPage(1) }}>
             <option value="">Tous les bâtiments</option>
-            {batiments.map(b => <option key={b} value={b}>{b}</option>)}
+            {batimentsNoms.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
-        {mockUser.role === 'admin' && (
+        {user.role === 'admin' && (
           <button className="btn-primary" onClick={() => setModal('creer')}>
             <i className="ti ti-plus" /> Nouvel OT
           </button>
@@ -460,7 +436,7 @@ export default function Interventions() {
                 {selected.commentaires.map(c => (
                   <div key={c.id} className="commentaire">
                     <div className="commentaire-header">
-                      <strong>{c.auteur}</strong>
+                      <strong>{c.auteur || c.user?.nom}</strong>
                       <span>{new Date(c.created_at).toLocaleString('fr-FR')}</span>
                     </div>
                     <p>{c.contenu}</p>
@@ -480,7 +456,7 @@ export default function Interventions() {
                     {selected.reouvertures.map(r => (
                       <tr key={r.id}>
                         <td>{new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
-                        <td>{r.auteur}</td>
+                        <td>{r.auteur || r.user?.nom}</td>
                         <td><span className="badge" style={{ background: STATUT_COLORS[r.statut_precedent]?.bg, color: STATUT_COLORS[r.statut_precedent]?.color }}>{r.statut_precedent}</span></td>
                         <td>{r.motif}</td>
                       </tr>
@@ -490,9 +466,10 @@ export default function Interventions() {
               </div>
             )}
 
+            {/* Le rapport n'est disponible que si l'OT est terminé ET que le PDF existe (RG-RAPPORT-01) */}
             {selected.statut === 'terminee' && selected.rapport_pdf_chemin && (
               <div className="detail-section">
-                <a href={selected.rapport_pdf_chemin} target="_blank" rel="noreferrer" className="btn-rapport">
+                <a href={getRapportUrl(selected.id)} target="_blank" rel="noreferrer" className="btn-rapport">
                   <i className="ti ti-file-type-pdf" /> Télécharger le rapport PDF
                 </a>
               </div>
@@ -522,7 +499,7 @@ export default function Interventions() {
                     <label>Technicien</label>
                     <select value={formAssigner.technicien_id} onChange={e => setFormAssigner({ technicien_id: e.target.value })}>
                       <option value="">Sélectionner un technicien</option>
-                      {mockTechniciens.map(t => (
+                      {techniciens.map(t => (
                         <option key={t.id} value={t.id}>{t.prenom} {t.nom}</option>
                       ))}
                     </select>
@@ -664,7 +641,7 @@ export default function Interventions() {
                       <label>Technicien (optionnel)</label>
                       <select value={formCreer.technicien_id} onChange={e => setFormCreer(f => ({ ...f, technicien_id: e.target.value }))}>
                         <option value="">Non assigné</option>
-                        {mockTechniciens.map(t => (
+                        {techniciens.map(t => (
                           <option key={t.id} value={t.id}>{t.prenom} {t.nom}</option>
                         ))}
                       </select>
