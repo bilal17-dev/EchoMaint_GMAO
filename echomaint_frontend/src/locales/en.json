@@ -39,7 +39,9 @@
     "utilisateurs": "Users",
     "stats": "Statistics",
     "logout": "Sign out",
-    "profile": "Profile"
+    "profile": "Profile",
+    "maintenanceplans": "Maintenance plans",
+    "interventions_client": "My interventions"
   },
   "auth": {
     "welcome": "Welcome!",
