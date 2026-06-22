@@ -1,13 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './Utilisateurs.css'
 
-const mockUtilisateurs = [
-  { id: 'u1', nom: 'Admin', prenom: 'Super', email: 'admin@echomaint.com', role: 'admin', actif: true },
-  { id: 'u2', nom: 'Diallo', prenom: 'Mamadou', email: 'tech1@echomaint.com', role: 'technicien', actif: true },
-  { id: 'u3', nom: 'Sow', prenom: 'Aminata', email: 'tech2@echomaint.com', role: 'technicien', actif: true },
-  { id: 'u4', nom: 'Fall', prenom: 'Fatou', email: 'client1@echomaint.com', role: 'client', actif: true },
-  { id: 'u5', nom: 'Ndiaye', prenom: 'Cheikh', email: 'client2@echomaint.com', role: 'client', actif: false },
-]
+// On remplace mockUtilisateurs par les vraies fonctions connectées au backend
+import { getUtilisateurs, createUtilisateur, updateUtilisateur } from '../api/utilisateurs.api'
 
 const ROLE_COLORS = {
   admin:      { bg: '#F5F3FF', color: '#8B5CF6' },
@@ -16,12 +11,34 @@ const ROLE_COLORS = {
 }
 
 export default function Utilisateurs() {
-  const [utilisateurs, setUtilisateurs] = useState(mockUtilisateurs)
+  const [utilisateurs, setUtilisateurs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [erreurChargement, setErreurChargement] = useState('')
+
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({ nom: '', prenom: '', email: '', role: 'technicien', password: '' })
   const [erreurs, setErreurs] = useState([])
+
+  // ─── Chargement initial ───────────────────────────────────────────────────
+  useEffect(() => {
+    chargerUtilisateurs()
+  }, [])
+
+  const chargerUtilisateurs = async () => {
+    setLoading(true)
+    setErreurChargement('')
+    try {
+      const res = await getUtilisateurs()
+      setUtilisateurs(res.data)
+    } catch (error) {
+      console.error('Erreur de chargement des utilisateurs:', error)
+      setErreurChargement('Impossible de charger les utilisateurs. Vérifiez que vous êtes connecté en tant qu\'admin.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filtered = utilisateurs.filter(u => {
     const matchSearch = `${u.nom} ${u.prenom} ${u.email}`.toLowerCase().includes(search.toLowerCase())
@@ -29,31 +46,59 @@ export default function Utilisateurs() {
     return matchSearch && matchRole
   })
 
-  const handleToggleActif = (id) => {
-    setUtilisateurs(prev => prev.map(u => u.id === id ? { ...u, actif: !u.actif } : u))
+  // ─── Activer/Désactiver un compte ────────────────────────────────────────
+  const handleToggleActif = async (id, actifActuel) => {
+    try {
+      // Appel réel à PUT /utilisateurs/:id avec le nouveau statut actif
+      const res = await updateUtilisateur(id, { actif: !actifActuel })
+      setUtilisateurs(prev => prev.map(u => u.id === id ? res.data : u))
+    } catch (error) {
+      const message = error.response?.data?.message || 'Erreur lors de la mise à jour.'
+      window.alert(message)
+    }
   }
 
-  const handleCreer = () => {
+  // ─── Création d'un nouvel utilisateur ────────────────────────────────────
+  const handleCreer = async () => {
     const errs = []
     if (!form.nom) errs.push('Le nom est obligatoire.')
     if (!form.prenom) errs.push('Le prénom est obligatoire.')
     if (!form.email) errs.push('L\'email est obligatoire.')
     if (!form.password || form.password.length < 6) errs.push('Le mot de passe doit faire au moins 6 caractères.')
-    if (utilisateurs.find(u => u.email === form.email)) errs.push('Cet email est déjà utilisé.')
     if (errs.length) { setErreurs(errs); return }
 
-    const nouvel = {
-      id: `u${Date.now()}`,
-      nom: form.nom,
-      prenom: form.prenom,
-      email: form.email,
-      role: form.role,
-      actif: true,
+    try {
+      // Appel réel à POST /utilisateurs
+      const res = await createUtilisateur(form)
+      setUtilisateurs(prev => [res.data, ...prev])
+      setModal(null)
+      setForm({ nom: '', prenom: '', email: '', role: 'technicien', password: '' })
+      setErreurs([])
+    } catch (error) {
+      // Le backend vérifie l'unicité de l'email et renvoie un message clair si déjà utilisé
+      const message = error.response?.data?.message || 'Erreur lors de la création de l\'utilisateur.'
+      setErreurs([message])
     }
-    setUtilisateurs(prev => [nouvel, ...prev])
-    setModal(null)
-    setForm({ nom: '', prenom: '', email: '', role: 'technicien', password: '' })
-    setErreurs([])
+  }
+
+  if (loading) {
+    return (
+      <div className="utilisateurs">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+          Chargement des utilisateurs...
+        </p>
+      </div>
+    )
+  }
+
+  if (erreurChargement) {
+    return (
+      <div className="utilisateurs">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#ef4444' }}>
+          {erreurChargement}
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -153,7 +198,7 @@ export default function Utilisateurs() {
                   <div className="table-actions">
                     <button
                       className={`btn-toggle ${u.actif ? 'btn-desactiver' : 'btn-activer'}`}
-                      onClick={() => handleToggleActif(u.id)}
+                      onClick={() => handleToggleActif(u.id, u.actif)}
                       title={u.actif ? 'Désactiver' : 'Activer'}
                     >
                       <i className={`ti ${u.actif ? 'ti-user-off' : 'ti-user-check'}`} aria-hidden="true" />

@@ -1,52 +1,9 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import './FicheEquipement.css'
 
-// Mock — à remplacer par GET /equipements/:id
-// (le backend renvoie l'équipement + bâtiment parent + client + stats 30 jours)
-const mockFiche = {
-  e1: {
-    id: 'e1',
-    nom: 'Climatiseur Hall A',
-    reference: 'CLIM-001',
-    type: 'Climatisation',
-    marque: 'Daikin',
-    modele: 'FTXM50',
-    numero_serie: 'SN-2024-001',
-    date_installation: '2024-03-12',
-    statut: 'actif',
-    description: "Climatiseur principal du hall d'accueil.",
-    batiment: { id: '1', nom: 'Siège Social DGS Africa', adresse: 'Route de Ngor, Dakar' },
-    client: { id: 'c1', nom: 'DGS Africa' },
-    stats: { nb_interventions_30j: 2, derniere_intervention_date: '2026-05-28' }
-  },
-  e2: {
-    id: 'e2',
-    nom: 'Groupe Électrogène',
-    reference: 'GE-002',
-    type: 'Énergie',
-    marque: 'Caterpillar',
-    modele: 'C15',
-    numero_serie: 'SN-2023-114',
-    date_installation: '2023-06-01',
-    statut: 'en_panne',
-    description: '',
-    batiment: { id: '1', nom: 'Siège Social DGS Africa', adresse: 'Route de Ngor, Dakar' },
-    client: { id: 'c1', nom: 'DGS Africa' },
-    stats: { nb_interventions_30j: 4, derniere_intervention_date: '2026-06-10' }
-  },
-}
-
-// Mock — à remplacer par GET /equipements/:id/historique
-const mockHistorique = {
-  e1: [
-    { id: 'ot1', titre: 'Révision filtre climatiseur', type: 'preventif', statut: 'terminee', date_fin_reelle: '2026-05-28', duree_reelle_minutes: 45, technicien: 'Modou Diop', commentaire_cloture: 'Filtre remplacé, niveau gaz vérifié.' },
-    { id: 'ot2', titre: 'Contrôle annuel', type: 'preventif', statut: 'terminee', date_fin_reelle: '2026-02-14', duree_reelle_minutes: 60, technicien: 'Modou Diop', commentaire_cloture: 'Aucune anomalie détectée.' },
-  ],
-  e2: [
-    { id: 'ot3', titre: 'Panne démarrage groupe', type: 'curatif', statut: 'terminee', date_fin_reelle: '2026-06-10', duree_reelle_minutes: 120, technicien: 'Awa Ndiaye', commentaire_cloture: 'Batterie remplacée.' },
-    { id: 'ot4', titre: 'Fuite huile moteur', type: 'curatif', statut: 'annulee', date_fin_reelle: '2026-04-02', duree_reelle_minutes: 0, technicien: 'Awa Ndiaye', commentaire_cloture: 'Doublon avec OT précédent.' },
-  ],
-}
+// On remplace mockFiche et mockHistorique par les vraies fonctions backend
+import { getEquipement, getHistorique } from '../api/equipements.api'
 
 const STATUT_LABELS = {
   actif: { label: 'Actif', className: 'badge-actif' },
@@ -71,10 +28,50 @@ export default function FicheEquipement() {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  const equipement = mockFiche[id]
-  const historique = mockHistorique[id] || []
+  const [equipement, setEquipement] = useState(null)
+  const [historique, setHistorique] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [erreur, setErreur] = useState('')
 
-  if (!equipement) {
+  // ─── Chargement des données quand l'id change dans l'URL ────────────────────
+  // Le tableau [id] en dépendance signifie : recharge à chaque fois que l'id
+  // de l'équipement dans l'URL change (navigation d'une fiche à une autre)
+  useEffect(() => {
+    chargerFiche()
+  }, [id])
+
+  const chargerFiche = async () => {
+    setLoading(true)
+    setErreur('')
+    try {
+      // GET /equipements/:id renvoie l'équipement avec bâtiment, client et stats 30j
+      // GET /equipements/:id/historique renvoie la liste des OT terminés/annulés
+      const [resEquipement, resHistorique] = await Promise.all([
+        getEquipement(id),
+        getHistorique(id)
+      ])
+
+      setEquipement(resEquipement.data)
+      setHistorique(resHistorique.data)
+    } catch (error) {
+      console.error('Erreur de chargement de la fiche équipement:', error)
+      setErreur('Impossible de charger cet équipement.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="fiche-equipement">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+          Chargement de la fiche équipement...
+        </p>
+      </div>
+    )
+  }
+
+  if (erreur || !equipement) {
     return (
       <div className="fiche-equipement">
         <div className="fiche-empty">
@@ -88,7 +85,7 @@ export default function FicheEquipement() {
     )
   }
 
-  const statutInfo = STATUT_LABELS[equipement.statut]
+  const statutInfo = STATUT_LABELS[equipement.statut] || STATUT_LABELS.actif
 
   return (
     <div className="fiche-equipement">
@@ -121,7 +118,8 @@ export default function FicheEquipement() {
           </div>
           <div>
             <p className="fiche-stat-label">Interventions (30 derniers jours)</p>
-            <p className="fiche-stat-value">{equipement.stats.nb_interventions_30j}</p>
+            {/* nb_interventions_30j vient du calcul fait par le backend dans EquipementController.show */}
+            <p className="fiche-stat-value">{equipement.nb_interventions_30j ?? 0}</p>
           </div>
         </div>
         <div className="fiche-stat-card">
@@ -130,7 +128,7 @@ export default function FicheEquipement() {
           </div>
           <div>
             <p className="fiche-stat-label">Dernière intervention</p>
-            <p className="fiche-stat-value">{formatDate(equipement.stats.derniere_intervention_date)}</p>
+            <p className="fiche-stat-value">{formatDate(equipement.derniere_intervention_date)}</p>
           </div>
         </div>
       </div>
@@ -140,7 +138,7 @@ export default function FicheEquipement() {
         <div className="fiche-card">
           <h2>Caractéristiques techniques</h2>
           <div className="fiche-details">
-            <div className="fiche-detail"><span>Type</span><strong>{equipement.type}</strong></div>
+            <div className="fiche-detail"><span>Type</span><strong>{equipement.type || '—'}</strong></div>
             <div className="fiche-detail"><span>Marque</span><strong>{equipement.marque || '—'}</strong></div>
             <div className="fiche-detail"><span>Modèle</span><strong>{equipement.modele || '—'}</strong></div>
             <div className="fiche-detail"><span>Numéro de série</span><strong>{equipement.numero_serie || '—'}</strong></div>
@@ -154,9 +152,9 @@ export default function FicheEquipement() {
         <div className="fiche-card">
           <h2>Localisation</h2>
           <div className="fiche-details">
-            <div className="fiche-detail"><span>Bâtiment</span><strong>{equipement.batiment.nom}</strong></div>
-            <div className="fiche-detail"><span>Adresse</span><strong>{equipement.batiment.adresse}</strong></div>
-            <div className="fiche-detail"><span>Client</span><strong>{equipement.client.nom}</strong></div>
+            {/* batiment_nom et client_nom viennent des jointures faites dans Equipement.findById */}
+            <div className="fiche-detail"><span>Bâtiment</span><strong>{equipement.batiment_nom || '—'}</strong></div>
+            <div className="fiche-detail"><span>Client</span><strong>{equipement.client_nom || '—'}</strong></div>
           </div>
         </div>
       </div>
@@ -169,14 +167,14 @@ export default function FicheEquipement() {
         ) : (
           <div className="historique-list">
             {historique.map(ot => {
-              const otStatutInfo = OT_STATUT_LABELS[ot.statut]
+              const otStatutInfo = OT_STATUT_LABELS[ot.statut] || OT_STATUT_LABELS.terminee
               return (
                 <div key={ot.id} className="historique-item">
                   <div className="historique-item-top">
                     <div>
                       <p className="historique-titre">{ot.titre}</p>
                       <p className="historique-meta">
-                        {ot.type === 'preventif' ? 'Préventif' : 'Curatif'} · {formatDate(ot.date_fin_reelle)} · {ot.technicien}
+                        {ot.type === 'preventif' ? 'Préventif' : 'Curatif'} · {formatDate(ot.date_fin_reelle || ot.updated_at)} · {ot.technicien_nom || 'Non assigné'}
                       </p>
                     </div>
                     <span className={`ot-badge ${otStatutInfo.className}`}>{otStatutInfo.label}</span>

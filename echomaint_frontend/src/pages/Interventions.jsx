@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Interventions.css'
 
-// On importe les vraies fonctions connectées au backend
-// Elles remplacent mockInterventions et mockTechniciens
 import {
   getInterventions, createIntervention, assigner, demarrer,
   cloturer, rouvrir, annuler, getRapportUrl
 } from '../api/interventions.api'
 import { getTechniciens } from '../api/utilisateurs.api'
 import { getBatiments } from '../api/batiments.api'
+// Nouvel import pour le sélecteur d'équipement
+import { getEquipements } from '../api/equipements.api'
 
-// ─── COULEURS ─────────────────────────────────────────────────────────────────
 const STATUT_COLORS = {
   planifiee: { bg: '#F1F5F9', color: '#64748B', label: 'Planifiée' },
   assignee:  { bg: '#FFF7ED', color: '#F59E0B', label: 'Assignée' },
@@ -29,21 +28,19 @@ const PRIORITE_COLORS = {
 
 export default function Interventions() {
   const navigate = useNavigate()
-
-  // On récupère l'utilisateur connecté depuis le localStorage
-  // (sauvegardé lors de la connexion dans Login.jsx)
   const user = JSON.parse(localStorage.getItem('user') || '{}')
 
-  // Données chargées depuis le backend
   const [interventions, setInterventions] = useState([])
   const [techniciens, setTechniciens] = useState([])
   const [batiments, setBatiments] = useState([])
+  // Nouvel état pour la liste des équipements (sélecteur du formulaire de création)
+  const [equipements, setEquipements] = useState([])
 
   const [loading, setLoading] = useState(true)
   const [erreurChargement, setErreurChargement] = useState('')
 
   const [selected, setSelected] = useState(null)
-  const [modal, setModal] = useState(null) // 'assigner' | 'cloturer' | 'rouvrir' | 'annuler' | 'creer'
+  const [modal, setModal] = useState(null)
   const [filterStatut, setFilterStatut] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterPriorite, setFilterPriorite] = useState('')
@@ -51,17 +48,16 @@ export default function Interventions() {
   const [page, setPage] = useState(1)
   const ITEMS_PER_PAGE = 5
 
-  // Formulaires modales
   const [formAssigner, setFormAssigner] = useState({ technicien_id: '' })
   const [formCloturer, setFormCloturer] = useState({ commentaire_cloture: '', duree_reelle_minutes: '' })
   const [formRouvrir, setFormRouvrir] = useState({ motif: '' })
+  // Ajout du champ equipement_id, obligatoire côté backend
   const [formCreer, setFormCreer] = useState({
     titre: '', type: 'preventif', priorite: 'normale',
     description: '', date_planifiee: '', technicien_id: '', equipement_id: ''
   })
   const [erreurs, setErreurs] = useState([])
 
-  // ─── Chargement initial des données ──────────────────────────────────────────
   useEffect(() => {
     chargerDonnees()
   }, [])
@@ -70,16 +66,18 @@ export default function Interventions() {
     setLoading(true)
     setErreurChargement('')
     try {
-      // On charge les 3 sources de données nécessaires à la page en parallèle
-      const [resInterventions, resTechniciens, resBatiments] = await Promise.all([
+      // On ajoute getEquipements() au chargement parallèle
+      const [resInterventions, resTechniciens, resBatiments, resEquipements] = await Promise.all([
         getInterventions(),
         getTechniciens(),
-        getBatiments()
+        getBatiments(),
+        getEquipements()
       ])
 
       setInterventions(resInterventions.data)
       setTechniciens(resTechniciens.data)
       setBatiments(resBatiments.data)
+      setEquipements(resEquipements.data)
     } catch (error) {
       console.error('Erreur de chargement des interventions:', error)
       setErreurChargement('Impossible de charger les interventions. Vérifiez que le serveur backend est démarré.')
@@ -88,8 +86,6 @@ export default function Interventions() {
     }
   }
 
-  // ─── FILTRES ───────────────────────────────────────────────────────────────
-  // On garde le filtrage côté frontend pour la réactivité immédiate de l'interface
   const filtered = interventions.filter(i => {
     if (filterStatut && i.statut !== filterStatut) return false
     if (filterType && i.type !== filterType) return false
@@ -100,16 +96,8 @@ export default function Interventions() {
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
-
-  // Liste unique des noms de bâtiments pour le filtre, calculée depuis les interventions chargées
   const batimentsNoms = [...new Set(interventions.map(i => i.batiment_nom).filter(Boolean))]
 
-  // ─── ACTIONS CONNECTÉES AU BACKEND ───────────────────────────────────────────
-
-  /**
-   * Met à jour une intervention dans la liste affichée ET dans le panneau de détail
-   * sans recharger toute la page. data vient de la réponse du backend.
-   */
   const mettreAJourLocalement = (id, data) => {
     setInterventions(prev => prev.map(i => i.id === id ? { ...i, ...data } : i))
     if (selected?.id === id) setSelected(prev => ({ ...prev, ...data }))
@@ -117,15 +105,11 @@ export default function Interventions() {
 
   const handleAssigner = async () => {
     if (!formAssigner.technicien_id) { setErreurs(['Sélectionnez un technicien.']); return }
-
     try {
-      // Appel réel à POST /interventions/:id/assigner
       const res = await assigner(selected.id, formAssigner.technicien_id)
       mettreAJourLocalement(selected.id, res.data)
       setModal(null); setErreurs([])
     } catch (error) {
-      // Le backend peut refuser si le technicien n'a pas le bon rôle (RG-OT-02)
-      // ou si la transition n'est pas valide (RG-OT-01)
       const message = error.response?.data?.message || 'Erreur lors de l\'assignation.'
       setErreurs([message])
     }
@@ -133,7 +117,6 @@ export default function Interventions() {
 
   const handleDemarrer = async (id) => {
     try {
-      // Appel réel à POST /interventions/:id/demarrer
       const res = await demarrer(id)
       mettreAJourLocalement(id, res.data)
     } catch (error) {
@@ -143,8 +126,6 @@ export default function Interventions() {
   }
 
   const handleCloturer = async () => {
-    // Validation côté frontend pour un retour immédiat
-    // (le backend valide aussi ces règles RG-OT-03, donc double sécurité)
     const errs = []
     if (!formCloturer.commentaire_cloture || formCloturer.commentaire_cloture.length < 10)
       errs.push('Le commentaire doit contenir au moins 10 caractères.')
@@ -153,8 +134,6 @@ export default function Interventions() {
     if (errs.length) { setErreurs(errs); return }
 
     try {
-      // Appel réel à POST /interventions/:id/cloturer
-      // Le backend génère automatiquement le rapport PDF à ce moment-là
       const res = await cloturer(selected.id, {
         commentaire_cloture: formCloturer.commentaire_cloture,
         duree_reelle_minutes: parseInt(formCloturer.duree_reelle_minutes),
@@ -177,16 +156,12 @@ export default function Interventions() {
     if (errs.length) { setErreurs(errs); return }
 
     try {
-      // Appel réel à POST /interventions/:id/rouvrir
-      // Le backend invalide automatiquement le rapport PDF (RG-OT-07)
-      // et enregistre la réouverture dans l'historique (RG-OT-06)
       const res = await rouvrir(selected.id, formRouvrir.motif)
       mettreAJourLocalement(selected.id, res.data)
       setModal(null)
       setFormRouvrir({ motif: '' })
       setErreurs([])
     } catch (error) {
-      // Le backend refuse si l'utilisateur n'est pas admin (RG-OT-04)
       const message = error.response?.data?.message || 'Erreur lors de la réouverture.'
       setErreurs([message])
     }
@@ -194,7 +169,6 @@ export default function Interventions() {
 
   const handleAnnuler = async () => {
     try {
-      // Appel réel à POST /interventions/:id/annuler
       const res = await annuler(selected.id)
       mettreAJourLocalement(selected.id, res.data)
       setModal(null)
@@ -212,13 +186,8 @@ export default function Interventions() {
     if (errs.length) { setErreurs(errs); return }
 
     try {
-      // Appel réel à POST /interventions
-      // Si type = curatif, le backend passe automatiquement l'équipement en "en_panne"
       const res = await createIntervention(formCreer)
-
-      // On ajoute la nouvelle intervention en tête de liste
       setInterventions(prev => [res.data, ...prev])
-
       setModal(null)
       setFormCreer({ titre: '', type: 'preventif', priorite: 'normale', description: '', date_planifiee: '', technicien_id: '', equipement_id: '' })
       setErreurs([])
@@ -228,7 +197,6 @@ export default function Interventions() {
     }
   }
 
-  // ─── BOUTONS CONTEXTUELS ──────────────────────────────────────────────────
   const renderActions = (ot) => {
     const isAssignedTech = user.id === ot.technicien_id
     const isAdmin = user.role === 'admin'
@@ -268,7 +236,6 @@ export default function Interventions() {
     )
   }
 
-  // ─── Affichage pendant le chargement ────────────────────────────────────────
   if (loading) {
     return (
       <div className="interventions">
@@ -289,11 +256,9 @@ export default function Interventions() {
     )
   }
 
-  // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
     <div className="interventions">
 
-      {/* Header */}
       <div className="interventions-header">
         <div className="interventions-filters">
           <select value={filterStatut} onChange={e => { setFilterStatut(e.target.value); setPage(1) }}>
@@ -326,10 +291,8 @@ export default function Interventions() {
         )}
       </div>
 
-      {/* Vue liste + détail côte à côte */}
       <div className="interventions-layout">
 
-        {/* Liste */}
         <div className="interventions-list">
           {paginated.length === 0 ? (
             <div className="empty"><i className="ti ti-clipboard-off" /><p>Aucune intervention trouvée</p></div>
@@ -362,7 +325,6 @@ export default function Interventions() {
             </div>
           ))}
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="pagination">
               <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>
@@ -380,7 +342,6 @@ export default function Interventions() {
           )}
         </div>
 
-        {/* Fiche détail */}
         {selected && (
           <div className="ot-detail">
             <div className="ot-detail-header">
@@ -466,7 +427,6 @@ export default function Interventions() {
               </div>
             )}
 
-            {/* Le rapport n'est disponible que si l'OT est terminé ET que le PDF existe (RG-RAPPORT-01) */}
             {selected.statut === 'terminee' && selected.rapport_pdf_chemin && (
               <div className="detail-section">
                 <a href={getRapportUrl(selected.id)} target="_blank" rel="noreferrer" className="btn-rapport">
@@ -482,12 +442,10 @@ export default function Interventions() {
         )}
       </div>
 
-      {/* ─── MODALES ──────────────────────────────────────────────────────── */}
       {modal && (
         <div className="modal-overlay" onClick={() => { setModal(null); setErreurs([]) }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
 
-            {/* ASSIGNER */}
             {modal === 'assigner' && (
               <>
                 <div className="modal-header">
@@ -513,7 +471,6 @@ export default function Interventions() {
               </>
             )}
 
-            {/* CLOTURER */}
             {modal === 'cloturer' && (
               <>
                 <div className="modal-header">
@@ -550,7 +507,6 @@ export default function Interventions() {
               </>
             )}
 
-            {/* ROUVRIR */}
             {modal === 'rouvrir' && (
               <>
                 <div className="modal-header">
@@ -581,7 +537,6 @@ export default function Interventions() {
               </>
             )}
 
-            {/* ANNULER */}
             {modal === 'annuler' && (
               <>
                 <div className="modal-header">
@@ -598,7 +553,6 @@ export default function Interventions() {
               </>
             )}
 
-            {/* CRÉER */}
             {modal === 'creer' && (
               <>
                 <div className="modal-header">
@@ -610,6 +564,23 @@ export default function Interventions() {
                     <label>Titre <span className="required">*</span></label>
                     <input type="text" placeholder="Ex: Révision climatisation" value={formCreer.titre} onChange={e => setFormCreer(f => ({ ...f, titre: e.target.value }))} />
                   </div>
+
+                  {/* Nouveau sélecteur d'équipement — obligatoire côté backend */}
+                  <div className="form-group">
+                    <label>Équipement <span className="required">*</span></label>
+                    <select
+                      value={formCreer.equipement_id}
+                      onChange={e => setFormCreer(f => ({ ...f, equipement_id: e.target.value }))}
+                    >
+                      <option value="">Sélectionner un équipement</option>
+                      {equipements.map(eq => (
+                        <option key={eq.id} value={eq.id}>
+                          {eq.nom} ({eq.reference}) — {eq.batiment_nom}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="form-row">
                     <div className="form-group">
                       <label>Type</label>

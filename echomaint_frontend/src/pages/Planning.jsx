@@ -1,49 +1,28 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getUser } from '../store/auth.store'
 import './Planning.css'
 
-const mockBatiments = [
-  { id: '1', nom: 'Siège Social DGS Africa' },
-  { id: '2', nom: 'Tour Almadies' },
-  { id: '3', nom: 'Entrepôt Mbao' },
-  { id: '4', nom: 'Immeuble Plateau' },
-]
-
-const mockTechniciens = [
-  { id: 't1', nom: 'Modou Diop' },
-  { id: 't2', nom: 'Awa Ndiaye' },
-]
-
-// Mocks — à remplacer par GET /planning?...
-const mockPlanningOTs = [
-  { id: 'ot1', titre: 'Révision filtre climatiseur', type: 'preventif', statut: 'terminee', priorite: 'basse', date_planifiee: '2026-06-01', equipement: { nom: 'Climatiseur Hall A' }, batiment: { id: '1', nom: 'Siège Social DGS Africa' }, technicien: { id: 't1', prenom: 'Modou', nom: 'Diop' } },
-  { id: 'ot2', titre: 'Panne démarrage groupe', type: 'curatif', statut: 'en_cours', priorite: 'haute', date_planifiee: '2026-06-15', equipement: { nom: 'Groupe Électrogène' }, batiment: { id: '1', nom: 'Siège Social DGS Africa' }, technicien: { id: 't2', prenom: 'Awa', nom: 'Ndiaye' } },
-  { id: 'ot3', titre: 'Contrôle ascenseur', type: 'preventif', statut: 'assignee', priorite: 'moyenne', date_planifiee: '2026-06-20', equipement: { nom: 'Ascenseur Tour A' }, batiment: { id: '2', nom: 'Tour Almadies' }, technicien: { id: 't1', prenom: 'Modou', nom: 'Diop' } },
-  { id: 'ot4', titre: 'Fuite pompe à eau', type: 'curatif', statut: 'a_planifier', priorite: 'haute', date_planifiee: '2026-06-22', equipement: { nom: 'Pompe à Eau' }, batiment: { id: '3', nom: 'Entrepôt Mbao' }, technicien: null },
-  { id: 'ot5', titre: 'Maintenance onduleur', type: 'preventif', statut: 'terminee', priorite: 'basse', date_planifiee: '2026-06-10', equipement: { nom: 'Onduleur' }, batiment: { id: '4', nom: 'Immeuble Plateau' }, technicien: { id: 't1', prenom: 'Modou', nom: 'Diop' } },
-  { id: 'ot6', titre: 'Vérification compresseur', type: 'preventif', statut: 'planifiee', priorite: 'moyenne', date_planifiee: '2026-07-05', equipement: { nom: 'Compresseur' }, batiment: { id: '3', nom: 'Entrepôt Mbao' }, technicien: { id: 't2', prenom: 'Awa', nom: 'Ndiaye' } },
-  { id: 'ot7', titre: 'Révision groupe électrogène', type: 'preventif', statut: 'planifiee', priorite: 'haute', date_planifiee: '2026-07-12', equipement: { nom: 'Groupe Électrogène' }, batiment: { id: '1', nom: 'Siège Social DGS Africa' }, technicien: { id: 't1', prenom: 'Modou', nom: 'Diop' } },
-  { id: 'ot8', titre: 'Inspection pompe secondaire', type: 'preventif', statut: 'planifiee', priorite: 'basse', date_planifiee: '2026-06-20', equipement: { nom: 'Pompe Secondaire' }, batiment: { id: '2', nom: 'Tour Almadies' }, technicien: { id: 't2', prenom: 'Awa', nom: 'Ndiaye' } },
-]
+// On remplace mockPlanningOTs, mockBatiments et mockTechniciens
+// par les vraies fonctions connectées au backend
+import { getPlanning } from '../api/planning.api'
+import { getBatiments } from '../api/batiments.api'
+import { getTechniciens } from '../api/utilisateurs.api'
 
 const STATUT_CHIP = {
-  a_planifier: 'chip-a-planifier',
-  planifiee:   'chip-planifiee',
-  assignee:    'chip-assignee',
-  en_cours:    'chip-en-cours',
-  terminee:    'chip-terminee',
-  annulee:     'chip-annulee',
+  planifiee: 'chip-planifiee',
+  assignee:  'chip-assignee',
+  en_cours:  'chip-en-cours',
+  terminee:  'chip-terminee',
+  annulee:   'chip-annulee',
 }
 
 const STATUT_LABELS = {
-  a_planifier: 'À planifier',
   planifiee: 'Planifiée',
-  assignee: 'Assignée',
-  en_cours: 'En cours',
-  terminee: 'Terminée',
-  annulee: 'Annulée',
+  assignee:  'Assignée',
+  en_cours:  'En cours',
+  terminee:  'Terminée',
+  annulee:   'Annulée',
 }
 
 const TYPE_LABELS = { preventif: 'Préventif', curatif: 'Curatif' }
@@ -51,29 +30,75 @@ const TYPE_LABELS = { preventif: 'Préventif', curatif: 'Curatif' }
 const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
-function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate() }
+function getDaysInMonth(year, month) {
+  return new Date(year, month + 1, 0).getDate()
+}
+
 function getFirstDayOfMonth(year, month) {
   const d = new Date(year, month, 1).getDay()
   return d === 0 ? 6 : d - 1
-}
-// eslint-disable-next-line no-unused-vars
-function formatDate(dateStr) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 export default function Planning() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const user = getUser()
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
 
   const today = new Date()
   const [viewYear, setViewYear] = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth())
   const [selectedDay, setSelectedDay] = useState(today.getDate())
+
+  // Filtres
   const [filterBatiment, setFilterBatiment] = useState('')
   const [filterTechnicien, setFilterTechnicien] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
+
+  // Données chargées depuis le backend
+  const [planningOTs, setPlanningOTs] = useState([])
+  const [batiments, setBatiments] = useState([])
+  const [techniciens, setTechniciens] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [erreur, setErreur] = useState('')
+
+  // ─── Chargement des bâtiments et techniciens (une seule fois) ────────────
+  useEffect(() => {
+    Promise.all([getBatiments(), getTechniciens()])
+      .then(([resBat, resTech]) => {
+        setBatiments(resBat.data)
+        setTechniciens(resTech.data)
+      })
+      .catch(err => console.error('Erreur chargement filtres:', err))
+  }, [])
+
+  // ─── Chargement du planning à chaque changement de mois ou de filtre ─────
+  // Le backend reçoit la période via date_debut et date_fin
+  useEffect(() => {
+    chargerPlanning()
+  }, [viewYear, viewMonth, filterBatiment, filterTechnicien, filterStatut])
+
+  const chargerPlanning = async () => {
+    setLoading(true)
+    setErreur('')
+    try {
+      // On construit la période du mois affiché (du 1er au dernier jour)
+      const dateDebut = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-01`
+      const dateFin = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${getDaysInMonth(viewYear, viewMonth)}`
+
+      const params = { date_debut: dateDebut, date_fin: dateFin }
+      if (filterBatiment) params.batiment_id = filterBatiment
+      if (filterTechnicien) params.technicien_id = filterTechnicien
+      if (filterStatut) params.statut = filterStatut
+
+      const res = await getPlanning(params)
+      setPlanningOTs(res.data)
+    } catch (error) {
+      console.error('Erreur de chargement du planning:', error)
+      setErreur('Impossible de charger le planning.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const prevMonth = () => {
     if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
@@ -87,20 +112,10 @@ export default function Planning() {
     setSelectedDay(1)
   }
 
-  // RG-PLAN-01 : technicien voit uniquement ses OT
-  const filteredOTs = useMemo(() => {
-    return mockPlanningOTs.filter(ot => {
-      if (user?.role === 'technicien' && ot.technicien?.id !== user?.id) return false
-      if (filterBatiment && ot.batiment?.id !== filterBatiment) return false
-      if (filterTechnicien && ot.technicien?.id !== filterTechnicien) return false
-      if (filterStatut && ot.statut !== filterStatut) return false
-      return true
-    })
-  }, [filterBatiment, filterTechnicien, filterStatut, user])
-
+  // Groupe les OT par jour pour colorier le calendrier
   const otsByDay = useMemo(() => {
     const map = {}
-    filteredOTs.forEach(ot => {
+    planningOTs.forEach(ot => {
       const d = new Date(ot.date_planifiee)
       if (d.getFullYear() === viewYear && d.getMonth() === viewMonth) {
         const day = d.getDate()
@@ -109,17 +124,13 @@ export default function Planning() {
       }
     })
     return map
-  }, [filteredOTs, viewYear, viewMonth])
+  }, [planningOTs, viewYear, viewMonth])
 
   const selectedDayOTs = otsByDay[selectedDay] || []
 
-  const monthOTs = useMemo(() => filteredOTs
-    .filter(ot => {
-      const d = new Date(ot.date_planifiee)
-      return d.getFullYear() === viewYear && d.getMonth() === viewMonth
-    })
-    .sort((a, b) => new Date(a.date_planifiee) - new Date(b.date_planifiee))
-  , [filteredOTs, viewYear, viewMonth])
+  const monthOTs = useMemo(() =>
+    [...planningOTs].sort((a, b) => new Date(a.date_planifiee) - new Date(b.date_planifiee))
+  , [planningOTs])
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)
   const firstDay = getFirstDayOfMonth(viewYear, viewMonth)
@@ -134,13 +145,15 @@ export default function Planning() {
       <div className="planning-filters">
         <select value={filterBatiment} onChange={e => setFilterBatiment(e.target.value)}>
           <option value="">Tous les bâtiments</option>
-          {mockBatiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
+          {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
         </select>
 
+        {/* Le filtre technicien n'est visible que pour les admins
+            RG-PLAN-01 : un technicien ne voit que ses propres OT (géré côté backend) */}
         {user?.role === 'admin' && (
           <select value={filterTechnicien} onChange={e => setFilterTechnicien(e.target.value)}>
             <option value="">Tous les techniciens</option>
-            {mockTechniciens.map(tech => <option key={tech.id} value={tech.id}>{tech.nom}</option>)}
+            {techniciens.map(tech => <option key={tech.id} value={tech.id}>{tech.prenom} {tech.nom}</option>)}
           </select>
         )}
 
@@ -151,6 +164,19 @@ export default function Planning() {
           ))}
         </select>
       </div>
+
+      {/* Affichage pendant le chargement */}
+      {loading && (
+        <p style={{ textAlign: 'center', padding: '1rem', color: '#64748B', fontSize: '13px' }}>
+          Chargement du planning...
+        </p>
+      )}
+
+      {erreur && (
+        <p style={{ textAlign: 'center', padding: '1rem', color: '#ef4444', fontSize: '13px' }}>
+          {erreur}
+        </p>
+      )}
 
       {/* Layout principal : calendrier + panel jour */}
       <div className="planning-layout">
@@ -171,11 +197,9 @@ export default function Planning() {
             {DAYS.map(d => (
               <div key={d} className="cal-day-header">{d}</div>
             ))}
-
             {Array.from({ length: firstDay }, (_, i) => (
               <div key={`empty-${i}`} className="cal-day cal-day-empty" />
             ))}
-
             {Array.from({ length: daysInMonth }, (_, i) => {
               const day = i + 1
               const dayOTs = otsByDay[day] || []
@@ -210,12 +234,8 @@ export default function Planning() {
           </div>
 
           <div className="calendar-legend">
-            <span className="legend-item">
-              <span className="cal-dot dot-preventif" /> Préventif
-            </span>
-            <span className="legend-item">
-              <span className="cal-dot dot-curatif" /> Curatif
-            </span>
+            <span className="legend-item"><span className="cal-dot dot-preventif" /> Préventif</span>
+            <span className="legend-item"><span className="cal-dot dot-curatif" /> Curatif</span>
           </div>
         </div>
 
@@ -229,7 +249,7 @@ export default function Planning() {
           {selectedDayOTs.length === 0 ? (
             <div className="day-panel-empty">
               <i className="ti ti-calendar-off" aria-hidden="true" />
-              <p>{t('planning.noEvents')}</p>
+              <p>Aucune intervention ce jour</p>
             </div>
           ) : (
             <div className="day-panel-list">
@@ -246,14 +266,14 @@ export default function Planning() {
                     </span>
                   </div>
                   <p className="planning-ot-meta">
-                    <i className="ti ti-settings" aria-hidden="true" /> {ot.equipement?.nom}
+                    <i className="ti ti-settings" aria-hidden="true" /> {ot.equipement_nom}
                     {' · '}
-                    <i className="ti ti-building" aria-hidden="true" /> {ot.batiment?.nom}
+                    <i className="ti ti-building" aria-hidden="true" /> {ot.batiment_nom}
                   </p>
-                  {ot.technicien ? (
+                  {ot.technicien_nom ? (
                     <p className="planning-ot-tech">
                       <i className="ti ti-user" aria-hidden="true" />
-                      {ot.technicien.prenom} {ot.technicien.nom}
+                      {ot.technicien_prenom} {ot.technicien_nom}
                     </p>
                   ) : (
                     <p className="planning-ot-tech planning-ot-unassigned">
@@ -278,7 +298,7 @@ export default function Planning() {
         </h3>
 
         {monthOTs.length === 0 ? (
-          <p className="planning-month-empty">{t('planning.noEvents')}</p>
+          <p className="planning-month-empty">Aucune intervention ce mois-ci.</p>
         ) : (
           <div className="planning-month-list">
             {monthOTs.map(ot => (
@@ -299,8 +319,10 @@ export default function Planning() {
                 <div className="planning-list-info">
                   <p className="planning-list-titre">{ot.titre}</p>
                   <p className="planning-list-meta">
-                    {ot.equipement?.nom} · {ot.batiment?.nom}
-                    {ot.technicien ? ` · ${ot.technicien.prenom} ${ot.technicien.nom}` : ' · Non assigné'}
+                    {ot.equipement_nom} · {ot.batiment_nom}
+                    {ot.technicien_nom
+                      ? ` · ${ot.technicien_prenom || ''} ${ot.technicien_nom}`
+                      : ' · Non assigné'}
                   </p>
                 </div>
 
