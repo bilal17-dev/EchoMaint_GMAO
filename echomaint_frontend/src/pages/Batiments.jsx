@@ -1,37 +1,61 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Batiments.css'
 
-// Mock clients — à remplacer par GET /clients une fois l'endpoint de Dev 1 disponible
-const mockClients = [
-  { id: 'c1', nom: 'DGS Africa' },
-  { id: 'c2', nom: 'SCI Almadies' },
-  { id: 'c3', nom: 'Logistique SN' },
-  { id: 'c4', nom: 'Agence Sud' },
-]
-
-// Mock bâtiments — modèle v2.1 : client_id (FK vers Client), ville, description
-const mockBatiments = [
-  { id: '1', nom: 'Siège Social DGS Africa', adresse: 'Route de Ngor', ville: 'Dakar', client_id: 'c1', description: '', nb_equipements: 24 },
-  { id: '2', nom: 'Tour Almadies', adresse: 'Route des Almadies', ville: 'Dakar', client_id: 'c2', description: '', nb_equipements: 18 },
-  { id: '3', nom: 'Entrepôt Mbao', adresse: 'Zone industrielle', ville: 'Mbao', client_id: 'c3', description: '', nb_equipements: 42 },
-  { id: '4', nom: 'Immeuble Plateau', adresse: 'Plateau', ville: 'Dakar', client_id: 'c1', description: '', nb_equipements: 15 },
-  { id: '5', nom: 'Agence Thiès', adresse: 'Centre ville', ville: 'Thiès', client_id: 'c4', description: '', nb_equipements: 8 },
-  { id: '6', nom: 'Centre Technique', adresse: 'Almadies', ville: 'Dakar', client_id: 'c1', description: '', nb_equipements: 12 },
-]
+// On importe les vraies fonctions qui parlent au backend
+// Elles remplacent les tableaux mockClients et mockBatiments qui étaient écrits en dur
+import { getBatiments, createBatiment, updateBatiment, deleteBatiment } from '../api/batiments.api'
+import { getClients } from '../api/clients.api'
 
 const ITEMS_PER_PAGE = 6
 
 export default function Batiments() {
   const navigate = useNavigate()
-  const [batiments, setBatiments] = useState(mockBatiments)
-  const [clients] = useState(mockClients)
+
+  // On démarre avec des tableaux vides : les vraies données arrivent via useEffect ci-dessous
+  const [batiments, setBatiments] = useState([])
+  const [clients, setClients] = useState([])
+
+  // États pour gérer le chargement et les erreurs de connexion au backend
+  const [loading, setLoading] = useState(true)
+  const [erreur, setErreur] = useState('')
+
   const [search, setSearch] = useState('')
   const [filterClient, setFilterClient] = useState('')
   const [page, setPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
   const [editBatiment, setEditBatiment] = useState(null)
   const [form, setForm] = useState({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
+
+  // ─── Chargement des données au premier affichage de la page ────────────────
+  // Le tableau vide [] en deuxième argument veut dire :
+  // "exécute cette fonction une seule fois, juste après le premier rendu de la page"
+  useEffect(() => {
+    chargerDonnees()
+  }, [])
+
+  const chargerDonnees = async () => {
+    setLoading(true)
+    setErreur('')
+    try {
+      // On lance les deux requêtes en même temps avec Promise.all
+      // au lieu d'attendre l'une puis l'autre, ce qui est plus rapide
+      const [resBatiments, resClients] = await Promise.all([
+        getBatiments(),
+        getClients()
+      ])
+
+      // Le backend retourne toujours un objet { data: [...] }
+      // on prend juste .data pour récupérer le tableau utile
+      setBatiments(resBatiments.data)
+      setClients(resClients.data)
+    } catch (error) {
+      console.error('Erreur de chargement des bâtiments:', error)
+      setErreur('Impossible de charger les bâtiments. Vérifiez que le serveur backend est démarré.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getClientNom = (clientId) => clients.find(c => c.id === clientId)?.nom || '—'
 
@@ -47,14 +71,21 @@ export default function Batiments() {
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
-  const handleDelete = (id) => {
-    const batiment = batiments.find(b => b.id === id)
-    if (batiment.nb_equipements > 0) {
-      window.alert('Impossible de supprimer ce bâtiment : il a encore des équipements rattachés.')
-      return
-    }
-    if (window.confirm('Supprimer ce bâtiment ?')) {
+  // ─── Suppression connectée au backend ──────────────────────────────────────
+  const handleDelete = async (id) => {
+    if (!window.confirm('Supprimer ce bâtiment ?')) return
+
+    try {
+      // On appelle le vrai endpoint DELETE /batiments/:id
+      // Le backend lui-même vérifie la règle RG-REF-03 :
+      // impossible de supprimer si le bâtiment a encore des équipements actifs
+      await deleteBatiment(id)
       setBatiments(prev => prev.filter(b => b.id !== id))
+    } catch (error) {
+      // Si le backend refuse (équipements rattachés), on affiche son message exact
+      const message = error.response?.data?.message
+        || 'Impossible de supprimer ce bâtiment : il a encore des équipements rattachés.'
+      window.alert(message)
     }
   }
 
@@ -70,29 +101,51 @@ export default function Batiments() {
     setShowModal(true)
   }
 
-  const handleSubmit = (e) => {
+  // ─── Création / modification connectée au backend ──────────────────────────
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (editBatiment) {
-      setBatiments(prev => prev.map(b =>
-        b.id === editBatiment.id
-          ? { ...b, nom: form.nom, adresse: form.adresse, ville: form.ville, client_id: form.client_id, description: form.description }
-          : b
-      ))
-    } else {
-      const newBatiment = {
-        id: Date.now().toString(),
-        nom: form.nom,
-        adresse: form.adresse,
-        ville: form.ville,
-        client_id: form.client_id,
-        description: form.description,
-        nb_equipements: 0
+
+    try {
+      if (editBatiment) {
+        // Modification d'un bâtiment existant
+        const res = await updateBatiment(editBatiment.id, form)
+        setBatiments(prev => prev.map(b =>
+          b.id === editBatiment.id ? res.data : b
+        ))
+      } else {
+        // Création d'un nouveau bâtiment
+        const res = await createBatiment(form)
+        setBatiments(prev => [...prev, res.data])
       }
-      setBatiments(prev => [...prev, newBatiment])
+      setShowModal(false)
+      setEditBatiment(null)
+      setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
+    } catch (error) {
+      const message = error.response?.data?.message || 'Erreur lors de l\'enregistrement.'
+      window.alert(message)
     }
-    setShowModal(false)
-    setEditBatiment(null)
-    setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
+  }
+
+  // ─── Affichage pendant le chargement des données ────────────────────────────
+  if (loading) {
+    return (
+      <div className="batiments">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+          Chargement des bâtiments...
+        </p>
+      </div>
+    )
+  }
+
+  // ─── Affichage en cas d'erreur de connexion au backend ──────────────────────
+  if (erreur) {
+    return (
+      <div className="batiments">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#ef4444' }}>
+          {erreur}
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -163,7 +216,12 @@ export default function Batiments() {
               </div>
 
               <div className="batiment-meta">
-                <span><strong>{batiment.nb_equipements}</strong> équipements</span>
+                {/*
+                  nb_equipements n'existe pas forcément dans la réponse du backend.
+                  On affiche "0" par défaut si le champ n'est pas fourni,
+                  pour éviter une erreur d'affichage (undefined).
+                */}
+                <span><strong>{batiment.nb_equipements ?? 0}</strong> équipements</span>
                 <span>Client: <strong>{getClientNom(batiment.client_id)}</strong></span>
               </div>
 

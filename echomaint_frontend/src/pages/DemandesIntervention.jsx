@@ -1,57 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './DemandesIntervention.css'
 
-// Mock — à remplacer par GET /demandes-intervention (vue admin : toutes les DI)
-const mockDemandes = [
-  {
-    id: 'di1',
-    client: 'DGS Africa',
-    equipement: { id: 'e2', nom: 'Groupe Électrogène' },
-    batiment: 'Siège Social DGS Africa',
-    titre: 'Bruit anormal au démarrage',
-    description: "Le groupe électrogène fait un bruit métallique fort au démarrage depuis hier matin.",
-    priorite: 'haute',
-    statut: 'ouverte',
-    created_at: '2026-06-15T09:20:00',
-    ot_id: null,
-  },
-  {
-    id: 'di2',
-    client: 'SCI Almadies',
-    equipement: { id: 'e3', nom: 'Ascenseur Tour A' },
-    batiment: 'Tour Almadies',
-    titre: "L'ascenseur s'arrête entre deux étages",
-    description: "Plusieurs usagers signalent un arrêt brusque entre le 2e et le 3e étage.",
-    priorite: 'urgente',
-    statut: 'ouverte',
-    created_at: '2026-06-16T14:05:00',
-    ot_id: null,
-  },
-  {
-    id: 'di3',
-    client: 'Logistique SN',
-    equipement: { id: 'e4', nom: 'Pompe à Eau' },
-    batiment: 'Entrepôt Mbao',
-    titre: 'Fuite au niveau du raccord',
-    description: 'Petite fuite visible, flaque au sol près de la pompe.',
-    priorite: 'normale',
-    statut: 'traitee',
-    created_at: '2026-06-10T08:00:00',
-    ot_id: 'OT-2026-0145',
-  },
-  {
-    id: 'di4',
-    client: 'DGS Africa',
-    equipement: { id: 'e1', nom: 'Climatiseur Hall A' },
-    batiment: 'Siège Social DGS Africa',
-    titre: 'Doublon de signalement',
-    description: 'Déjà signalé hier par un autre utilisateur.',
-    priorite: 'basse',
-    statut: 'rejetee',
-    created_at: '2026-06-12T11:30:00',
-    ot_id: null,
-  },
-]
+// On remplace mockDemandes par les vraies fonctions connectées au backend
+import { getDemandes, convertirDemande } from '../api/demandes.api'
 
 const PRIORITES = {
   basse: { label: 'Basse', className: 'prio-basse' },
@@ -73,37 +24,93 @@ function formatDateTime(dateStr) {
 }
 
 export default function DemandesIntervention() {
-  const [demandes, setDemandes] = useState(mockDemandes)
+  const [demandes, setDemandes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [erreur, setErreur] = useState('')
+
   const [search, setSearch] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
+
+  // ─── Chargement initial ───────────────────────────────────────────────────
+  useEffect(() => {
+    chargerDemandes()
+  }, [])
+
+  const chargerDemandes = async () => {
+    setLoading(true)
+    setErreur('')
+    try {
+      const res = await getDemandes()
+      setDemandes(res.data)
+    } catch (error) {
+      console.error('Erreur de chargement des demandes:', error)
+      setErreur('Impossible de charger les demandes d\'intervention.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filtered = demandes.filter(d => {
     const matchSearch =
       d.titre.toLowerCase().includes(search.toLowerCase()) ||
-      d.equipement.nom.toLowerCase().includes(search.toLowerCase()) ||
-      d.client.toLowerCase().includes(search.toLowerCase())
+      (d.equipement_nom || '').toLowerCase().includes(search.toLowerCase()) ||
+      (d.client_nom || '').toLowerCase().includes(search.toLowerCase())
     const matchStatut = filterStatut ? d.statut === filterStatut : true
     return matchSearch && matchStatut
   })
 
+  /**
+   * NOTE IMPORTANTE :
+   * Le backend actuel (DemandeInterventionController.js) n'a PAS d'endpoint
+   * pour rejeter une demande, seulement /convertir.
+   * On garde donc le rejet en mode "non disponible" en attendant
+   * que Sokna ajoute cette route si besoin.
+   */
   const handleRejeter = (id) => {
-    if (!window.confirm('Rejeter cette demande ?')) return
-    // --- Mode mock : PUT /demandes-intervention/:id/statut { statut: 'rejetee' } ---
-    setDemandes(prev => prev.map(d => d.id === id ? { ...d, statut: 'rejetee' } : d))
+    window.alert('Le rejet de demande n\'est pas encore disponible côté backend. Demande à Sokna d\'ajouter PUT /demandes-intervention/:id/statut.')
   }
 
-  const handleConvertir = (id) => {
+  const handleConvertir = async (id) => {
     if (!window.confirm('Convertir cette demande en intervention curative ?')) return
-    // --- Mode mock : POST /demandes-intervention/:id/convertir ---
-    // RG-DI-03 : copie titre/description/priorité, type OT forcé à curatif, DI passe à traitee
-    const fakeOtId = `OT-${Date.now().toString().slice(-6)}`
-    setDemandes(prev => prev.map(d => d.id === id ? { ...d, statut: 'traitee', ot_id: fakeOtId } : d))
+
+    try {
+      // Appel réel à POST /demandes-intervention/:id/convertir
+      // RG-DI-03 : le backend copie titre/description/priorité, force le type à curatif
+      const res = await convertirDemande(id)
+
+      // On met à jour la demande dans la liste avec le lien vers le nouvel OT
+      setDemandes(prev => prev.map(d =>
+        d.id === id ? { ...d, statut: 'traitee', intervention_id: res.data.id } : d
+      ))
+    } catch (error) {
+      const message = error.response?.data?.message || 'Erreur lors de la conversion.'
+      window.alert(message)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="demandes">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+          Chargement des demandes...
+        </p>
+      </div>
+    )
+  }
+
+  if (erreur) {
+    return (
+      <div className="demandes">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#ef4444' }}>
+          {erreur}
+        </p>
+      </div>
+    )
   }
 
   return (
     <div className="demandes">
 
-      {/* Header */}
       <div className="demandes-header">
         <div className="demandes-filters">
           <div className="search-box">
@@ -124,7 +131,6 @@ export default function DemandesIntervention() {
         </div>
       </div>
 
-      {/* Liste */}
       {filtered.length === 0 ? (
         <div className="demandes-empty">
           <i className="ti ti-clipboard-off" aria-hidden="true" />
@@ -133,19 +139,19 @@ export default function DemandesIntervention() {
       ) : (
         <div className="demandes-list">
           {filtered.map(d => {
-            const prioInfo = PRIORITES[d.priorite]
-            const statutInfo = STATUTS[d.statut]
+            const prioInfo = PRIORITES[d.priorite] || PRIORITES.normale
+            const statutInfo = STATUTS[d.statut] || STATUTS.ouverte
             return (
               <div key={d.id} className="demande-card">
                 <div className="demande-card-top">
                   <div className="demande-card-titles">
                     <p className="demande-titre">{d.titre}</p>
                     <p className="demande-meta">
-                      <i className="ti ti-settings" aria-hidden="true" /> {d.equipement.nom}
+                      <i className="ti ti-settings" aria-hidden="true" /> {d.equipement_nom}
                       {' · '}
-                      <i className="ti ti-building" aria-hidden="true" /> {d.batiment}
+                      <i className="ti ti-building" aria-hidden="true" /> {d.batiment_nom || '—'}
                       {' · '}
-                      {d.client}
+                      {d.client_nom}
                     </p>
                   </div>
                   <div className="demande-badges">
@@ -172,10 +178,10 @@ export default function DemandesIntervention() {
                     </div>
                   )}
 
-                  {d.statut === 'traitee' && d.ot_id && (
+                  {d.statut === 'traitee' && d.intervention_id && (
                     <span className="demande-ot-link">
                       <i className="ti ti-link" aria-hidden="true" />
-                      Convertie en {d.ot_id}
+                      Convertie en intervention
                     </span>
                   )}
                 </div>

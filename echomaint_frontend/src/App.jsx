@@ -13,6 +13,7 @@ import Layout from './components/Layout'
 import PrivateRoute from './routes/PrivateRoute'
 import AdminRoute from './routes/AdminRoute'
 import DemandesIntervention from './pages/DemandesIntervention'
+import MaintenancePlans from './pages/MaintenancePlans'
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
             <Route element={<AdminRoute />}>
               <Route path="/utilisateurs" element={<Utilisateurs />} />
               <Route path="/demandes-intervention" element={<DemandesIntervention />} />
+              <Route path="/maintenance-plans" element={<MaintenancePlans />} />
             </Route>
           </Route>
         </Route>

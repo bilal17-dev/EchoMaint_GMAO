@@ -1,9 +1,7 @@
 .layout {
   display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  background: linear-gradient(180deg, #F8FAFF 0%, #F1F5F9 100%);
+  min-height: 100vh;
+  background: #F4F7FC;
 }
 
 .layout-main {
@@ -16,6 +14,6 @@
 
 .layout-content {
   flex: 1;
+  padding: 0 2rem 2rem;
   overflow-y: auto;
-  padding: 1.5rem 2rem;
 }

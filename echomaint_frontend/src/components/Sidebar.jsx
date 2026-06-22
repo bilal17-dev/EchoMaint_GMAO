@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import logo from '../assets/logo.png'
@@ -6,23 +5,23 @@ import { getUser, clearSession } from '../store/auth.store'
 import LanguageSelector from './LanguageSelector'
 import './Sidebar.css'
 
-// Navigation filtrée par rôle
 const NAV_ITEMS_ADMIN = [
-  { to: '/dashboard',              icon: 'ti-layout-dashboard', key: 'nav.dashboard' },
-  { to: '/batiments',              icon: 'ti-building',          key: 'nav.batiments' },
-  { to: '/equipements',            icon: 'ti-cpu',               key: 'nav.equipements' },
-  { to: '/interventions',          icon: 'ti-tool',              key: 'nav.interventions' },
-  { to: '/planning',               icon: 'ti-calendar',          key: 'nav.planning' },
-  { to: '/demandes-intervention',  icon: 'ti-clipboard-list',    key: 'nav.demandes' },
-  { to: '/stats',                  icon: 'ti-chart-bar',         key: 'nav.stats' },
-  { to: '/utilisateurs',           icon: 'ti-users',             key: 'nav.utilisateurs' },
+  { to: '/dashboard',             icon: 'ti-layout-dashboard', key: 'nav.dashboard' },
+  { to: '/batiments',             icon: 'ti-building',          key: 'nav.batiments' },
+  { to: '/equipements',           icon: 'ti-cpu',               key: 'nav.equipements' },
+  { to: '/demandes-intervention', icon: 'ti-clipboard-list',    key: 'nav.demandes' },
+  { to: '/interventions',         icon: 'ti-tool',              key: 'nav.interventions' },
+  { to: '/maintenance-plans',     icon: 'ti-calendar-repeat',   key: 'nav.maintenanceplans' },
+  { to: '/planning',              icon: 'ti-calendar',          key: 'nav.planning' },
+  { to: '/stats',                 icon: 'ti-chart-bar',         key: 'nav.stats' },
+  { to: '/utilisateurs',          icon: 'ti-users',             key: 'nav.utilisateurs' },
 ]
 
 const NAV_ITEMS_TECHNICIEN = [
-  { to: '/dashboard',    icon: 'ti-layout-dashboard', key: 'nav.dashboard' },
-  { to: '/equipements',  icon: 'ti-cpu',               key: 'nav.equipements' },
-  { to: '/interventions',icon: 'ti-tool',              key: 'nav.interventions' },
-  { to: '/planning',     icon: 'ti-calendar',          key: 'nav.planning' },
+  { to: '/dashboard',     icon: 'ti-layout-dashboard', key: 'nav.dashboard' },
+  { to: '/equipements',   icon: 'ti-cpu',               key: 'nav.equipements' },
+  { to: '/interventions', icon: 'ti-tool',              key: 'nav.interventions' },
+  { to: '/planning',      icon: 'ti-calendar',          key: 'nav.planning' },
 ]
 
 const NAV_ITEMS_CLIENT = [
@@ -30,6 +29,7 @@ const NAV_ITEMS_CLIENT = [
   { to: '/batiments',             icon: 'ti-building',          key: 'nav.batiments' },
   { to: '/equipements',           icon: 'ti-cpu',               key: 'nav.equipements' },
   { to: '/demandes-intervention', icon: 'ti-clipboard-list',    key: 'nav.demandes' },
+  { to: '/interventions',         icon: 'ti-tool',              key: 'nav.interventions_client' },
 ]
 
 const NAV_BY_ROLE = {
@@ -48,11 +48,10 @@ function getInitiales(nom = '', prenom = '') {
   return `${(prenom[0] || '').toUpperCase()}${(nom[0] || '').toUpperCase()}` || 'U'
 }
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed, onToggle }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const user = getUser()
-  const [collapsed, setCollapsed] = useState(true)
 
   const navItems = NAV_BY_ROLE[user?.role] || NAV_ITEMS_CLIENT
 
@@ -70,13 +69,12 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="sidebar-logo">
         <img src={logo} alt="EchoMaint" className="sidebar-logo-img" />
-        {!collapsed && <span className="sidebar-logo-text" />}
       </div>
 
       {/* Bouton collapse */}
       <button
         className="sidebar-collapse-btn"
-        onClick={() => setCollapsed(!collapsed)}
+        onClick={onToggle}
         title={collapsed ? 'Ouvrir' : 'Réduire'}
       >
         <i className={`ti ${collapsed ? 'ti-chevrons-right' : 'ti-chevrons-left'}`} aria-hidden="true" />
@@ -106,7 +104,6 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="sidebar-footer">
 
-        {/* Sélecteur de langue (RG-I18N-01) */}
         {!collapsed && (
           <div className="sidebar-lang">
             <LanguageSelector />
@@ -119,9 +116,7 @@ export default function Sidebar() {
             <i className="ti ti-bell" aria-hidden="true" />
             <span className="sidebar-badge">3</span>
           </div>
-          {!collapsed && (
-            <span className="sidebar-link-label">Notifications</span>
-          )}
+          {!collapsed && <span className="sidebar-link-label">Notifications</span>}
         </button>
 
         <div className="sidebar-divider" />

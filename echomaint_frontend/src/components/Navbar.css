@@ -1,124 +1,206 @@
 .navbar {
-  height: 70px;
-  background: transparent;
-  border-bottom: none;
-  display: flex;
-  align-items: center;
-  padding: 1rem 2rem 0;
-  gap: 1rem;
+  padding: 16px 20px 8px;
   flex-shrink: 0;
-  margin-bottom: 0.5rem;
 }
 
+/* Capsule flottante glassmorphism */
+.navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(135deg, #143959 0%, #1a4f7a 100%);
+  border-radius: 20px;
+  padding: 12px 20px;
+  box-shadow:
+    0 8px 32px rgba(20, 57, 89, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 64px;
+}
+
+/* Partie gauche */
 .navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   flex: 1;
+  min-width: 0;
+}
+
+.navbar-hamburger {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.navbar-hamburger:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.navbar-hamburger .ti {
+  font-size: 18px;
+}
+
+.navbar-greeting {
+  min-width: 0;
 }
 
 .navbar-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #1E293B;
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.navbar-firstname {
+  font-weight: 700;
 }
 
 .navbar-subtitle {
-  font-size: 13px;
-  color: #64748B;
-  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Partie droite */
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-/* Fond bleuté pour les boutons topbar */
-.navbar-darkmode,
-.navbar-notif,
-.navbar-profile {
-  background: rgba(241, 245, 249, 0.8);
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  backdrop-filter: blur(8px);
+.navbar-sep {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 4px;
 }
 
-.navbar-darkmode {
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-}
-
-.navbar-darkmode:hover {
-  background: #EFF6FF;
-  border-color: #2563EB;
-}
-
-.navbar-darkmode .ti {
-  font-size: 18px;
-  color: #64748B;
-}
-
-.navbar-notif {
+/* Boutons icône */
+.navbar-icon-btn {
   position: relative;
-  cursor: pointer;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, border-color 0.2s;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.navbar-notif:hover {
-  background: #EFF6FF;
-  border-color: #2563EB;
+.navbar-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
-.navbar-notif .ti {
-  font-size: 20px;
-  color: #64748B;
+.navbar-icon-btn .ti {
+  font-size: 18px;
 }
 
 .navbar-notif-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 16px;
-  height: 16px;
+  top: 5px;
+  right: 5px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
-  background: #ef4444;
+  background: #22C55E;
   color: #ffffff;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1.5px solid #143959;
 }
 
-.navbar-profile {
+/* Sélecteur langue */
+.navbar-lang-wrap {
+  position: relative;
+}
+
+.navbar-lang-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 8px 12px;
   cursor: pointer;
-  padding: 6px 14px;
-  transition: background 0.2s, border-color 0.2s;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+  font-family: 'Inter', sans-serif;
 }
 
-.navbar-profile:hover {
-  background: #EFF6FF;
-  border-color: #2563EB;
+.navbar-lang-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.navbar-lang-btn .ti {
+  font-size: 16px;
+}
+
+.navbar-lang-btn .ti-chevron-down {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* Profil */
+.navbar-profile-wrap {
+  position: relative;
+}
+
+.navbar-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 5px 10px 5px 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.navbar-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.navbar-profile-btn .ti-chevron-down {
+  font-size: 13px;
 }
 
 .navbar-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #2563EB;
+  background: linear-gradient(135deg, #2563EB, #60A5FA);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -126,37 +208,98 @@
   font-weight: 700;
   color: #ffffff;
   flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-.navbar-profile-info {
-  display: flex;
-  flex-direction: column;
+/* Dropdowns */
+.navbar-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.18);
+  border: 1px solid #E2E8F0;
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 1000;
+  animation: dropdownIn 0.15s ease;
 }
 
-.navbar-profile-name {
+.navbar-dropdown-right {
+  left: auto;
+  right: 0;
+  min-width: 200px;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navbar-dropdown-header {
+  padding: 12px 14px 10px;
+}
+
+.navbar-dropdown-name {
   font-size: 13px;
   font-weight: 600;
   color: #1E293B;
-  margin: 0;
+  margin: 0 0 2px;
 }
 
-.navbar-profile-role {
+.navbar-dropdown-role {
   font-size: 11px;
   color: #64748B;
   margin: 0;
 }
 
-.navbar-profile .ti-chevron-down {
-  font-size: 14px;
-  color: #94a3b8;
+.navbar-dropdown-divider {
+  height: 1px;
+  background: #F1F5F9;
+  margin: 4px 0;
 }
 
-.navbar-lang {
+.navbar-dropdown-item {
   display: flex;
   align-items: center;
-  background: rgba(241, 245, 249, 0.8);
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 0 10px;
-  height: 42px;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: #1E293B;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+  text-decoration: none;
+}
+
+.navbar-dropdown-item:hover {
+  background: #F4F7FC;
+}
+
+.navbar-dropdown-item.active {
+  color: #2563EB;
+  font-weight: 600;
+  background: #EFF6FF;
+}
+
+.navbar-dropdown-item .ti {
+  font-size: 15px;
+  color: #64748B;
+}
+
+.navbar-dropdown-logout {
+  color: #ef4444;
+}
+
+.navbar-dropdown-logout .ti {
+  color: #ef4444;
+}
+
+.navbar-dropdown-logout:hover {
+  background: #FEF2F2;
 }

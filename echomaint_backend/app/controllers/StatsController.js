@@ -79,7 +79,127 @@ const StatsController = {
       console.error('[StatsController.kpiResume]', error);
       return res.status(500).json({ message: 'Une erreur serveur est survenue lors de l\'extraction des indicateurs.' });
     }
-  }
+  },
+  /**
+   * GET /api/v1/kpi/par-equipement
+   * Retourne le top 5 des équipements et le top 5 des bâtiments
+   * ayant eu le plus d'interventions curatives sur les 12 derniers mois.
+   * Le "value" retourné est un pourcentage par rapport au total des OT curatifs.
+   */
+  
+  kpiParEquipement: async (req, res) => {
+    try {
+      // On calcule la date d'il y a 12 mois
+      const ilYa12Mois = new Date();
+      ilYa12Mois.setMonth(ilYa12Mois.getMonth() - 12);
+
+      // On compte le nombre total d'OT curatifs sur la période
+      // pour pouvoir calculer un pourcentage juste après
+      const totalCuratifs = await db('interventions')
+        .where({ type: 'curatif' })
+        .where('created_at', '>=', ilYa12Mois)
+        .count('id as total')
+        .first();
+
+      const total = parseInt(totalCuratifs.total) || 1; // évite une division par zéro
+
+      // ─── Top 5 équipements ────────────────────────────────────────────────
+      // On compte le nombre d'OT curatifs par équipement, on trie du plus
+      // grand au plus petit, et on garde seulement les 5 premiers
+      const parEquipementBrut = await db('interventions')
+        .select('equipements.nom')
+        .join('equipements', 'interventions.equipement_id', 'equipements.id')
+        .where('interventions.type', 'curatif')
+        .where('interventions.created_at', '>=', ilYa12Mois)
+        .groupBy('equipements.id', 'equipements.nom')
+        .count('interventions.id as nb')
+        .orderBy('nb', 'desc')
+        .limit(5);
+
+      // On transforme le nombre brut en pourcentage pour chaque équipement
+      const par_equipement = parEquipementBrut.map(item => ({
+        name: item.nom,
+        value: Math.round((item.nb / total) * 1000) / 10 // arrondi à 1 décimale
+      }));
+
+      // ─── Top 5 bâtiments ──────────────────────────────────────────────────
+      const parBatimentBrut = await db('interventions')
+        .select('batiments.nom')
+        .join('equipements', 'interventions.equipement_id', 'equipements.id')
+        .join('batiments', 'equipements.batiment_id', 'batiments.id')
+        .where('interventions.type', 'curatif')
+        .where('interventions.created_at', '>=', ilYa12Mois)
+        .groupBy('batiments.id', 'batiments.nom')
+        .count('interventions.id as nb')
+        .orderBy('nb', 'desc')
+        .limit(5);
+
+      const par_batiment = parBatimentBrut.map(item => ({
+        name: item.nom,
+        value: Math.round((item.nb / total) * 1000) / 10
+      }));
+
+      return res.status(200).json({
+        data: { par_equipement, par_batiment }
+      });
+
+    } catch (error) {
+      console.error('[StatsController.kpiParEquipement]', error);
+      return res.status(500).json({ message: 'Erreur lors du calcul des statistiques par équipement.' });
+    }
+  },
+
+  /**
+   * GET /api/v1/kpi/evolution
+   * Retourne le nombre d'interventions par mois sur les 12 derniers mois,
+   * regroupées en 3 catégories : ouvertes, en cours, clôturées.
+   */
+  kpiEvolution: async (req, res) => {
+    try {
+      const moisLabels = ['Janv.', 'Févr.', 'Mars', 'Avr.', 'Mai', 'Juin',
+                           'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
+
+      const resultats = [];
+      const maintenant = new Date();
+
+      // On boucle sur les 12 derniers mois, du plus ancien au plus récent
+      for (let i = 11; i >= 0; i--) {
+        const dateDebutMois = new Date(maintenant.getFullYear(), maintenant.getMonth() - i, 1);
+        const dateFinMois = new Date(maintenant.getFullYear(), maintenant.getMonth() - i + 1, 0, 23, 59, 59);
+
+        // Statuts "ouvertes" = planifiee + assignee
+        const ouvertes = await db('interventions')
+          .whereIn('statut', ['planifiee', 'assignee'])
+          .whereBetween('created_at', [dateDebutMois, dateFinMois])
+          .count('id as total').first();
+
+        // Statut "en cours"
+        const enCours = await db('interventions')
+          .where('statut', 'en_cours')
+          .whereBetween('created_at', [dateDebutMois, dateFinMois])
+          .count('id as total').first();
+
+        // Statut "clôturées" = terminee
+        const cloturees = await db('interventions')
+          .where('statut', 'terminee')
+          .whereBetween('created_at', [dateDebutMois, dateFinMois])
+          .count('id as total').first();
+
+        resultats.push({
+          month: moisLabels[dateDebutMois.getMonth()],
+          ouvertes: parseInt(ouvertes.total) || 0,
+          enCours: parseInt(enCours.total) || 0,
+          cloturees: parseInt(cloturees.total) || 0,
+        });
+      }
+
+      return res.status(200).json({ data: resultats });
+
+    } catch (error) {
+      console.error('[StatsController.kpiEvolution]', error);
+      return res.status(500).json({ message: 'Erreur lors du calcul de l\'évolution des interventions.' });
+    }
+  },
 };
 
 module.exports = StatsController;

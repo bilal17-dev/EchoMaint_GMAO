@@ -1,43 +1,38 @@
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useState, useEffect } from 'react'
 import './Stats.css'
 
-const mockBatiments = [
-  { id: '1', nom: 'Siège Social DGS Africa' },
-  { id: '2', nom: 'Tour Almadies' },
-  { id: '3', nom: 'Entrepôt Mbao' },
-  { id: '4', nom: 'Immeuble Plateau' },
-]
+// On remplace mockOTs, mockBatiments et mockTechniciens
+// par les vraies fonctions connectées au backend
+import { getInterventions } from '../api/interventions.api'
+import { getBatiments } from '../api/batiments.api'
+import { getTechniciens } from '../api/utilisateurs.api'
 
-const mockTechniciens = [
-  { id: 't1', nom: 'Modou Diop' },
-  { id: 't2', nom: 'Awa Ndiaye' },
-]
-
-const STATUTS = ['a_planifier', 'planifiee', 'assignee', 'en_cours', 'terminee', 'annulee']
+const STATUTS = ['planifiee', 'assignee', 'en_cours', 'terminee', 'annulee']
 const STATUT_LABELS = {
-  a_planifier: 'À planifier', planifiee: 'Planifiée', assignee: 'Assignée',
-  en_cours: 'En cours', terminee: 'Terminée', annulee: 'Annulée',
+  planifiee: 'Planifiée', assignee: 'Assignée', en_cours: 'En cours',
+  terminee: 'Terminée', annulee: 'Annulée',
 }
 const TYPES = ['preventif', 'curatif']
 
-// Mock OT pour export — à remplacer par GET /exports/interventions?format=csv&...
-const mockOTs = [
-  { id: 'ot1', titre: 'Révision filtre climatiseur', type: 'preventif', statut: 'terminee', priorite: 'basse', equipement: 'Climatiseur Hall A', batiment: 'Siège Social DGS Africa', technicien: 'Modou Diop', date_planifiee: '2026-05-28', date_debut_reelle: '2026-05-28', date_fin_reelle: '2026-05-28', duree_reelle_minutes: 45, nb_reouvertures: 0 },
-  { id: 'ot2', titre: 'Panne démarrage groupe', type: 'curatif', statut: 'en_cours', priorite: 'haute', equipement: 'Groupe Électrogène', batiment: 'Siège Social DGS Africa', technicien: 'Awa Ndiaye', date_planifiee: '2026-06-15', date_debut_reelle: '2026-06-15', date_fin_reelle: '', duree_reelle_minutes: '', nb_reouvertures: 0 },
-  { id: 'ot3', titre: 'Contrôle ascenseur', type: 'preventif', statut: 'assignee', priorite: 'moyenne', equipement: 'Ascenseur Tour A', batiment: 'Tour Almadies', technicien: 'Modou Diop', date_planifiee: '2026-06-20', date_debut_reelle: '', date_fin_reelle: '', duree_reelle_minutes: '', nb_reouvertures: 0 },
-  { id: 'ot4', titre: 'Fuite pompe à eau', type: 'curatif', statut: 'a_planifier', priorite: 'haute', equipement: 'Pompe à Eau', batiment: 'Entrepôt Mbao', technicien: '', date_planifiee: '2026-06-22', date_debut_reelle: '', date_fin_reelle: '', duree_reelle_minutes: '', nb_reouvertures: 0 },
-  { id: 'ot5', titre: 'Vérification compresseur', type: 'preventif', statut: 'annulee', priorite: 'basse', equipement: 'Compresseur', batiment: 'Entrepôt Mbao', technicien: 'Awa Ndiaye', date_planifiee: '2026-05-10', date_debut_reelle: '', date_fin_reelle: '', duree_reelle_minutes: '', nb_reouvertures: 0 },
-  { id: 'ot6', titre: 'Maintenance onduleur', type: 'preventif', statut: 'terminee', priorite: 'moyenne', equipement: 'Onduleur', batiment: 'Immeuble Plateau', technicien: 'Modou Diop', date_planifiee: '2026-04-30', date_debut_reelle: '2026-04-30', date_fin_reelle: '2026-04-30', duree_reelle_minutes: 60, nb_reouvertures: 1 },
-]
-
+/**
+ * Exporte les interventions filtrées en fichier CSV directement depuis le navigateur.
+ * C'est un export "côté client" différent de l'export backend /exports/interventions
+ * qui génère le fichier côté serveur avec plus de données.
+ */
 function exportInterventionsCSV(data) {
-  const headers = ['ID', 'Titre', 'Type', 'Statut', 'Priorité', 'Équipement', 'Bâtiment', 'Technicien', 'Date planifiée', 'Date début', 'Date fin', 'Durée (min)', 'Réouvertures']
+  const headers = ['ID', 'Titre', 'Type', 'Statut', 'Priorité', 'Équipement', 'Bâtiment', 'Technicien', 'Date planifiée', 'Durée (min)', 'Réouvertures']
   const rows = data.map(ot => [
-    ot.id, ot.titre, ot.type, ot.statut, ot.priorite,
-    ot.equipement, ot.batiment, ot.technicien || 'Non assigné',
-    ot.date_planifiee, ot.date_debut_reelle, ot.date_fin_reelle,
-    ot.duree_reelle_minutes, ot.nb_reouvertures
+    ot.id,
+    ot.titre,
+    ot.type,
+    ot.statut,
+    ot.priorite,
+    ot.equipement_nom || '—',
+    ot.batiment_nom || '—',
+    ot.technicien_nom ? `${ot.technicien_prenom || ''} ${ot.technicien_nom}`.trim() : 'Non assigné',
+    ot.date_planifiee ? new Date(ot.date_planifiee).toLocaleDateString('fr-FR') : '—',
+    ot.duree_reelle_minutes || '—',
+    ot.reouvertures?.length || 0
   ])
 
   const csv = [headers, ...rows].map(r => r.join(';')).join('\n')
@@ -51,8 +46,11 @@ function exportInterventionsCSV(data) {
 }
 
 export default function Stats() {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useTranslation()
+  const [interventions, setInterventions] = useState([])
+  const [batiments, setBatiments] = useState([])
+  const [techniciens, setTechniciens] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [erreur, setErreur] = useState('')
 
   const [filterStatut, setFilterStatut] = useState('')
   const [filterType, setFilterType] = useState('')
@@ -61,15 +59,63 @@ export default function Stats() {
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
 
-  const filtered = mockOTs.filter(ot => {
-    const matchStatut = filterStatut ? ot.statut === filterStatut : true
-    const matchType = filterType ? ot.type === filterType : true
-    const matchBat = filterBatiment ? mockBatiments.find(b => b.id === filterBatiment)?.nom === ot.batiment : true
-    const matchTech = filterTechnicien ? mockTechniciens.find(t => t.id === filterTechnicien)?.nom === ot.technicien : true
-    const matchDebut = dateDebut ? new Date(ot.date_planifiee) >= new Date(dateDebut) : true
-    const matchFin = dateFin ? new Date(ot.date_planifiee) <= new Date(dateFin) : true
-    return matchStatut && matchType && matchBat && matchTech && matchDebut && matchFin
+  // ─── Chargement initial ───────────────────────────────────────────────────
+  useEffect(() => {
+    chargerDonnees()
+  }, [])
+
+  const chargerDonnees = async () => {
+    setLoading(true)
+    setErreur('')
+    try {
+      // On charge toutes les interventions + bâtiments + techniciens en parallèle
+      const [resInterventions, resBatiments, resTechniciens] = await Promise.all([
+        getInterventions(),
+        getBatiments(),
+        getTechniciens()
+      ])
+
+      setInterventions(resInterventions.data)
+      setBatiments(resBatiments.data)
+      setTechniciens(resTechniciens.data)
+    } catch (error) {
+      console.error('Erreur de chargement des statistiques:', error)
+      setErreur('Impossible de charger les données.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ─── Filtrage côté frontend ───────────────────────────────────────────────
+  const filtered = interventions.filter(ot => {
+    if (filterStatut && ot.statut !== filterStatut) return false
+    if (filterType && ot.type !== filterType) return false
+    if (filterBatiment && ot.batiment_id !== filterBatiment) return false
+    if (filterTechnicien && ot.technicien_id !== filterTechnicien) return false
+    if (dateDebut && new Date(ot.date_planifiee) < new Date(dateDebut)) return false
+    if (dateFin && new Date(ot.date_planifiee) > new Date(dateFin)) return false
+    return true
   })
+
+  if (loading) {
+    return (
+      <div className="stats">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+          Chargement des données...
+        </p>
+      </div>
+    )
+  }
+
+  if (erreur) {
+    return (
+      <div className="stats">
+        <p style={{ textAlign: 'center', padding: '3rem', color: '#ef4444' }}>
+          {erreur}
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="stats">
@@ -92,8 +138,19 @@ export default function Stats() {
             <button
               className="btn-export btn-export-pdf"
               onClick={() => {
-                // GET /exports/interventions?format=pdf&statut=...&type=...&batiment_id=...
-                window.alert('Export PDF : disponible une fois le backend J9 connecté.\nEndpoint : GET /exports/interventions?format=pdf')
+                // Construit les paramètres de filtre pour l'endpoint backend
+                const params = new URLSearchParams()
+                params.set('format', 'pdf')
+                if (filterStatut) params.set('statut', filterStatut)
+                if (filterType) params.set('type', filterType)
+                if (filterBatiment) params.set('batiment_id', filterBatiment)
+                if (filterTechnicien) params.set('technicien_id', filterTechnicien)
+                if (dateDebut) params.set('date_planifiee_debut', dateDebut)
+                if (dateFin) params.set('date_planifiee_fin', dateFin)
+                window.open(
+                  `${import.meta.env.VITE_API_URL}/exports/interventions?${params.toString()}`,
+                  '_blank'
+                )
               }}
             >
               <i className="ti ti-file-type-pdf" aria-hidden="true" />
@@ -114,17 +171,17 @@ export default function Stats() {
           </select>
           <select value={filterBatiment} onChange={e => setFilterBatiment(e.target.value)}>
             <option value="">Tous les bâtiments</option>
-            {mockBatiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
+            {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
           </select>
           <select value={filterTechnicien} onChange={e => setFilterTechnicien(e.target.value)}>
             <option value="">Tous les techniciens</option>
-            {mockTechniciens.map(tech => <option key={tech.id} value={tech.id}>{tech.nom}</option>)}
+            {techniciens.map(tech => <option key={tech.id} value={tech.id}>{tech.prenom} {tech.nom}</option>)}
           </select>
           <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)} title="Date début" />
           <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)} title="Date fin" />
         </div>
 
-        {/* Aperçu du tableau */}
+        {/* Tableau */}
         {filtered.length === 0 ? (
           <p className="stats-empty">Aucune intervention trouvée avec ces filtres.</p>
         ) : (
@@ -159,12 +216,12 @@ export default function Stats() {
                       </span>
                     </td>
                     <td>{ot.priorite}</td>
-                    <td>{ot.equipement}</td>
-                    <td>{ot.batiment}</td>
-                    <td>{ot.technicien || <span style={{ color: '#94a3b8' }}>—</span>}</td>
-                    <td>{ot.date_planifiee || '—'}</td>
+                    <td>{ot.equipement_nom || '—'}</td>
+                    <td>{ot.batiment_nom || '—'}</td>
+                    <td>{ot.technicien_nom ? `${ot.technicien_prenom || ''} ${ot.technicien_nom}`.trim() : <span style={{ color: '#94a3b8' }}>—</span>}</td>
+                    <td>{ot.date_planifiee ? new Date(ot.date_planifiee).toLocaleDateString('fr-FR') : '—'}</td>
                     <td>{ot.duree_reelle_minutes || '—'}</td>
-                    <td className="stats-td-center">{ot.nb_reouvertures}</td>
+                    <td className="stats-td-center">{ot.reouvertures?.length || 0}</td>
                   </tr>
                 ))}
               </tbody>
@@ -173,7 +230,7 @@ export default function Stats() {
         )}
       </div>
 
-      {/* Section export KPI — redirige vers le Dashboard */}
+      {/* Section export KPI */}
       <div className="stats-section stats-section-kpi">
         <div className="stats-section-header">
           <div>
