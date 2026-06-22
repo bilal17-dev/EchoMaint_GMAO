@@ -13,12 +13,22 @@ const TRANSITIONS = {
 };
 
 const InterventionController = {
+  // index optimisé pour le planning (formatage des données)
   index: async (req, res) => {
     try {
       const interventions = await Intervention.findAll(req.query);
-      return res.status(200).json({ data: interventions });
+      
+      // Normalisation des données pour le calendrier (ajout des champs attendus par le front)
+      const formattedData = interventions.map(i => ({
+        ...i,
+        start: i.date_planifiee, 
+        title: i.titre
+      }));
+      
+      return res.status(200).json({ data: formattedData });
     } catch (error) {
-      return res.status(500).json({ message: "Erreur serveur." });
+      console.error('[InterventionController.index]', error);
+      return res.status(500).json({ message: "Erreur serveur lors de la récupération." });
     }
   },
 
@@ -44,17 +54,23 @@ const InterventionController = {
 
       if (typeNettoye === 'curatif') await Equipement.update(equipement_id, { statut: 'en_panne' });
 
+      // Gestion sécurisée de la date
+      let datePlanifiee = date_planifiee ? new Date(date_planifiee) : new Date();
+      if (isNaN(datePlanifiee.getTime())) {
+        return res.status(400).json({ message: "Format de date invalide." });
+      }
+
       const intervention = await Intervention.create({
         id: uuidv4(), titre, description, type: typeNettoye,
         priorite: priorite || 'normale',
         statut: technicien_id ? 'assignee' : 'planifiee',
-        date_planifiee: date_planifiee ? new Date(date_planifiee) : new Date(),
+        date_planifiee: datePlanifiee,
         equipement_id, technicien_id: technicien_id || null, plan_maintenance_id: plan_maintenance_id || null
       });
 
       return res.status(201).json({ data: intervention, message: "Demande créée avec succès." });
     } catch (error) {
-      console.error(error);
+      console.error('[InterventionController.store]', error);
       return res.status(500).json({ message: "Erreur serveur." });
     }
   },
@@ -79,6 +95,7 @@ const InterventionController = {
 
       return res.status(200).json({ message: "Intervention clôturée." });
     } catch (error) {
+      console.error('[InterventionController.cloturer]', error);
       return res.status(500).json({ message: "Erreur serveur." });
     }
   },
@@ -91,11 +108,11 @@ const InterventionController = {
       await db('interventions').where({ id }).delete();
       return res.status(200).json({ message: "Supprimé avec succès." });
     } catch (error) {
+      console.error('[InterventionController.destroy]', error);
       return res.status(500).json({ message: "Erreur serveur lors de la suppression." });
     }
   },
 
-  // Méthodes ajoutées pour satisfaire les routes et permettre le démarrage du serveur
   telechargerRapport: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
   recupererPhotos: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
   assigner: async (req, res) => res.status(501).json({ message: "Non implémenté" }),
