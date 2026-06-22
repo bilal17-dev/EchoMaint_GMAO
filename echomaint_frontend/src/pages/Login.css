@@ -120,7 +120,7 @@
 }
 
 .logo-img {
-  height: 5Opx;
+  height: 100px;
   object-fit: contain;
 }
 
@@ -244,7 +244,7 @@
 }
 
 .login-btn {
-  background: #2563EB;
+  background: #143959;
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -257,7 +257,7 @@
 }
 
 .login-btn:hover {
-  background: #0F172A;
+  background: #143F59;
 }
 
 .login-btn:disabled {

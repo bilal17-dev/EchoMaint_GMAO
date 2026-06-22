@@ -30,10 +30,10 @@
 
 .sidebar-logo-img {
   width: 200px;
-  height: 36px;
+  height: 80px;
   object-fit: contain;
   flex-shrink: 0;
-  margin-left: 0%;
+  margin-right: 0%;
 }
 
 .sidebar-logo-text {

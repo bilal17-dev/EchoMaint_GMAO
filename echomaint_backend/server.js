@@ -22,6 +22,7 @@ const clientRoutes       = require('./app/routes/client.routes');
 const demandeRoutes      = require('./app/routes/demande.routes');
 const planningRoutes     = require('./app/routes/planning.routes');
 const utilisateurRoutes = require('./app/routes/utilisateur.routes');
+const planMaintenanceRoutes = require('./app/routes/planMaintenance.routes')
 
 // On crée l'application Express
 const app = express();
@@ -83,6 +84,7 @@ app.use(`${API_BASE}/clients`,      clientRoutes);
 app.use(`${API_BASE}/demandes`,     demandeRoutes);
 app.use(`${API_BASE}/planning`,     planningRoutes);
 app.use(`${API_BASE}/utilisateurs`, utilisateurRoutes);
+app.use(`${API_BASE}/plans-maintenance`, planMaintenanceRoutes);
 
 // Route de test générique
 app.get('/', (req, res) => {

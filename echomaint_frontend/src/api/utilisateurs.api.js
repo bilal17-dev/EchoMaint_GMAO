@@ -1,24 +1,40 @@
-// On importe l'instance Axios déjà configurée
-import api from './axios.config';
+import api from './axios.config'
 
-// Récupère tous les utilisateurs (admin uniquement)
-export const getUtilisateurs = async () => (await api.get('/utilisateurs')).data;
+// Mock de secours — à retirer dès que Dev 1 monte la route /utilisateurs dans server.js
+const mockUtilisateurs = [
+  { id: 'u1', nom: 'Diop', prenom: 'Aishatou', email: 'admin@dgsafrica.com', role: 'admin', actif: true },
+  { id: 'u2', nom: 'Diop', prenom: 'Modou', email: 'tech1@dgsafrica.com', role: 'technicien', actif: true },
+  { id: 'u3', nom: 'Ndiaye', prenom: 'Awa', email: 'tech2@dgsafrica.com', role: 'technicien', actif: true },
+  { id: 'u4', nom: 'Sall', prenom: 'Omar', email: 'client1@dgsafrica.com', role: 'client', actif: true },
+]
 
-// Récupère uniquement la liste des techniciens (utile pour assigner une intervention)
-export const getTechniciens = async () => (await api.get('/utilisateurs/techniciens')).data;
+export async function getUtilisateurs() {
+  try {
+    const res = await api.get('/utilisateurs')
+    return res.data
+  } catch (err) {
+    console.warn('[MOCK] /utilisateurs non disponible, données mockées utilisées.')
+    return { data: mockUtilisateurs }
+  }
+}
 
-// Récupère un utilisateur précis
-export const getUtilisateur = async (id) => (await api.get(`/utilisateurs/${id}`)).data;
+export async function createUtilisateur(data) {
+  try {
+    const res = await api.post('/utilisateurs', data)
+    return res.data
+  } catch (err) {
+    // Mock : simule une création
+    console.warn('[MOCK] Création utilisateur simulée.')
+    return { data: { id: `u${Date.now()}`, ...data, actif: true } }
+  }
+}
 
-// Crée un nouvel utilisateur (admin uniquement)
-// data doit contenir : nom, prenom, email, password, role
-export const createUtilisateur = async (data) => (await api.post('/utilisateurs', data)).data;
-
-// Modifie un utilisateur existant
-export const updateUtilisateur = async (id, data) => (await api.put(`/utilisateurs/${id}`, data)).data;
-
-// Supprime un utilisateur
-export const deleteUtilisateur = async (id) => (await api.delete(`/utilisateurs/${id}`)).data;
-
-// Change la langue préférée d'un utilisateur (fr ou en)
-export const updateLangue = async (id, langue) => (await api.put(`/utilisateurs/${id}/langue`, { langue })).data;
+export async function updateUtilisateur(id, data) {
+  try {
+    const res = await api.put(`/utilisateurs/${id}`, data)
+    return res.data
+  } catch (err) {
+    console.warn('[MOCK] Mise à jour utilisateur simulée.')
+    return { data: { id, ...data } }
+  }
+}

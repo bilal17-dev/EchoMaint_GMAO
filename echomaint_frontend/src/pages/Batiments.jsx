@@ -26,6 +26,7 @@ export default function Batiments() {
   const [showModal, setShowModal] = useState(false)
   const [editBatiment, setEditBatiment] = useState(null)
   const [form, setForm] = useState({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
+  const user = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
 
   // ─── Chargement des données au premier affichage de la page ────────────────
   // Le tableau vide [] en deuxième argument veut dire :
@@ -173,14 +174,16 @@ export default function Batiments() {
             ))}
           </select>
         </div>
-        <button className="btn-primary" onClick={() => {
-          setEditBatiment(null)
-          setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
-          setShowModal(true)
-        }}>
-          <i className="ti ti-plus" aria-hidden="true" />
-          Nouveau bâtiment
-        </button>
+        {user.role === 'admin' && (
+          <button className="btn-primary" onClick={() => {
+            setEditBatiment(null)
+            setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
+            setShowModal(true)
+          }}>
+            <i className="ti ti-plus" aria-hidden="true" />
+            Nouveau bâtiment
+          </button>
+        )}
       </div>
 
       {/* Grille */}
@@ -198,12 +201,16 @@ export default function Batiments() {
                   <i className="ti ti-building" aria-hidden="true" />
                 </div>
                 <div className="batiment-actions">
-                  <button onClick={() => handleEdit(batiment)} title="Modifier">
-                    <i className="ti ti-edit" aria-hidden="true" />
-                  </button>
-                  <button onClick={() => handleDelete(batiment.id)} title="Supprimer" className="btn-danger">
-                    <i className="ti ti-trash" aria-hidden="true" />
-                  </button>
+                  {user.role === 'admin' && (
+                    <>
+                      <button onClick={() => handleEdit(batiment)} title="Modifier">
+                        <i className="ti ti-edit" aria-hidden="true" />
+                      </button>
+                      <button onClick={() => handleDelete(batiment.id)} title="Supprimer" className="btn-danger">
+                        <i className="ti ti-trash" aria-hidden="true" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
