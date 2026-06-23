@@ -21,7 +21,9 @@ const statsRoutes        = require('./app/routes/stats.routes');
 const clientRoutes       = require('./app/routes/client.routes');
 const demandeRoutes      = require('./app/routes/demande.routes');
 const planningRoutes     = require('./app/routes/planning.routes');
-const utilisateurRoutes = require('./app/routes/utilisateur.routes');
+const utilisateurRoutes  = require('./app/routes/utilisateur.routes');
+// Ajout de la route pour les plans de maintenance
+const planRoutes         = require('./app/routes/planMaintenance.routes');
 
 // On crée l'application Express
 const app = express();
@@ -78,6 +80,7 @@ app.use(`${API_BASE}/auth`,         authRoutes);
 app.use(`${API_BASE}/batiments`,    batimentRoutes);
 app.use(`${API_BASE}/equipements`,  equipementRoutes);
 app.use(`${API_BASE}/interventions`, interventionRoutes);
+app.use(`${API_BASE}/plans`,        planRoutes); // Ajouté ici
 app.use(`${API_BASE}/kpi`,          statsRoutes);
 app.use(`${API_BASE}/clients`,      clientRoutes);
 app.use(`${API_BASE}/demandes`,     demandeRoutes);
@@ -92,7 +95,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Gestion des routes inconnues (DEBUG AJOUTÉ ICI)
+// Gestion des routes inconnues
 app.use((req, res) => {
   console.log(`[DEBUG 404] Route non trouvée tentée : ${req.method} ${req.originalUrl}`);
   res.status(404).json({ 
