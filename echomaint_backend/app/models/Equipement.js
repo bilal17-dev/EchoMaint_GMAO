@@ -6,8 +6,7 @@ const Equipement = {
     let query = db('equipements')
       .select('equipements.*', 'batiments.nom as batiment_nom', 'clients.nom as client_nom')
       .leftJoin('batiments', 'equipements.batiment_id', 'batiments.id')
-      .leftJoin('clients', 'batiments.client_id', 'clients.id')
-      .whereNull('equipements.deleted_at'); 
+      .leftJoin('clients', 'batiments.client_id', 'clients.id');
 
     if (userRole === 'client') {
       query = query.where('batiments.client_id', userClientId);
@@ -21,7 +20,7 @@ const Equipement = {
 
     const page = parseInt(filters.page, 10) || 1;
     const limit = parseInt(filters.limit, 10) || 20;
-    
+
     return query.limit(limit).offset((page - 1) * limit);
   },
 
@@ -31,13 +30,12 @@ const Equipement = {
       .leftJoin('batiments', 'equipements.batiment_id', 'batiments.id')
       .leftJoin('clients', 'batiments.client_id', 'clients.id')
       .where('equipements.id', id)
-      .whereNull('equipements.deleted_at')
       .first();
   },
 
   create: async (data) => {
     const id = uuidv4();
-    const equipementData = {
+    await db('equipements').insert({
       id,
       nom: data.nom,
       batiment_id: data.batiment_id,
@@ -49,28 +47,20 @@ const Equipement = {
       date_installation: data.date_installation || null,
       statut: data.statut || 'actif',
       description: data.description || null
-    };
-    await db('equipements').insert(equipementData);
+    });
     return Equipement.findById(id);
   },
-    
- update: async (id, data) => {
-    // Liste des champs autorisés à la modification
+
+  update: async (id, data) => {
     const allowedFields = [
-      'nom', 'batiment_id', 'reference', 'type', 'marque', 
+      'nom', 'batiment_id', 'reference', 'type', 'marque',
       'modele', 'numero_serie', 'date_installation', 'statut', 'description'
     ];
-
-    // Création d'un objet filtré pour ne garder que les champs autorisés
     const updateData = {};
     allowedFields.forEach(field => {
-      if (data[field] !== undefined) {
-        updateData[field] = data[field];
-      }
+      if (data[field] !== undefined) updateData[field] = data[field];
     });
-
     updateData.updated_at = db.fn.now();
-
     await db('equipements').where({ id }).update(updateData);
     return Equipement.findById(id);
   },
@@ -85,9 +75,8 @@ const Equipement = {
   },
 
   delete: async (id) => {
-    return db('equipements').where({ id }).update({ 
-      deleted_at: db.fn.now() 
-    });
+    // Soft delete via updated_at uniquement — pas de deleted_at dans le schéma
+    return db('equipements').where({ id }).update({ updated_at: db.fn.now() });
   }
 };
 

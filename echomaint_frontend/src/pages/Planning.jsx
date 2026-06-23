@@ -75,10 +75,7 @@ export default function Planning() {
 
   // ─── Chargement du planning à chaque changement de mois ou de filtre ─────
   // Le backend reçoit la période via date_debut et date_fin
-  useEffect(() => {
-    chargerPlanning()
-  }, [viewYear, viewMonth, filterBatiment, filterTechnicien, filterStatut])
-
+  
   const chargerPlanning = async () => {
   setLoading(true)
   setErreur('')
@@ -103,6 +100,10 @@ export default function Planning() {
     setLoading(false)
   }
   }
+  useEffect(() => {
+    chargerPlanning()
+  }, [viewYear, viewMonth, filterBatiment, filterTechnicien, filterStatut])
+
 
   const prevMonth = () => {
     if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }

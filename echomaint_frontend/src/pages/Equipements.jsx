@@ -46,32 +46,35 @@ export default function Equipements() {
   // ─── Chargement des données au montage de la page ──────────────────────────
   // useEffect avec un tableau vide [] en deuxième argument signifie :
   // "exécute cette fonction une seule fois, quand la page s'affiche pour la première fois"
-  useEffect(() => {
-    chargerDonnees()
-  }, [])
-
   const chargerDonnees = async () => {
-    setLoading(true)
-    setErreur('')
-    try {
-      // On lance les deux requêtes en parallèle avec Promise.all
-      // pour ne pas attendre l'une puis l'autre, mais les deux en même temps
-      const [resEquipements, resBatiments] = await Promise.all([
-        getEquipements(),
-        getBatiments()
-      ])
+  setLoading(true)
+  setErreur('')
+  try {
+    const [resEquipements, resBatiments] = await Promise.all([
+      getEquipements(),
+      getBatiments()
+    ])
 
-      // Le backend retourne toujours { data: [...] }
-      // donc on prend .data pour récupérer juste le tableau
-      setEquipements(resEquipements.data)
-      setBatiments(resBatiments.data)
-    } catch (error) {
-      console.error('Erreur de chargement des équipements:', error)
-      setErreur('Impossible de charger les équipements. Vérifiez que le serveur backend est démarré.')
-    } finally {
-      setLoading(false)
-    }
+    const equips = Array.isArray(resEquipements)       ? resEquipements
+                 : Array.isArray(resEquipements?.data)  ? resEquipements.data
+                 : []
+    const bats   = Array.isArray(resBatiments)         ? resBatiments
+                 : Array.isArray(resBatiments?.data)    ? resBatiments.data
+                 : []
+
+    setEquipements(equips)
+    setBatiments(bats)
+  } catch (error) {
+    console.error('Erreur de chargement des équipements:', error)
+    setErreur('Impossible de charger les équipements.')
+  } finally {
+    setLoading(false)
   }
+}
+
+useEffect(() => {
+  chargerDonnees()
+}, [])
 
   const getBatimentNom = (id) => batiments.find(b => b.id === id)?.nom || '—'
   const getStatutInfo = (statut) => STATUTS.find(s => s.value === statut) || STATUTS[0]

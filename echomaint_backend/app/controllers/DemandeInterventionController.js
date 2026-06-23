@@ -14,7 +14,7 @@ const DemandeInterventionController = {
       // Si l'utilisateur connecté est un client, il ne voit QUE ses propres demandes
       const filtres = {};
       if (req.user.role === 'client') {
-        filtres.client_id = req.user.client_id; // ID de son entreprise stocké dans son compte user
+        filtres.client_id = req.user.id_client; // ID de son entreprise stocké dans son compte user
       } else {
         // Si c'est l'admin, il peut filtrer par les query params de l'URL
         if (req.query.statut) filtres.statut = req.query.statut;
@@ -40,7 +40,7 @@ const DemandeInterventionController = {
       }
 
       // Sécurité : Un client ne peut pas voir la DI d'une autre entreprise
-      if (req.user.role === 'client' && demande.client_id !== req.user.client_id) {
+      if (req.user.role === 'client' && demande.client_id !== req.user.id_client) {
         return res.status(403).json({ message: res.translate('forbidden') });
       }
 
@@ -64,7 +64,7 @@ const DemandeInterventionController = {
       }
 
       // Récupération sécurisée du client_id de l'entreprise (via le user authentifié)
-      const client_id = req.user.client_id;
+      const client_id = req.user.id_client;
       if (!client_id && req.user.role === 'client') {
         return res.status(400).json({ message: 'Votre compte utilisateur n\'est rattaché à aucune entreprise cliente.' });
       }
@@ -76,7 +76,7 @@ const DemandeInterventionController = {
         titre,
         description,
         priorite: priorite || 'normale',
-        statut: 'en_attente' // Forcé à la création
+        statut: 'ouverte' // Forcé à la création
       };
 
       const resultat = await DemandeIntervention.create(nouvelleDI);
@@ -107,18 +107,18 @@ const DemandeInterventionController = {
         return res.status(404).json({ message: res.translate('not_found') });
       }
 
-      if (demande.statut !== 'en_attente') {
+      if (demande.statut !== 'ouverte') {
         return res.status(422).json({ message: `Impossible de rejeter une demande déjà traitée (Statut actuel: ${demande.statut}).` });
       }
 
       const miseAJour = await DemandeIntervention.update(req.params.id, {
-        statut: 'rejettee',
+        statut: 'rejetee',
         motif_rejet: motif_rejet.trim()
       });
 
       return res.status(200).json({ 
         data: miseAJour, 
-        message: res.translate('di_rejetee') 
+        message: res.translate('di_rejettee') 
       });
     } catch (error) {
       console.error('[DemandeInterventionController.rejeter]', error);
@@ -140,7 +140,7 @@ const DemandeInterventionController = {
         return res.status(404).json({ message: res.translate('not_found') });
       }
 
-      if (demande.statut !== 'en_attente') {
+      if (demande.statut !== 'ouverte') {
         await transaction.rollback();
         return res.status(422).json({ message: 'Cette demande a déjà été traitée.' });
       }
@@ -167,7 +167,7 @@ const DemandeInterventionController = {
       await transaction('demandes_intervention')
         .where({ id: req.params.id })
         .update({
-          statut: 'validee',
+          statut: 'traitee',
           intervention_id: interventionId,
           updated_at: new Date()
         });

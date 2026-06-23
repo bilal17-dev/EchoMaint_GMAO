@@ -61,7 +61,7 @@ const AuthController = {
         return res.status(403).json({ message: res.translate('compte_desactive') });
       }
 
-      const valide = await User.verifierMotDePasse(passwordSaisi, user.mot_de_passe);
+      const valide = await User.verifierMotDePasse(passwordSaisi, user.password_hash);
       if (!valide) {
         return res.status(401).json({ message: res.translate('mot_de_passe_incorrect') });
       }

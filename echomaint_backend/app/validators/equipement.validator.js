@@ -21,9 +21,9 @@ const validerEquipement = (req, res, next) => {
   }
 
   // 4. Validation du statut (ALIGNÉ AVEC TES NOUVEAUX ENUM SQL)
-  const statutsAutorises = ['en_service', 'en_panne', 'hors_service'];
+  const statutsAutorises = ['actif', 'en_panne', 'hors_service'];
   if (statut && !statutsAutorises.includes(statut)) {
-    erreurs.push('Le statut doit être : en_service, en_panne, ou hors_service.');
+    erreurs.push('Le statut doit être : actif, en_panne, ou hors_service.');
   }
 
   // S'il y a des erreurs, on bloque la requête

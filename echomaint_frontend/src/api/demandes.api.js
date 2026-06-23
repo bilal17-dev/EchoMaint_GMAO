@@ -1,16 +1,15 @@
-// On importe l'instance Axios déjà configurée
 import api from './axios.config';
 
-// Récupère toutes les demandes d'intervention
-// Un admin voit toutes les demandes, un client ne voit que les siennes (géré côté backend)
-export const getDemandes = async () => (await api.get('/demandes')).data;
+// Admin : toutes les DI | Client : uniquement les siennes (filtré par le backend)
+export const getDemandes = async () => (await api.get('/demandes-intervention')).data;
 
-// Récupère une seule demande précise
-export const getDemande = async (id) => (await api.get(`/demandes/${id}`)).data;
+export const getDemande = async (id) => (await api.get(`/demandes-intervention/${id}`)).data;
 
-// Crée une nouvelle demande d'intervention (utilisé par un client qui signale une panne)
-// data doit contenir : equipement_id, titre, description, priorite (optionnel)
-export const createDemande = async (data) => (await api.post('/demandes', data)).data;
+// Client : soumettre une nouvelle DI
+export const creerDemande = async (data) => (await api.post('/demandes-intervention', data)).data;
 
-// Convertit une demande en ordre de travail curatif (admin uniquement)
-export const convertirDemande = async (id) => (await api.post(`/demandes/${id}/convertir`)).data;
+// Admin : convertir une DI en OT curatif
+export const convertirDemande = async (id) => (await api.post(`/demandes-intervention/${id}/valider`)).data;
+
+// Admin : rejeter une DI avec motif
+export const rejeterDemande = async (id, motif_rejet) => (await api.post(`/demandes-intervention/${id}/rejeter`, { motif_rejet })).data;

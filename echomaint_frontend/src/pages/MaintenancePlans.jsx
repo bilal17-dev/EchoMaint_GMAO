@@ -54,7 +54,7 @@ export default function MaintenancePlans() {
   const [periodiciteMode,setPeriodiciteMode]= useState(30)
 
   // ── Chargement (une seule fois) ─────────────────────────────────────────────
-  useEffect(() => { charger() }, [])
+  
 
   const charger = async () => {
     setLoading(true)
@@ -95,6 +95,8 @@ export default function MaintenancePlans() {
       setLoading(false)
     }
   }
+
+  useEffect(() => { charger() }, [])
 
   // ── Gestion des tâches ───────────────────────────────────────────────────────
   const ajouterTache = () =>

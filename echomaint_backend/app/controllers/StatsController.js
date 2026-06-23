@@ -40,13 +40,13 @@ const StatsController = {
 
       const ot_en_retard = await baseQuery.clone()
         .where('interventions.date_planifiee', '<', db.fn.now())
-        .whereIn('interventions.statut', ['a_planifier', 'assignee', 'en_cours'])
+        .whereIn('interventions.statut', ['planifiee', 'assignee', 'en_cours'])
         .count('interventions.id as total').first();
 
       let equipQuery = db('equipements')
         .join('batiments', 'equipements.batiment_id', 'batiments.id')
         .where('equipements.statut', 'en_panne')
-        .whereNull('equipements.deleted_at');
+        
 
       if (batiment_id) equipQuery = equipQuery.where('equipements.batiment_id', batiment_id);
       if (role === 'client') equipQuery = equipQuery.where('batiments.client_id', id_client);

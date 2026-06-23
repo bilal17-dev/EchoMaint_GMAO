@@ -36,9 +36,7 @@ export default function FicheEquipement() {
   // ─── Chargement des données quand l'id change dans l'URL ────────────────────
   // Le tableau [id] en dépendance signifie : recharge à chaque fois que l'id
   // de l'équipement dans l'URL change (navigation d'une fiche à une autre)
-  useEffect(() => {
-    chargerFiche()
-  }, [id])
+  
 
   const chargerFiche = async () => {
     setLoading(true)
@@ -60,6 +58,9 @@ export default function FicheEquipement() {
       setLoading(false)
     }
   }
+  useEffect(() => {
+    chargerFiche()
+  }, [id])
 
   if (loading) {
     return (

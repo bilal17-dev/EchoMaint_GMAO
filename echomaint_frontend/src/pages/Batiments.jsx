@@ -31,32 +31,37 @@ export default function Batiments() {
   // ─── Chargement des données au premier affichage de la page ────────────────
   // Le tableau vide [] en deuxième argument veut dire :
   // "exécute cette fonction une seule fois, juste après le premier rendu de la page"
-  useEffect(() => {
-    chargerDonnees()
-  }, [])
-
   const chargerDonnees = async () => {
     setLoading(true)
     setErreur('')
     try {
-      // On lance les deux requêtes en même temps avec Promise.all
-      // au lieu d'attendre l'une puis l'autre, ce qui est plus rapide
       const [resBatiments, resClients] = await Promise.all([
         getBatiments(),
         getClients()
       ])
 
-      // Le backend retourne toujours un objet { data: [...] }
-      // on prend juste .data pour récupérer le tableau utile
-      setBatiments(resBatiments.data)
-      setClients(resClients.data)
+      const bats    = Array.isArray(resBatiments)       ? resBatiments
+                    : Array.isArray(resBatiments?.data)  ? resBatiments.data
+                    : []
+      const clients = Array.isArray(resClients)         ? resClients
+                    : Array.isArray(resClients?.data)    ? resClients.data
+                    : []
+
+      setBatiments(bats)
+      setClients(clients)
     } catch (error) {
       console.error('Erreur de chargement des bâtiments:', error)
-      setErreur('Impossible de charger les bâtiments. Vérifiez que le serveur backend est démarré.')
+      setErreur('Impossible de charger les bâtiments.')
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    chargerDonnees()
+  }, [])
+
+  
 
   const getClientNom = (clientId) => clients.find(c => c.id === clientId)?.nom || '—'
 

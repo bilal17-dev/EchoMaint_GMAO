@@ -58,9 +58,7 @@ export default function Interventions() {
   })
   const [erreurs, setErreurs] = useState([])
 
-  useEffect(() => {
-    chargerDonnees()
-  }, [])
+  
 
   const chargerDonnees = async () => {
     setLoading(true)
@@ -85,6 +83,10 @@ export default function Interventions() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    chargerDonnees()
+  }, [])
 
   const filtered = interventions.filter(i => {
     if (filterStatut && i.statut !== filterStatut) return false

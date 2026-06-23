@@ -393,7 +393,7 @@ function DashboardClient() {
   const [loading,        setLoading]        = useState(true)
   const [erreur,         setErreur]         = useState('')
 
-  useEffect(() => { charger() }, [])
+  
 
   const charger = async () => {
     setLoading(true)
@@ -416,6 +416,7 @@ function DashboardClient() {
       setLoading(false)
     }
   }
+  useEffect(() => { charger() }, [])
 
   if (loading) return <div className="dashboard"><p className="dashboard-message">Chargement…</p></div>
   if (erreur)  return <div className="dashboard"><p className="dashboard-message dashboard-message--error">{erreur}</p></div>

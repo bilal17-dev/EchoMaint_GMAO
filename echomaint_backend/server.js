@@ -83,7 +83,7 @@ app.use(`${API_BASE}/interventions`, interventionRoutes);
 app.use(`${API_BASE}/plans-maintenance`, planMaintenanceRoutes); // Ajouté ici
 app.use(`${API_BASE}/kpi`,          statsRoutes);
 app.use(`${API_BASE}/clients`,      clientRoutes);
-app.use(`${API_BASE}/demandes`,     demandeRoutes);
+app.use(`${API_BASE}/demandes-intervention`,     demandeRoutes);
 app.use(`${API_BASE}/planning`,     planningRoutes);
 app.use(`${API_BASE}/utilisateurs`, utilisateurRoutes);
 
