@@ -5,10 +5,11 @@
 exports.up = function(knex) {
   return knex.schema.createTable('clients', (table) => {
     table.uuid('id').primary().defaultTo(knex.fn.uuid());
-    table.string('nom', 150).notNullable();
-    table.string('adresse', 255).nullable();
-    table.string('telephone', 50).nullable();
-    table.timestamps(true, true);
+    table.string('nom').notNullable();
+    table.string('email_contact').nullable();
+    table.string('telephone').nullable();
+    table.string('adresse').nullable();
+    table.timestamp('created_at').defaultTo(knex.fn.now());
   });
 };
 
