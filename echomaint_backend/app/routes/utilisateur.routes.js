@@ -1,11 +1,12 @@
-const express = require('express');
-const router = express.Router();
-const UtilisateurController = require('../controllers/UtilisateurController');
-const auth = require('../middlewares/auth'); // Optionnel : pour protéger la création
+const express = require('express')
+const router  = express.Router()
+const UtilisateurController = require('../controllers/UtilisateurController')
+const auth    = require('../middlewares/auth')
+const isAdmin = require('../middlewares/isAdmin')
 
-// Route POST pour créer un technicien
-router.post('/', UtilisateurController.store);
-//  Route GET pour récupérer les techniciens (utilisée par le frontend)
-router.get('/techniciens', UtilisateurController.getTechniciens);
+router.get('/',              auth, isAdmin, UtilisateurController.index)
+router.get('/techniciens',   auth,          UtilisateurController.getTechniciens)
+router.post('/',             auth, isAdmin, UtilisateurController.store)
+router.put('/:id',           auth, isAdmin, UtilisateurController.update)
 
-module.exports = router;
+module.exports = router

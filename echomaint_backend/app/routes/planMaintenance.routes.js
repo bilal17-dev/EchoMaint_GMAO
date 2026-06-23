@@ -8,5 +8,6 @@ const isAdmin = require('../middlewares/isAdmin');
 router.get('/', auth, PlanController.index);
 router.post('/', auth, isAdmin, PlanController.store);
 router.delete('/:id', auth, isAdmin, PlanController.destroy);
+router.put('/:id', auth, isAdmin, PlanController.update);
 
 module.exports = router;
