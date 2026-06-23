@@ -2,7 +2,6 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import logo from '../assets/logo.png'
 import { getUser, clearSession } from '../store/auth.store'
-import LanguageSelector from './LanguageSelector'
 import './Sidebar.css'
 
 const NAV_ITEMS_ADMIN = [
@@ -48,7 +47,7 @@ function getInitiales(nom = '', prenom = '') {
   return `${(prenom[0] || '').toUpperCase()}${(nom[0] || '').toUpperCase()}` || 'U'
 }
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const user = getUser()
@@ -72,13 +71,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       </div>
 
       {/* Bouton collapse */}
-      <button
-        className="sidebar-collapse-btn"
-        onClick={onToggle}
-        title={collapsed ? 'Ouvrir' : 'Réduire'}
-      >
-        <i className={`ti ${collapsed ? 'ti-chevrons-right' : 'ti-chevrons-left'}`} aria-hidden="true" />
-      </button>
+      
 
       {/* Navigation */}
       <nav className="sidebar-nav">
@@ -104,22 +97,8 @@ export default function Sidebar({ collapsed, onToggle }) {
       {/* Footer */}
       <div className="sidebar-footer">
 
-        {!collapsed && (
-          <div className="sidebar-lang">
-            <LanguageSelector />
-          </div>
-        )}
-
-        {/* Notifications */}
-        <button className="sidebar-link sidebar-notif" title={collapsed ? 'Notifications' : ''}>
-          <div className="sidebar-link-icon">
-            <i className="ti ti-bell" aria-hidden="true" />
-            <span className="sidebar-badge">3</span>
-          </div>
-          {!collapsed && <span className="sidebar-link-label">Notifications</span>}
-        </button>
-
-        <div className="sidebar-divider" />
+       
+        
 
         {/* User */}
         <div className="sidebar-user">

@@ -41,6 +41,7 @@ export default function Equipements() {
   const [showModal, setShowModal] = useState(false)
   const [editEquipement, setEditEquipement] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const user = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
 
   // ─── Chargement des données au montage de la page ──────────────────────────
   // useEffect avec un tableau vide [] en deuxième argument signifie :
@@ -191,26 +192,25 @@ export default function Equipements() {
           </div>
           <select value={filterBatiment} onChange={e => handleBatimentFilterChange(e.target.value)}>
             <option value="">Tous les bâtiments</option>
-            {batiments.map(b => (
-              <option key={b.id} value={b.id}>{b.nom}</option>
-            ))}
+            {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
           </select>
           <select value={filterStatut} onChange={e => { setFilterStatut(e.target.value); setPage(1) }}>
             <option value="">Tous les statuts</option>
-            {STATUTS.map(s => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
+            {STATUTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
-        <button className="btn-primary" onClick={() => {
-          setEditEquipement(null)
-          setForm({ ...emptyForm, batiment_id: filterBatiment || '' })
-          setShowModal(true)
-        }}>
-          <i className="ti ti-plus" aria-hidden="true" />
-          Nouvel équipement
-        </button>
-      </div>
+        {/* Bouton création uniquement pour admin */}
+        {user.role === 'admin' && (
+          <button className="btn-primary" onClick={() => {
+            setEditEquipement(null)
+            setForm(emptyForm)
+            setShowModal(true)
+          }}>
+            <i className="ti ti-plus" aria-hidden="true" />
+            Nouvel équipement
+          </button>
+        )}
+      </div>  
 
       {/* Grille */}
       {paginated.length === 0 ? (
@@ -229,12 +229,16 @@ export default function Equipements() {
                     <i className="ti ti-settings" aria-hidden="true" />
                   </div>
                   <div className="equipement-actions">
-                    <button onClick={() => handleEdit(eq)} title="Modifier">
-                      <i className="ti ti-edit" aria-hidden="true" />
-                    </button>
-                    <button onClick={() => handleDelete(eq.id)} title="Supprimer" className="btn-danger">
-                      <i className="ti ti-trash" aria-hidden="true" />
-                    </button>
+                    {user.role === 'admin' && (
+                      <>
+                        <button onClick={() => handleEdit(eq)} title="Modifier">
+                          <i className="ti ti-edit" aria-hidden="true" />
+                        </button>
+                        <button onClick={() => handleDelete(eq.id)} title="Supprimer" className="btn-danger">
+                          <i className="ti ti-trash" aria-hidden="true" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 

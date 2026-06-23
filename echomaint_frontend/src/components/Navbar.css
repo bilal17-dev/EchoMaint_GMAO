@@ -9,16 +9,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: linear-gradient(135deg, #143959 0%, #1a4f7a 100%);
+  background: white;
   border-radius: 20px;
   padding: 12px 20px;
-  box-shadow:
-    0 8px 32px rgba(20, 57, 89, 0.35),
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
+  
   border: 1px solid rgba(255, 255, 255, 0.08);
-  min-height: 64px;
+  min-height: 50px;
 }
 
 /* Partie gauche */
@@ -34,15 +30,15 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s;
   flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(2, 2, 2, 0.8);
 }
 
 .navbar-hamburger:hover {
@@ -60,7 +56,7 @@
 .navbar-title {
   font-size: 17px;
   font-weight: 600;
-  color: #ffffff;
+  color: #080808;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -73,7 +69,7 @@
 
 .navbar-subtitle {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(3, 3, 3, 0.55);
   margin: 2px 0 0;
   white-space: nowrap;
   overflow: hidden;
@@ -101,14 +97,14 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(5, 5, 5, 0.8);
 }
 
 .navbar-icon-btn:hover {
@@ -145,12 +141,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   border-radius: 10px;
   padding: 8px 12px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(8, 8, 8, 0.85);
   font-size: 13px;
   font-weight: 600;
   transition: background 0.2s;
@@ -179,13 +175,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   border-radius: 10px;
   padding: 5px 10px 5px 5px;
   cursor: pointer;
   transition: background 0.2s;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(3, 3, 3, 0.7);
 }
 
 .navbar-profile-btn:hover {
@@ -197,10 +193,10 @@
 }
 
 .navbar-avatar {
-  width: 32px;
-  height: 32px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #60A5FA);
+  background: #328C40;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -282,7 +278,7 @@
 }
 
 .navbar-dropdown-item.active {
-  color: #2563EB;
+  color: #eb0a0a;
   font-weight: 600;
   background: #EFF6FF;
 }

@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════════════════════════════
+   Dashboard.css — EchoMaint GMAO
+   ═══════════════════════════════════════════════════════════════ */
+
 .dashboard {
   display: flex;
   flex-direction: column;
@@ -5,12 +9,83 @@
   width: 100%;
 }
 
-.dashboard-kpi {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
+.dashboard-message {
+  text-align: center;
+  padding: 3rem;
+  color: #64748B;
+}
+
+.dashboard-message--error {
+  color: #ef4444;
+}
+
+/* ── Bandeau de bienvenue ──────────────────────────────────────── */
+.dashboard-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #1E293B 0%, #2563EB 100%);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  color: #fff;
   gap: 1rem;
 }
 
+.dashboard-welcome-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #fff;
+}
+
+.dashboard-welcome-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+  margin: 0;
+}
+
+/* ── Bouton nouvelle DI ────────────────────────────────────────── */
+.btn-nouvelle-di {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  color: #1E293B;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.15s;
+  font-family: 'Inter', sans-serif;
+  flex-shrink: 0;
+}
+
+.btn-nouvelle-di:hover {
+  background: #EFF6FF;
+  transform: translateY(-1px);
+}
+
+.btn-nouvelle-di--sm {
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
+/* ── Grilles KPI ───────────────────────────────────────────────── */
+.dashboard-kpi--4col {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.dashboard-kpi--3col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* ── Carte KPI ─────────────────────────────────────────────────── */
 .kpi-card {
   background: #ffffff;
   border-radius: 20px;
@@ -82,6 +157,7 @@
   opacity: 0.6;
 }
 
+/* ── Charts (donuts) ───────────────────────────────────────────── */
 .dashboard-charts-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -118,6 +194,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .chart-icon-wrap .ti {
@@ -138,30 +215,21 @@
   margin: 0;
 }
 
-.chart-filter {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #F4F7FC;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  padding: 6px 12px;
-  font-size: 12px;
-  color: #64748B;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  white-space: nowrap;
-}
-
-.chart-filter:hover {
-  border-color: #2563EB;
-  color: #2563EB;
-}
-
-.chart-filter .ti {
+.chart-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
   font-size: 13px;
 }
 
+.chart-empty--action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ── Filtres + exports (Admin) ─────────────────────────────────── */
 .dashboard-filters {
   display: flex;
   justify-content: space-between;
@@ -222,9 +290,225 @@
   color: #ef4444;
 }
 
-/* 9 KPI cards en 3 colonnes */
-.dashboard-kpi {
+/* ── Listes (Admin + Client) ───────────────────────────────────── */
+.dashboard-lists-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.dashboard-list-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
+}
+
+.list-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.list-card-voir-tout {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #2563EB;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: gap 0.15s;
+}
+
+.list-card-voir-tout:hover {
+  gap: 8px;
+}
+
+/* ── Tableau dashboard ─────────────────────────────────────────── */
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dashboard-table thead tr {
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.dashboard-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  padding: 0 8px 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-table td {
+  padding: 10px 8px;
+  color: #1E293B;
+  border-bottom: 1px solid #F8FAFC;
+  vertical-align: middle;
+}
+
+.dashboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dashboard-table tbody tr:hover td {
+  background: #F8FAFC;
+}
+
+.table-ref {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+.table-titre {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-date {
+  white-space: nowrap;
+  color: #64748B;
+  font-size: 12px;
+}
+
+/* ── Badges ────────────────────────────────────────────────────── */
+.badge-statut {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-priorite {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.badge-priorite--basse   { color: #64748B; background: #F1F5F9; }
+.badge-priorite--normale { color: #2563EB; background: #EFF6FF; }
+.badge-priorite--haute   { color: #F59E0B; background: #FFFBEB; }
+.badge-priorite--urgente { color: #ef4444; background: #FEF2F2; }
+
+/* ── Liste équipements en panne (Client) ───────────────────────── */
+.equip-panne-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.equip-panne-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #FEF2F2;
+  border-radius: 12px;
+  border: 1px solid #FECACA;
+}
+
+.equip-panne-icon {
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #ef4444;
+  font-size: 18px;
+}
+
+.equip-panne-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.equip-panne-nom {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.equip-panne-ref {
+  font-size: 11px;
+  color: #64748B;
+}
+
+/* ── Placeholder technicien ────────────────────────────────────── */
+.dashboard-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .dashboard-kpi--4col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-charts-row,
+  .dashboard-lists-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-kpi--4col,
+  .dashboard-kpi--3col {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-welcome {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

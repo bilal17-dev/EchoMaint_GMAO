@@ -65,8 +65,10 @@ export default function Planning() {
   useEffect(() => {
     Promise.all([getBatiments(), getTechniciens()])
       .then(([resBat, resTech]) => {
-        setBatiments(resBat.data)
-        setTechniciens(resTech.data)
+        const bats  = Array.isArray(resBat)  ? resBat  : (resBat.data  ?? [])
+        const techs = Array.isArray(resTech) ? resTech : (resTech.data ?? [])
+        setBatiments(bats)
+        setTechniciens(techs)
       })
       .catch(err => console.error('Erreur chargement filtres:', err))
   }, [])
@@ -78,26 +80,28 @@ export default function Planning() {
   }, [viewYear, viewMonth, filterBatiment, filterTechnicien, filterStatut])
 
   const chargerPlanning = async () => {
-    setLoading(true)
-    setErreur('')
-    try {
-      // On construit la période du mois affiché (du 1er au dernier jour)
-      const dateDebut = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-01`
-      const dateFin = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${getDaysInMonth(viewYear, viewMonth)}`
+  setLoading(true)
+  setErreur('')
+  try {
+    const dateDebut = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-01`
+    const dateFin   = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${getDaysInMonth(viewYear, viewMonth)}`
 
-      const params = { date_debut: dateDebut, date_fin: dateFin }
-      if (filterBatiment) params.batiment_id = filterBatiment
-      if (filterTechnicien) params.technicien_id = filterTechnicien
-      if (filterStatut) params.statut = filterStatut
+    const params = { date_debut: dateDebut, date_fin: dateFin }
+    if (filterBatiment)   params.batiment_id   = filterBatiment
+    if (filterTechnicien) params.technicien_id = filterTechnicien
+    if (filterStatut)     params.statut        = filterStatut
 
-      const res = await getPlanning(params)
-      setPlanningOTs(res.data)
-    } catch (error) {
-      console.error('Erreur de chargement du planning:', error)
-      setErreur('Impossible de charger le planning.')
-    } finally {
-      setLoading(false)
-    }
+    const res = await getPlanning(params)
+    // Absorbe { data: [...] } ou tableau direct
+    const liste = Array.isArray(res) ? res : (res.data ?? [])
+    setPlanningOTs(liste)
+  } catch (error) {
+    console.error('Erreur de chargement du planning:', error)
+    // Affiche l'erreur mais ne bloque pas la page
+    setErreur(`Impossible de charger le planning. (${error.response?.status ?? 'réseau'})`)
+  } finally {
+    setLoading(false)
+  }
   }
 
   const prevMonth = () => {
