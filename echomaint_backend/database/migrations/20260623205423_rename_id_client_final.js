@@ -3,6 +3,7 @@
  * @returns { Promise<void> }
  */
 exports.up = function(knex) {
+  // On commence par un return global pour que Knex attende la fin de toute la chaîne
   return knex.schema.alterTable('users', (table) => {
     table.dropForeign('client_id');
     table.renameColumn('client_id', 'id_client');
