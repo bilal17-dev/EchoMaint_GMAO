@@ -33,11 +33,12 @@ function App() {
             <Route path="/interventions/:id" element={<DetailIntervention />} />
             <Route path="/planning" element={<Planning />} />
             <Route path="/stats" element={<Stats />} />
+            <Route path="/demandes-intervention" element={<DemandesIntervention />} />
 
             {/* Routes admin uniquement */}
             <Route element={<AdminRoute />}>
               <Route path="/utilisateurs" element={<Utilisateurs />} />
-              <Route path="/demandes-intervention" element={<DemandesIntervention />} />
+              
               <Route path="/maintenance-plans" element={<MaintenancePlans />} />
             </Route>
           </Route>

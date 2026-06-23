@@ -1,97 +1,109 @@
 import { useState, useEffect } from 'react'
 import './MaintenancePlans.css'
 import { useAuth } from '../hooks/useAuth'
-import api from '../api/axios.config'
+import { getPlans, createPlan, updatePlan } from '../api/plans.api'
 import { getEquipements } from '../api/equipements.api'
 
 const PERIODICITE_OPTIONS = [
-  { label: 'Tous les mois',      value: 30  },
-  { label: 'Tous les 3 mois',    value: 90  },
-  { label: 'Tous les 6 mois',    value: 180 },
-  { label: 'Tous les ans',       value: 365 },
-  { label: 'Personnalisé (jours)', value: 0  },
+  { label: 'Tous les mois',        value: 30  },
+  { label: 'Tous les 3 mois',      value: 90  },
+  { label: 'Tous les 6 mois',      value: 180 },
+  { label: 'Tous les ans',         value: 365 },
+  { label: 'Personnalisé (jours)', value: 0   },
 ]
 
 const ITEMS_PER_PAGE = 5
 
 const emptyForm = {
-  equipement_id: '',
-  label: '',
-  periodicite_jours: 30,
+  equipement_id:     '',
+  label:             '',
   periodicite_custom: '',
-  gamme_taches: [{ ordre: 1, libelle: '', obligatoire: true }],
-  actif: true,
+  gamme_taches:      [{ ordre: 1, libelle: '', obligatoire: true }],
+  actif:             true,
 }
 
-export default function MaintenancePlans() {
-  const { user } = useAuth()
-
-  const [plans,       setPlans]       = useState([])
-  const [equipements, setEquipements] = useState([])
-  const [loading,     setLoading]     = useState(true)
-  const [erreur,      setErreur]      = useState('')
-  const [page,        setPage]        = useState(1)
-  const [showModal,   setShowModal]   = useState(false)
-  const [form,        setForm]        = useState(emptyForm)
-  const [submitErr,   setSubmitErr]   = useState('')
-  const [periodiciteMode, setPeriodiciteMode] = useState(30)
-
-  useEffect(() => { charger() }, [])
-
-  const mockPlans = [
+// ─── Mock statique (hors composant, ne cause pas de re-render) ────────────────
+const MOCK_PLANS = [
   {
-    id: 'pm1',
+    id: 'mock-pm1',
     equipement_id: '',
     label: 'Entretien trimestriel ascenseurs',
     periodicite_jours: 90,
     gamme_taches: [
-      { ordre: 1, libelle: 'Vérifier la pression', obligatoire: true },
-      { ordre: 2, libelle: 'Nettoyer les filtres', obligatoire: true },
+      { ordre: 1, libelle: 'Vérifier la pression',  obligatoire: true  },
+      { ordre: 2, libelle: 'Nettoyer les filtres',   obligatoire: true  },
+      { ordre: 3, libelle: 'Tester les alarmes',     obligatoire: false },
     ],
     actif: true,
     derniere_generation: null,
+    _isMock: true,
   },
 ]
 
-const charger = async () => {
-  setLoading(true)
-  setErreur('')
-  try {
-    const [resPlans, resEquip] = await Promise.all([
-      api.get('/plans-maintenance'),
-      getEquipements(),
-    ])
-    const p = Array.isArray(resPlans.data) ? resPlans.data
-            : Array.isArray(resPlans.data?.data) ? resPlans.data.data
-            : []
-    const e = Array.isArray(resEquip) ? resEquip
-            : Array.isArray(resEquip.data) ? resEquip.data
-            : []
-    setPlans(p)
-    setEquipements(e)
-  } catch (err) {
-    console.warn('[MOCK] /plans-maintenance non disponible, données mockées utilisées.')
-    // Fallback mock au lieu d'afficher une erreur rouge
-    setPlans(mockPlans)
-    try {
-      const resEquip = await getEquipements()
-      const e = Array.isArray(resEquip) ? resEquip
-              : Array.isArray(resEquip.data) ? resEquip.data
-              : []
-      setEquipements(e)
-    } catch {
-      setEquipements([])
-    }
-  } finally {
-    setLoading(false)
-  }
-}
+export default function MaintenancePlans() {
+  const { user } = useAuth()
 
-  // ── Tâches ──────────────────────────────────────────────────────────────────
+  const [plans,          setPlans]          = useState([])
+  const [equipements,    setEquipements]    = useState([])
+  const [loading,        setLoading]        = useState(true)
+  const [backendDispo,   setBackendDispo]   = useState(true)   // false = mock actif
+  const [page,           setPage]           = useState(1)
+  const [showModal,      setShowModal]      = useState(false)
+  const [form,           setForm]           = useState(emptyForm)
+  const [submitErr,      setSubmitErr]      = useState('')
+  const [periodiciteMode,setPeriodiciteMode]= useState(30)
+
+  // ── Chargement (une seule fois) ─────────────────────────────────────────────
+  useEffect(() => { charger() }, [])
+
+  const charger = async () => {
+    setLoading(true)
+    try {
+      const [resPlans, resEquip] = await Promise.all([
+        getPlans(),
+        getEquipements(),
+      ])
+
+      // Normalise le retour plans
+      const p = Array.isArray(resPlans)       ? resPlans
+              : Array.isArray(resPlans?.data)  ? resPlans.data
+              : []
+
+      // Normalise le retour équipements
+      const e = Array.isArray(resEquip)       ? resEquip
+              : Array.isArray(resEquip?.data)  ? resEquip.data
+              : []
+
+      setPlans(p)
+      setEquipements(e)
+      setBackendDispo(true)
+    } catch (err) {
+      // Backend J5 pas encore implémenté → fallback mock silencieux
+      console.warn('[Plans] Backend /plans-maintenance non disponible, mock activé.')
+      setBackendDispo(false)
+      setPlans(MOCK_PLANS)
+
+      // On tente quand même de charger les équipements
+      try {
+        const resEquip = await getEquipements()
+        const e = Array.isArray(resEquip) ? resEquip : (resEquip?.data ?? [])
+        setEquipements(e)
+      } catch {
+        setEquipements([])
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Gestion des tâches ───────────────────────────────────────────────────────
   const ajouterTache = () =>
     setForm(f => ({
       ...f,
-      gamme_taches: [...f.gamme_taches, { ordre: f.gamme_taches.length + 1, libelle: '', obligatoire: true }]
+      gamme_taches: [
+        ...f.gamme_taches,
+        { ordre: f.gamme_taches.length + 1, libelle: '', obligatoire: true }
+      ]
     }))
 
   const supprimerTache = (i) =>
@@ -105,17 +117,18 @@ const charger = async () => {
   const updateTache = (i, field, value) =>
     setForm(f => ({
       ...f,
-      gamme_taches: f.gamme_taches.map((t, idx) => idx === i ? { ...t, [field]: value } : t)
+      gamme_taches: f.gamme_taches.map((t, idx) =>
+        idx === i ? { ...t, [field]: value } : t
+      )
     }))
 
-  // ── Soumission ──────────────────────────────────────────────────────────────
+  // ── Soumission ───────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     setSubmitErr('')
-    if (!form.equipement_id) { setSubmitErr('Sélectionnez un équipement.'); return }
-    if (!form.label.trim())  { setSubmitErr('Le libellé est obligatoire.'); return }
-    if (form.gamme_taches.some(t => !t.libelle.trim())) {
-      setSubmitErr('Toutes les tâches doivent avoir un libellé.'); return
-    }
+
+    if (!form.equipement_id)                              { setSubmitErr('Sélectionnez un équipement.'); return }
+    if (!form.label.trim())                               { setSubmitErr('Le libellé est obligatoire.'); return }
+    if (form.gamme_taches.some(t => !t.libelle.trim()))   { setSubmitErr('Toutes les tâches doivent avoir un libellé.'); return }
 
     const periodicite = periodiciteMode === 0
       ? parseInt(form.periodicite_custom) || 0
@@ -123,55 +136,82 @@ const charger = async () => {
 
     if (periodicite < 1) { setSubmitErr('La périodicité doit être ≥ 1 jour.'); return }
 
+    // Mode mock : ajoute localement sans appel backend
+    if (!backendDispo) {
+      const pseudo = {
+        id:                `mock-${Date.now()}`,
+        equipement_id:     form.equipement_id,
+        label:             form.label,
+        periodicite_jours: periodicite,
+        gamme_taches:      form.gamme_taches,
+        actif:             true,
+        derniere_generation: null,
+        _isMock: true,
+      }
+      setPlans(prev => [pseudo, ...prev])
+      setShowModal(false)
+      setForm(emptyForm)
+      setPeriodiciteMode(30)
+      return
+    }
+
     try {
       const payload = {
-        equipement_id:    form.equipement_id,
-        label:            form.label,
+        equipement_id:     form.equipement_id,
+        label:             form.label,
         periodicite_jours: periodicite,
-        gamme_taches:     form.gamme_taches,
-        actif:            form.actif,
+        gamme_taches:      form.gamme_taches,
+        actif:             true,
       }
-      const res = await api.post('/plans-maintenance', payload)
-      const nouveau = res.data?.data ?? res.data
+      const res    = await createPlan(payload)
+      const nouveau = res?.data ?? res
       setPlans(prev => [nouveau, ...prev])
       setShowModal(false)
       setForm(emptyForm)
       setPeriodiciteMode(30)
     } catch (err) {
-      const msg = err.response?.data?.message || 'Erreur lors de la création.'
-      setSubmitErr(msg)
+      setSubmitErr(err.response?.data?.message || 'Erreur lors de la création.')
     }
   }
 
-  // ── Toggle actif ────────────────────────────────────────────────────────────
+  // ── Toggle actif / inactif ───────────────────────────────────────────────────
   const handleToggle = async (plan) => {
+    if (plan._isMock) {
+      setPlans(prev => prev.map(p => p.id === plan.id ? { ...p, actif: !p.actif } : p))
+      return
+    }
     try {
-      await api.put(`/plans-maintenance/${plan.id}`, { actif: !plan.actif })
+      await updatePlan(plan.id, { actif: !plan.actif })
       setPlans(prev => prev.map(p => p.id === plan.id ? { ...p, actif: !p.actif } : p))
     } catch (err) {
       window.alert(err.response?.data?.message || 'Erreur lors de la mise à jour.')
     }
   }
 
-  const getEquipementNom = (id) => equipements.find(e => e.id === id)?.nom || '—'
+  const getEquipementNom = (id) =>
+    equipements.find(e => e.id === id)?.nom || '—'
 
   const totalPages = Math.ceil(plans.length / ITEMS_PER_PAGE)
   const paginated  = plans.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
+  // ── Rendu ────────────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="mplans">
       <p className="mplans-msg">Chargement des plans de maintenance…</p>
     </div>
   )
 
-  if (erreur) return (
-    <div className="mplans">
-      <p className="mplans-msg mplans-msg--error">{erreur}</p>
-    </div>
-  )
-
   return (
     <div className="mplans">
+
+      {/* Bandeau info mock */}
+      {!backendDispo && (
+        <div className="mplans-mock-banner">
+          <i className="ti ti-info-circle" />
+          Mode aperçu — le backend J5 (plans de maintenance) n'est pas encore disponible.
+          Les données affichées sont des exemples locaux.
+        </div>
+      )}
 
       {/* Header */}
       <div className="mplans-header">
@@ -186,7 +226,7 @@ const charger = async () => {
         )}
       </div>
 
-      {/* Tableau des plans */}
+      {/* Tableau */}
       {plans.length === 0 ? (
         <div className="mplans-empty">
           <i className="ti ti-calendar-off" />
@@ -215,7 +255,10 @@ const charger = async () => {
               <tbody>
                 {paginated.map(plan => (
                   <tr key={plan.id}>
-                    <td className="mplans-label">{plan.label}</td>
+                    <td className="mplans-label">
+                      {plan.label}
+                      {plan._isMock && <span className="mplans-mock-tag">aperçu</span>}
+                    </td>
                     <td>{getEquipementNom(plan.equipement_id)}</td>
                     <td>
                       <span className="mplans-periode">
@@ -255,7 +298,6 @@ const charger = async () => {
             </table>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mplans-pagination">
               <p>{(page-1)*ITEMS_PER_PAGE+1}–{Math.min(page*ITEMS_PER_PAGE, plans.length)} sur {plans.length}</p>
@@ -277,7 +319,7 @@ const charger = async () => {
         </>
       )}
 
-      {/* Modal création */}
+      {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal modal--large" onClick={e => e.stopPropagation()}>
@@ -287,7 +329,6 @@ const charger = async () => {
             </div>
 
             <div className="modal-body">
-              {/* Équipement */}
               <div className="form-group">
                 <label>Équipement ciblé <span className="required">*</span></label>
                 <select
@@ -301,7 +342,6 @@ const charger = async () => {
                 </select>
               </div>
 
-              {/* Libellé */}
               <div className="form-group">
                 <label>Libellé du plan <span className="required">*</span></label>
                 <input
@@ -312,7 +352,6 @@ const charger = async () => {
                 />
               </div>
 
-              {/* Périodicité */}
               <div className="form-group">
                 <label>Périodicité</label>
                 <div className="mplans-periodo-grid">
@@ -339,7 +378,6 @@ const charger = async () => {
                 )}
               </div>
 
-              {/* Gamme de tâches */}
               <div className="form-group">
                 <label>Gamme de tâches <span className="required">*</span></label>
                 <div className="mplans-taches">
@@ -348,7 +386,7 @@ const charger = async () => {
                       <span className="mplans-tache-ordre">{tache.ordre}</span>
                       <input
                         type="text"
-                        placeholder={`Ex : Vérifier la pression`}
+                        placeholder="Ex : Vérifier la pression"
                         value={tache.libelle}
                         onChange={e => updateTache(i, 'libelle', e.target.value)}
                       />
@@ -361,11 +399,7 @@ const charger = async () => {
                         Obligatoire
                       </label>
                       {form.gamme_taches.length > 1 && (
-                        <button
-                          type="button"
-                          className="mplans-tache-del"
-                          onClick={() => supprimerTache(i)}
-                        >
+                        <button type="button" className="mplans-tache-del" onClick={() => supprimerTache(i)}>
                           <i className="ti ti-trash" />
                         </button>
                       )}
@@ -382,7 +416,9 @@ const charger = async () => {
 
             <div className="modal-footer">
               <button className="btn-cancel" onClick={() => setShowModal(false)}>Annuler</button>
-              <button className="btn-primary" onClick={handleSubmit}>Créer le plan</button>
+              <button className="btn-primary" onClick={handleSubmit}>
+                {backendDispo ? 'Créer le plan' : 'Ajouter (aperçu local)'}
+              </button>
             </div>
           </div>
         </div>

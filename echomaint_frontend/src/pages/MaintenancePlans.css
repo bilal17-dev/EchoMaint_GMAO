@@ -133,3 +133,29 @@
   .mplans-table-wrap { overflow-x: auto; }
   .mplans-header { flex-direction: column; }
 }
+
+/* Bandeau mock */
+.mplans-mock-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #92400E;
+}
+
+/* Tag aperçu sur les lignes mock */
+.mplans-mock-tag {
+  display: inline-block;
+  margin-left: 8px;
+  background: #FEF3C7;
+  color: #92400E;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  vertical-align: middle;
+}

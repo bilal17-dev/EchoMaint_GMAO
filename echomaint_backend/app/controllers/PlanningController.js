@@ -1,62 +1,63 @@
 const db = require('../../database/connection');
 
 const PlanningController = {
-  
-  /**
-   * GET /api/v1/planning
-   * Retourne une vue consolidée des interventions sur une période donnée (max 92 jours)
-   */
+
   getPlanning: async (req, res) => {
     try {
-      const { date_debut, date_fin, technicien_id, equipement_id, type } = req.query;
+      const { date_debut, date_fin, technicien_id, batiment_id, equipement_id, statut } = req.query;
 
-      // 1. Validation : Les dates sont obligatoires
       if (!date_debut || !date_fin) {
         return res.status(400).json({ message: "Les dates de début et de fin sont obligatoires." });
       }
 
-      // 2. Validation : Contrainte métier des 92 jours
       const debut = new Date(date_debut);
-      const fin = new Date(date_fin);
-      const diffTime = Math.abs(fin - debut);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const fin   = new Date(date_fin);
+      const diffDays = Math.ceil(Math.abs(fin - debut) / (1000 * 60 * 60 * 24));
 
       if (diffDays > 92) {
-        return res.status(400).json({ message: "La période de planning ne peut pas dépasser 92 jours." });
+        return res.status(400).json({ message: "La période ne peut pas dépasser 92 jours." });
       }
 
-      // 3. Construction de la requête
       let query = db('interventions')
         .join('equipements', 'interventions.equipement_id', 'equipements.id')
+        .join('batiments',   'equipements.batiment_id',    'batiments.id')
+        .leftJoin('users as technicien', 'interventions.technicien_id', 'technicien.id')
         .select(
-          'interventions.*', 
-          'equipements.nom as equipement_nom',
-          'equipements.localisation'
+          'interventions.id',
+          'interventions.titre',
+          'interventions.type',
+          'interventions.statut',
+          'interventions.priorite',
+          'interventions.date_planifiee',
+          'interventions.technicien_id',
+          'equipements.nom  as equipement_nom',
+          'equipements.id   as equipement_id',
+          'batiments.nom    as batiment_nom',
+          'batiments.id     as batiment_id',
+          'technicien.nom   as technicien_nom',
+          'technicien.prenom as technicien_prenom'
         )
-        .whereBetween('date_planifiee', [date_debut, date_fin])
-        .orderBy('date_planifiee', 'asc');
+        .whereBetween('interventions.date_planifiee', [date_debut, date_fin])
+        .orderBy('interventions.date_planifiee', 'asc');
 
-      // 4. Application des filtres dynamiques
-      if (technicien_id) {
+      // RG-PLAN-01 : un technicien ne voit que ses propres OT
+      if (req.user.role === 'technicien') {
+        query = query.where('interventions.technicien_id', req.user.id);
+      } else if (technicien_id) {
         query = query.where('interventions.technicien_id', technicien_id);
       }
-      if (equipement_id) {
-        query = query.where('interventions.equipement_id', equipement_id);
-      }
-      if (type) {
-        query = query.where('interventions.type', type);
-      }
+
+      if (batiment_id)   query = query.where('batiments.id',         batiment_id);
+      if (equipement_id) query = query.where('equipements.id',        equipement_id);
+      if (statut)        query = query.where('interventions.statut',  statut);
 
       const planning = await query;
 
-      return res.status(200).json({ 
-        count: planning.length,
-        data: planning 
-      });
+      return res.status(200).json({ data: planning });
 
     } catch (error) {
       console.error('[PlanningController.getPlanning]', error);
-      return res.status(500).json({ message: res.translate('error_serveur') });
+      return res.status(500).json({ message: "Erreur serveur lors du chargement du planning." });
     }
   }
 };
