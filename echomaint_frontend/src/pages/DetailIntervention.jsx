@@ -371,18 +371,39 @@ export default function DetailIntervention() {
         </div>
       </div>
 
+  
       {/* Rapport PDF */}
       <div className="detail-card">
         <h2>Rapport d'intervention</h2>
         {ot.statut === 'terminee' && ot.rapport_pdf_chemin ? (
-          <a
-            href={`http://localhost:5000/api/v1/interventions/${id}/rapport`}
-            target="_blank"
-            rel="noreferrer"
+          <button
             className="btn-primary rapport-btn"
+            onClick={async () => {
+              try {
+                const token = localStorage.getItem('echomaint_token')
+                const res = await fetch(
+                  `http://localhost:5000/api/v1/interventions/${id}/rapport`,
+                  { headers: { Authorization: `Bearer ${token}` } }
+                )
+                if (!res.ok) {
+                  const err = await res.json().catch(() => ({}))
+                  window.alert(err.message || 'Rapport non disponible.')
+                  return
+                }
+                const blob = await res.blob()
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `rapport_intervention_${id}.pdf`
+                a.click()
+                URL.revokeObjectURL(url)
+              } catch {
+                window.alert('Erreur lors du téléchargement du rapport.')
+              }
+            }}
           >
             <i className="ti ti-file-type-pdf" /> Télécharger le rapport PDF
-          </a>
+          </button>
         ) : (
           <p className="rapport-unavailable">
             {ot.statut === 'terminee'

@@ -32,7 +32,7 @@
 }
 
 .search-box:focus-within {
-  border-color: #2563EB;
+  border-color: #328C40;
 }
 
 .search-box .ti {
@@ -71,7 +71,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #2563EB;
+  background: #328C40;
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -133,7 +133,7 @@
 
 .equipement-icon .ti {
   font-size: 22px;
-  color: #2563EB;
+  color: #328C40;
 }
 
 .equipement-actions {
@@ -236,9 +236,9 @@
   width: 100%;
   padding: 8px;
   border-radius: 10px;
-  border: 1px solid #2563EB;
+  border: 1px solid #328C40;
   background: transparent;
-  color: #2563EB;
+  color: #328C40;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -312,13 +312,13 @@
 
 .pagination-btns button:hover:not(:disabled) {
   background: #EFF6FF;
-  border-color: #2563EB;
-  color: #2563EB;
+  border-color: #328C40;
+  color: #328C40;
 }
 
 .pagination-btns button.active {
-  background: #2563EB;
-  border-color: #2563EB;
+  background: #328C40;
+  border-color: #328C40;
   color: #ffffff;
 }
 
@@ -434,7 +434,7 @@
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  border-color: #2563EB;
+  border-color: #328C40;
 }
 
 .form-group input::placeholder,

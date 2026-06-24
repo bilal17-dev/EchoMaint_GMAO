@@ -127,12 +127,12 @@
 }
 
 .sidebar-link-active {
-  color: #2563EB !important;
+  color: #328C40 !important;
   background: #EFF6FF !important;
 }
 
 .sidebar-link-active .sidebar-link-icon {
-  background: #2563EB;
+  background: #328C40;
 }
 
 .sidebar-link-active .sidebar-link-icon .ti {
@@ -140,7 +140,7 @@
 }
 
 .sidebar-link-active .sidebar-link-label {
-  color: #2563EB;
+  color: #328C40;
   font-weight: 600;
 }
 
@@ -193,7 +193,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #2563EB;
+  background: #328C40;
   display: flex;
   align-items: center;
   justify-content: center;
