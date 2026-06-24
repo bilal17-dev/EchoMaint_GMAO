@@ -158,7 +158,7 @@ const DemandeInterventionController = {
         statut: 'planifiee',
         equipement_id: demande.equipement_id,
         demande_intervention_id: demande.id, // Liaison bidirectionnelle pour la Journée 4
-        date_planifiee: new Date(),
+        date_planifiee: new Date(Date.now() + 24 * 60 * 60 * 1000),
         created_at: new Date(),
         updated_at: new Date()
       });

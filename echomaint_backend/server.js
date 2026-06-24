@@ -24,6 +24,8 @@ const planningRoutes     = require('./app/routes/planning.routes');
 const utilisateurRoutes  = require('./app/routes/utilisateur.routes');
 // Ajout de la route pour les plans de maintenance
 const planMaintenanceRoutes = require('./app/routes/planMaintenance.routes');
+const exportRoutes = require('./app/routes/export.routes');
+const uploadPath = process.env.UPLOAD_PATH || 'storage/uploads/photos'
 
 // On crée l'application Express
 const app = express();
@@ -65,11 +67,6 @@ app.use((req, res, next) => {
   next();
 });
 
-/**
- * DOSSIER STATIQUE
- */
-const uploadPath = process.env.UPLOAD_PATH || 'storage';
-app.use('/storage', express.static(path.join(__dirname, uploadPath)));
 
 /**
  * BRANCHEMENT DES ROUTES
@@ -86,7 +83,8 @@ app.use(`${API_BASE}/clients`,      clientRoutes);
 app.use(`${API_BASE}/demandes-intervention`,     demandeRoutes);
 app.use(`${API_BASE}/planning`,     planningRoutes);
 app.use(`${API_BASE}/utilisateurs`, utilisateurRoutes);
-
+app.use(`${API_BASE}/exports`, exportRoutes);
+app.use('/storage', express.static(path.join(__dirname, 'storage')))
 // Route de test générique
 app.get('/', (req, res) => {
   res.json({ 

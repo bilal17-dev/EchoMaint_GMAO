@@ -327,3 +327,9 @@
     grid-template-columns: 1fr;
   }
 }
+
+.historique-item-clickable:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  transition: all 0.15s;
+}

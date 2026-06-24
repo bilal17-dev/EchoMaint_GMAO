@@ -1,98 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { getUser } from '../store/auth.store'
-import PhotoUploader from '../components/PhotoUploader'
 import './DetailIntervention.css'
 
-// Mocks
-const mockTechniciens = [
-  { id: 't1', nom: 'Modou Diop' },
-  { id: 't2', nom: 'Awa Ndiaye' },
-]
-
-const mockOTs = {
-  ot1: {
-    id: 'ot1', titre: 'Révision filtre climatiseur', description: 'Révision complète du filtre et vérification du niveau de gaz.',
-    type: 'preventif', priorite: 'basse', statut: 'terminee',
-    date_planifiee: '2026-05-28', date_debut_reelle: '2026-05-28T09:00:00', date_fin_reelle: '2026-05-28T09:45:00',
-    commentaire_cloture: 'Filtre remplacé, niveau gaz vérifié. Pas d\'anomalie.',
-    duree_reelle_minutes: 45, technicien_id: 't1',
-    equipement: { id: 'e1', nom: 'Climatiseur Hall A', reference: 'CLIM-001', statut: 'actif' },
-    batiment: { id: '1', nom: 'Siège Social DGS Africa' },
-    rapport_url: '/api/interventions/ot1/rapport',
-    photos: [
-      { id: 'p1', type_photo: 'avant', url: 'https://placehold.co/300x200?text=Avant', created_at: '2026-05-28T09:05:00' },
-      { id: 'p2', type_photo: 'apres', url: 'https://placehold.co/300x200?text=Après', created_at: '2026-05-28T09:40:00' },
-    ],
-    commentaires: [
-      { id: 'c1', user: { nom: 'Admin DGS' }, contenu: 'Intervention validée.', created_at: '2026-05-28T10:00:00' }
-    ],
-    reouvertures: []
-  },
-  ot2: {
-    id: 'ot2', titre: 'Panne démarrage groupe', description: 'Le groupe électrogène ne démarre plus depuis ce matin.',
-    type: 'curatif', priorite: 'haute', statut: 'en_cours',
-    date_planifiee: '2026-06-15', date_debut_reelle: '2026-06-15T08:00:00', date_fin_reelle: null,
-    commentaire_cloture: null, duree_reelle_minutes: null, technicien_id: 't2',
-    equipement: { id: 'e2', nom: 'Groupe Électrogène', reference: 'GE-002', statut: 'en_panne' },
-    batiment: { id: '1', nom: 'Siège Social DGS Africa' },
-    rapport_url: null,
-    photos: [
-      { id: 'p3', type_photo: 'avant', url: 'https://placehold.co/300x200?text=Avant', created_at: '2026-06-15T08:10:00' },
-    ],
-    commentaires: [],
-    reouvertures: []
-  },
-  ot3: {
-    id: 'ot3', titre: 'Contrôle ascenseur', description: '',
-    type: 'preventif', priorite: 'moyenne', statut: 'assignee',
-    date_planifiee: '2026-06-20', date_debut_reelle: null, date_fin_reelle: null,
-    commentaire_cloture: null, duree_reelle_minutes: null, technicien_id: 't1',
-    equipement: { id: 'e3', nom: 'Ascenseur Tour A', reference: 'ASC-003', statut: 'actif' },
-    batiment: { id: '2', nom: 'Tour Almadies' },
-    rapport_url: null, photos: [], commentaires: [], reouvertures: []
-  },
-  ot4: {
-    id: 'ot4', titre: 'Fuite pompe à eau', description: 'Fuite visible au niveau du raccord principal.',
-    type: 'curatif', priorite: 'haute', statut: 'a_planifier',
-    date_planifiee: '2026-06-22', date_debut_reelle: null, date_fin_reelle: null,
-    commentaire_cloture: null, duree_reelle_minutes: null, technicien_id: null,
-    equipement: { id: 'e4', nom: 'Pompe à Eau', reference: 'POM-004', statut: 'en_panne' },
-    batiment: { id: '3', nom: 'Entrepôt Mbao' },
-    rapport_url: null, photos: [], commentaires: [], reouvertures: []
-  },
-}
-
-// Machine à états : transitions autorisées par statut
-/*const TRANSITIONS = {
-  a_planifier: ['assignee', 'annulee'],
-  planifiee: ['assignee', 'annulee'],
-  assignee: ['en_cours', 'annulee'],
-  en_cours: ['terminee'],
-  terminee: ['en_cours'], // réouverture
-  annulee: [],
-}*/
+import {
+  getIntervention, assigner, demarrer, cloturer,
+  rouvrir, annuler, getRapportUrl, uploadPhoto
+} from '../api/interventions.api'
+import { getTechniciens } from '../api/utilisateurs.api'
 
 const STATUT_STYLES = {
-  a_planifier: { label: 'À planifier', className: 'ot-badge-a-planifier' },
-  planifiee: { label: 'Planifiée', className: 'ot-badge-planifiee' },
-  assignee: { label: 'Assignée', className: 'ot-badge-assignee' },
-  en_cours: { label: 'En cours', className: 'ot-badge-en-cours' },
-  terminee: { label: 'Terminée', className: 'ot-badge-terminee' },
-  annulee: { label: 'Annulée', className: 'ot-badge-annulee' },
+  planifiee: { label: 'Planifiée',  className: 'ot-badge-planifiee' },
+  assignee:  { label: 'Assignée',   className: 'ot-badge-assignee' },
+  en_cours:  { label: 'En cours',   className: 'ot-badge-en-cours' },
+  terminee:  { label: 'Terminée',   className: 'ot-badge-terminee' },
+  annulee:   { label: 'Annulée',    className: 'ot-badge-annulee' },
 }
-
 const TYPE_STYLES = {
   preventif: { label: 'Préventif', className: 'type-badge-preventif' },
-  curatif: { label: 'Curatif', className: 'type-badge-curatif' },
+  curatif:   { label: 'Curatif',   className: 'type-badge-curatif' },
 }
-
 const PRIO_STYLES = {
-  basse: { label: 'Basse', className: 'prio-basse' },
+  basse:   { label: 'Basse',   className: 'prio-basse' },
   normale: { label: 'Normale', className: 'prio-normale' },
-  moyenne: { label: 'Moyenne', className: 'prio-moyenne' },
-  haute: { label: 'Haute', className: 'prio-haute' },
+  haute:   { label: 'Haute',   className: 'prio-haute' },
   urgente: { label: 'Urgente', className: 'prio-urgente' },
 }
 
@@ -100,139 +30,246 @@ function formatDate(d) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
-
 function formatDateTime(d) {
   if (!d) return '—'
   return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+// Les photos sont servies par Express via /storage (pas via /api/v1)
+const STORAGE_URL = 'http://localhost:5000/storage'
+
+function getPhotoUrl(chemin) {
+  if (!chemin) return ''
+  // Normalise les backslashes Windows et extrait le chemin relatif depuis storage/
+  const normalise = chemin.replace(/\\/g, '/')
+  const idx = normalise.indexOf('storage/')
+  if (idx !== -1) {
+    return `http://localhost:5000/${normalise.slice(idx)}`
+  }
+  return `${STORAGE_URL}/${normalise}`
+}
+
+function CommentaireForm({ interventionId, onAjout }) {
+  const [contenu, setContenu] = useState('')
+  const [sending, setSending]  = useState(false)
+
+  const handleEnvoyer = async () => {
+    if (contenu.trim().length === 0) return
+    setSending(true)
+    try {
+      const { ajouterCommentaire } = await import('../api/interventions.api')
+      const res = await ajouterCommentaire(interventionId, contenu.trim())
+      onAjout(res?.data ?? [])
+      setContenu('')
+    } catch (err) {
+      window.alert(err.response?.data?.message || 'Erreur lors de l\'envoi.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className="comment-form">
+      <textarea
+        placeholder="Ajouter un commentaire..."
+        value={contenu}
+        onChange={e => setContenu(e.target.value)}
+        rows={3}
+      />
+      <button className="btn-primary" onClick={handleEnvoyer} disabled={sending || contenu.trim().length === 0}>
+        {sending ? 'Envoi...' : <><i className="ti ti-send" /> Envoyer</>}
+      </button>
+    </div>
+  )
+}
+
 export default function DetailIntervention() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { t } = useTranslation()
-  const user = getUser()
 
-  const [ot, setOt] = useState(mockOTs[id])
-  const [commentaire, setCommentaire] = useState('')
+  const user              = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
+  const isAdmin           = user.role === 'admin'
+  const isTech            = user.role === 'technicien'
 
-  // Modales
-  const [modal, setModal] = useState(null) // 'assigner' | 'cloturer' | 'rouvrir' | 'annuler'
-  const [assignForm, setAssignForm] = useState({ technicien_id: '' })
-  const [cloturerForm, setCloturerForm] = useState({ commentaire_cloture: '', duree_reelle_minutes: '', resolu: false })
-  const [rouvrirForm, setRouvrirForm] = useState({ motif: '' })
+  const [ot,             setOt]             = useState(null)
+  const [techniciens,    setTechniciens]    = useState([])
+  const [loading,        setLoading]        = useState(true)
+  const [erreur,         setErreur]         = useState('')
+  const [modal,          setModal]          = useState(null)
+  const [errModal,       setErrModal]       = useState('')
+  const [submitting,     setSubmitting]     = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(null)
+  const [photoZoom,      setPhotoZoom]      = useState(null) // URL photo à zoomer
 
-  if (!ot) {
-    return (
-      <div className="detail-intervention">
-        <div className="detail-empty">
-          <i className="ti ti-alert-circle" aria-hidden="true" />
-          <p>Intervention introuvable.</p>
-          <button className="btn-outline" onClick={() => navigate('/interventions')}>
-            {t('common.back')}
-          </button>
-        </div>
-      </div>
-    )
+  const [assignForm,   setAssignForm]   = useState({ technicien_id: '' })
+  const [cloturerForm, setCloturerForm] = useState({ commentaire_cloture: '', duree_reelle_minutes: '' })
+  const [rouvrirForm,  setRouvrirForm]  = useState({ motif: '' })
+
+  
+
+  const chargerOT = async () => {
+    setLoading(true); setErreur('')
+    try {
+      const res = await getIntervention(id)
+      setOt(res?.data ?? res)
+    } catch (err) {
+      console.error('Erreur chargement OT:', err)
+      setErreur('Intervention introuvable ou erreur serveur.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const statutInfo = STATUT_STYLES[ot.statut] || STATUT_STYLES.a_planifier
-  const typeInfo = TYPE_STYLES[ot.type] || TYPE_STYLES.preventif
-  const prioInfo = PRIO_STYLES[ot.priorite] || PRIO_STYLES.normale
-  const technicienNom = mockTechniciens.find(t => t.id === ot.technicien_id)?.nom || t('detail.unassigned')
-  const canUploadPhotos = ot.statut === 'assignee' || ot.statut === 'en_cours'
+  const chargerTechniciens = async () => {
+    try {
+      const res = await getTechniciens()
+      setTechniciens(Array.isArray(res) ? res : (res?.data ?? []))
+    } catch { /* non bloquant */ }
+  }
+  useEffect(() => {
+      chargerOT()
+      if (isAdmin) chargerTechniciens()
+  }, [id])
+  const fermerModal = () => { setModal(null); setErrModal(''); setSubmitting(false) }
 
-  const photosAvant = ot.photos.filter(p => p.type_photo === 'avant')
-  const photosApres = ot.photos.filter(p => p.type_photo === 'apres')
+  // ── Actions ──────────────────────────────────────────────────────────────
 
-  // --- Handlers machine à états (mocks — à remplacer par les vrais endpoints) ---
-
-  const handleAssigner = (e) => {
-    e.preventDefault()
-    if (!assignForm.technicien_id) return
-    setOt(prev => ({ ...prev, statut: 'assignee', technicien_id: assignForm.technicien_id }))
-    setModal(null)
+  const handleAssigner = async () => {
+    if (!assignForm.technicien_id) { setErrModal('Sélectionnez un technicien.'); return }
+    setSubmitting(true)
+    try {
+      const res = await assigner(id, assignForm.technicien_id)
+      const tech = techniciens.find(t => t.id === assignForm.technicien_id)
+      setOt(prev => ({
+        ...prev, ...(res?.data ?? res),
+        technicien_nom: tech ? `${tech.prenom} ${tech.nom}` : prev.technicien_nom,
+        technicien_id: assignForm.technicien_id
+      }))
+      fermerModal(); setAssignForm({ technicien_id: '' })
+    } catch (err) {
+      setErrModal(err.response?.data?.message || 'Erreur lors de l\'assignation.')
+    } finally { setSubmitting(false) }
   }
 
-  const handleDemarrer = () => {
-    setOt(prev => ({ ...prev, statut: 'en_cours', date_debut_reelle: new Date().toISOString() }))
+  const handleDemarrer = async () => {
+    try {
+      const res = await demarrer(id)
+      setOt(prev => ({ ...prev, ...(res?.data ?? res) }))
+    } catch (err) {
+      window.alert(err.response?.data?.message || 'Erreur lors du démarrage.')
+    }
   }
 
-  const handleCloturer = (e) => {
-    e.preventDefault()
+  const handleCloturer = async () => {
     if (cloturerForm.commentaire_cloture.trim().length < 10) {
-      window.alert('Le commentaire de clôture doit faire au moins 10 caractères.')
-      return
+      setErrModal('Le commentaire doit faire au moins 10 caractères.'); return
     }
     if (!cloturerForm.duree_reelle_minutes || parseInt(cloturerForm.duree_reelle_minutes) <= 0) {
-      window.alert('La durée réelle doit être un entier supérieur à 0.')
-      return
+      setErrModal('La durée doit être un entier supérieur à 0.'); return
     }
-    setOt(prev => ({
-      ...prev,
-      statut: 'terminee',
-      date_fin_reelle: new Date().toISOString(),
-      commentaire_cloture: cloturerForm.commentaire_cloture,
-      duree_reelle_minutes: parseInt(cloturerForm.duree_reelle_minutes),
-      rapport_url: `/api/interventions/${ot.id}/rapport`, // simulé
-    }))
-    setModal(null)
+    // Avertissement si aucune photo uploadée (non bloquant selon roadmap)
+    const photos = ot.photos ?? []
+    if (photos.length === 0) {
+      const ok = window.confirm('Aucune photo n\'a été uploadée. Voulez-vous quand même clôturer ?')
+      if (!ok) return
+    }
+    setSubmitting(true)
+    try {
+      const res = await cloturer(id, {
+        commentaire_cloture: cloturerForm.commentaire_cloture,
+        duree_reelle_minutes: parseInt(cloturerForm.duree_reelle_minutes),
+        resolu: true
+      })
+      setOt(prev => ({ ...prev, ...(res?.data ?? res) }))
+      fermerModal(); setCloturerForm({ commentaire_cloture: '', duree_reelle_minutes: '' })
+      // Recharger pour avoir rapport_pdf_chemin à jour
+      await chargerOT()
+    } catch (err) {
+      setErrModal(err.response?.data?.message || 'Erreur lors de la clôture.')
+    } finally { setSubmitting(false) }
   }
 
-  const handleRouvrir = (e) => {
-    e.preventDefault()
+  const handleRouvrir = async () => {
     if (rouvrirForm.motif.trim().length < 20) {
-      window.alert('Le motif doit faire au moins 20 caractères.')
-      return
+      setErrModal('Le motif doit faire au moins 20 caractères.'); return
     }
-    const reouverture = {
-      id: `ro${Date.now()}`,
-      user: { nom: user?.nom || 'Admin' },
-      motif: rouvrirForm.motif,
-      statut_precedent: 'terminee',
-      created_at: new Date().toISOString()
+    setSubmitting(true)
+    try {
+      const res = await rouvrir(id, rouvrirForm.motif)
+      setOt(prev => ({ ...prev, ...(res?.data ?? res) }))
+      fermerModal(); setRouvrirForm({ motif: '' })
+    } catch (err) {
+      setErrModal(err.response?.data?.message || 'Erreur lors de la réouverture.')
+    } finally { setSubmitting(false) }
+  }
+
+  const handleAnnuler = async () => {
+    setSubmitting(true)
+    try {
+      const res = await annuler(id)
+      setOt(prev => ({ ...prev, ...(res?.data ?? res) }))
+      fermerModal()
+    } catch (err) {
+      window.alert(err.response?.data?.message || 'Erreur lors de l\'annulation.')
+    } finally { setSubmitting(false) }
+  }
+
+  const handleUploadPhoto = async (e, type_photo) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploadingPhoto(type_photo)
+    try {
+      const res = await uploadPhoto(id, file, type_photo)
+      const nouvPhotos = res?.data ?? []
+      setOt(prev => ({ ...prev, photos: nouvPhotos }))
+    } catch (err) {
+      window.alert(err.response?.data?.message || 'Erreur lors de l\'upload.')
+    } finally {
+      setUploadingPhoto(null)
+      e.target.value = ''
     }
-    setOt(prev => ({
-      ...prev,
-      statut: 'en_cours',
-      rapport_url: null, // RG-OT-07 : rapport invalidé
-      date_fin_reelle: null,
-      commentaire_cloture: null,
-      reouvertures: [reouverture, ...prev.reouvertures]
-    }))
-    setRouvrirForm({ motif: '' })
-    setModal(null)
   }
 
-  const handleAnnuler = () => {
-    setOt(prev => ({ ...prev, statut: 'annulee' }))
-    setModal(null)
-  }
-
-  const handleAddCommentaire = (e) => {
-    e.preventDefault()
-    if (!commentaire.trim()) return
-    const newComment = {
-      id: `c${Date.now()}`,
-      user: { nom: user?.nom || 'Utilisateur' },
-      contenu: commentaire,
-      created_at: new Date().toISOString()
+  const handleSupprimerPhoto = async (photoId) => {
+    if (!window.confirm('Supprimer cette photo ?')) return
+    try {
+      await fetch(`http://localhost:5000/api/v1/interventions/photos/${photoId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('echomaint_token')}` }
+      })
+      setOt(prev => ({ ...prev, photos: (prev.photos ?? []).filter(p => p.id !== photoId) }))
+    } catch {
+      window.alert('Erreur lors de la suppression.')
     }
-    setOt(prev => ({ ...prev, commentaires: [...prev.commentaires, newComment] }))
-    setCommentaire('')
   }
 
-  const handlePhotoUploaded = (photo) => {
-    setOt(prev => ({ ...prev, photos: [...prev.photos, { id: `p${Date.now()}`, ...photo, created_at: new Date().toISOString() }] }))
-  }
+  // ── Chargement ────────────────────────────────────────────────────────────
 
-  const handleDeletePhoto = (photoId) => {
-    if (!window.confirm(t('photos.deleteConfirm'))) return
-    setOt(prev => ({ ...prev, photos: prev.photos.filter(p => p.id !== photoId) }))
-  }
+  if (loading) return (
+    <div className="detail-intervention">
+      <div className="detail-empty"><p>Chargement de l'intervention...</p></div>
+    </div>
+  )
 
-  const isAdmin = user?.role === 'admin'
-  const isTechnicienAssigne = user?.role === 'technicien' && ot.technicien_id === user?.id
-  const isAdminOrTechAssigne = isAdmin || isTechnicienAssigne
+  if (erreur || !ot) return (
+    <div className="detail-intervention">
+      <div className="detail-empty">
+        <i className="ti ti-alert-circle" />
+        <p>{erreur || 'Intervention introuvable.'}</p>
+        <button className="btn-outline" onClick={() => navigate('/interventions')}>Retour</button>
+      </div>
+    </div>
+  )
+
+  const statutInfo           = STATUT_STYLES[ot.statut]  || STATUT_STYLES.planifiee
+  const typeInfo             = TYPE_STYLES[ot.type]       || TYPE_STYLES.preventif
+  const prioInfo             = PRIO_STYLES[ot.priorite]   || PRIO_STYLES.normale
+  const isTechAssigne        = isTech && ot.technicien_id === user.id
+  const isAdminOrTechAssigne = isAdmin || isTechAssigne
+  const peutUploaderPhoto    = isAdminOrTechAssigne && ['assignee', 'en_cours'].includes(ot.statut)
+  const peutSupprimerPhoto   = isAdminOrTechAssigne && ot.statut !== 'terminee'
+  const photosAvant          = (ot.photos ?? []).filter(p => p.type_photo === 'avant')
+  const photosApres          = (ot.photos ?? []).filter(p => p.type_photo === 'apres')
 
   return (
     <div className="detail-intervention">
@@ -240,10 +277,8 @@ export default function DetailIntervention() {
       {/* Header */}
       <div className="detail-header">
         <button className="btn-back" onClick={() => navigate(-1)}>
-          <i className="ti ti-arrow-left" aria-hidden="true" />
-          {t('common.back')}
+          <i className="ti ti-arrow-left" /> Retour
         </button>
-
         <div className="detail-header-title">
           <h1>{ot.titre}</h1>
           <div className="detail-header-badges">
@@ -257,62 +292,60 @@ export default function DetailIntervention() {
       {/* Actions machine à états */}
       {ot.statut !== 'annulee' && (
         <div className="detail-actions">
-          {/* Assigner — admin, OT à planifier ou planifié */}
-          {isAdmin && (ot.statut === 'a_planifier' || ot.statut === 'planifiee') && (
+          {isAdmin && ot.statut === 'planifiee' && (
             <button className="btn-primary" onClick={() => setModal('assigner')}>
-              <i className="ti ti-user-plus" aria-hidden="true" />
-              {t('detail.actions.assigner')}
+              <i className="ti ti-user-plus" /> Assigner
             </button>
           )}
-
-          {/* Démarrer — admin ou technicien assigné, OT assigné */}
           {isAdminOrTechAssigne && ot.statut === 'assignee' && (
             <button className="btn-action-start" onClick={handleDemarrer}>
-              <i className="ti ti-player-play" aria-hidden="true" />
-              {t('detail.actions.demarrer')}
+              <i className="ti ti-player-play" /> Démarrer
             </button>
           )}
-
-          {/* Clôturer — admin ou technicien assigné, OT en cours */}
           {isAdminOrTechAssigne && ot.statut === 'en_cours' && (
             <button className="btn-action-close" onClick={() => setModal('cloturer')}>
-              <i className="ti ti-circle-check" aria-hidden="true" />
-              {t('detail.actions.cloturer')}
+              <i className="ti ti-circle-check" /> Clôturer
             </button>
           )}
-
-          {/* Rouvrir — admin uniquement, OT terminé (RG-OT-04) */}
           {isAdmin && ot.statut === 'terminee' && (
             <button className="btn-action-reopen" onClick={() => setModal('rouvrir')}>
-              <i className="ti ti-rotate" aria-hidden="true" />
-              {t('detail.actions.rouvrir')}
+              <i className="ti ti-rotate" /> Rouvrir
             </button>
           )}
-
-          {/* Annuler — admin uniquement, OT à planifier ou assigné */}
-          {isAdmin && (ot.statut === 'a_planifier' || ot.statut === 'planifiee' || ot.statut === 'assignee') && (
+          {isAdmin && ['planifiee', 'assignee'].includes(ot.statut) && (
             <button className="btn-action-cancel" onClick={() => setModal('annuler')}>
-              <i className="ti ti-ban" aria-hidden="true" />
-              {t('detail.actions.annuler')}
+              <i className="ti ti-ban" /> Annuler
             </button>
           )}
         </div>
       )}
 
-      {/* Infos + Équipement */}
+      {/* Grille infos */}
       <div className="detail-grid">
         <div className="detail-card">
-          <h2>{t('detail.otDetails')}</h2>
+          <h2>Détails de l'intervention</h2>
           <div className="detail-rows">
-            <div className="detail-row"><span>{t('detail.type')}</span><strong>{typeInfo.label}</strong></div>
-            <div className="detail-row"><span>{t('detail.priorite')}</span><strong>{prioInfo.label}</strong></div>
-            <div className="detail-row"><span>{t('detail.datePlanifiee')}</span><strong>{formatDate(ot.date_planifiee)}</strong></div>
-            <div className="detail-row"><span>{t('detail.dateDebut')}</span><strong>{formatDateTime(ot.date_debut_reelle)}</strong></div>
-            <div className="detail-row"><span>{t('detail.dateFin')}</span><strong>{formatDateTime(ot.date_fin_reelle)}</strong></div>
+            <div className="detail-row"><span>Type</span><strong>{typeInfo.label}</strong></div>
+            <div className="detail-row"><span>Priorité</span><strong>{prioInfo.label}</strong></div>
+            <div className="detail-row">
+              <span>Statut</span>
+              <strong><span className={`ot-status-badge ${statutInfo.className}`}>{statutInfo.label}</span></strong>
+            </div>
+            <div className="detail-row"><span>Date planifiée</span><strong>{formatDate(ot.date_planifiee)}</strong></div>
+            <div className="detail-row"><span>Début réel</span><strong>{formatDateTime(ot.date_debut_reelle)}</strong></div>
+            <div className="detail-row"><span>Fin réelle</span><strong>{formatDateTime(ot.date_fin_reelle)}</strong></div>
             {ot.duree_reelle_minutes && (
-              <div className="detail-row"><span>{t('detail.duree')}</span><strong>{ot.duree_reelle_minutes} {t('detail.min')}</strong></div>
+              <div className="detail-row"><span>Durée réelle</span><strong>{ot.duree_reelle_minutes} min</strong></div>
             )}
-            <div className="detail-row"><span>{t('detail.technicien')}</span><strong>{technicienNom}</strong></div>
+            <div className="detail-row">
+              <span>Technicien</span>
+              <strong>
+                {ot.technicien_nom
+                  ? `${ot.technicien_prenom ?? ''} ${ot.technicien_nom}`.trim()
+                  : <span style={{ color: '#94a3b8' }}>Non assigné</span>
+                }
+              </strong>
+            </div>
           </div>
           {ot.commentaire_cloture && (
             <div className="detail-cloture-comment">
@@ -322,133 +355,185 @@ export default function DetailIntervention() {
           )}
           {ot.description && (
             <div className="detail-description">
-              <p className="detail-description-label">{t('detail.description')}</p>
+              <p className="detail-description-label">Description</p>
               <p>{ot.description}</p>
             </div>
           )}
         </div>
 
         <div className="detail-card">
-          <h2>{t('detail.equipment')}</h2>
+          <h2>Équipement & Bâtiment</h2>
           <div className="detail-rows">
-            <div className="detail-row"><span>{t('detail.equipment')}</span><strong>{ot.equipement.nom}</strong></div>
-            <div className="detail-row"><span>Réf.</span><strong>{ot.equipement.reference}</strong></div>
-            <div className="detail-row"><span>{t('detail.building')}</span><strong>{ot.batiment.nom}</strong></div>
+            <div className="detail-row"><span>Équipement</span><strong>{ot.equipement_nom ?? '—'}</strong></div>
+            <div className="detail-row"><span>Référence</span><strong>{ot.equipement_reference ?? '—'}</strong></div>
+            <div className="detail-row"><span>Bâtiment</span><strong>{ot.batiment_nom ?? '—'}</strong></div>
           </div>
         </div>
       </div>
 
-      {/* Rapport PDF — RG-RAPPORT-01 */}
+      {/* Rapport PDF */}
       <div className="detail-card">
-        <h2>{t('detail.rapport')}</h2>
-        {ot.rapport_url && ot.statut === 'terminee' ? (
+        <h2>Rapport d'intervention</h2>
+        {ot.statut === 'terminee' && ot.rapport_pdf_chemin ? (
           <a
-            href={ot.rapport_url}
+            href={`http://localhost:5000/api/v1/interventions/${id}/rapport`}
             target="_blank"
             rel="noreferrer"
             className="btn-primary rapport-btn"
           >
-            <i className="ti ti-file-type-pdf" aria-hidden="true" />
-            {t('detail.downloadRapport')}
+            <i className="ti ti-file-type-pdf" /> Télécharger le rapport PDF
           </a>
         ) : (
-          <p className="rapport-unavailable">{t('detail.rapportUnavailable')}</p>
+          <p className="rapport-unavailable">
+            {ot.statut === 'terminee'
+              ? 'Rapport en cours de génération...'
+              : 'Le rapport sera disponible après la clôture de l\'intervention.'
+            }
+          </p>
         )}
       </div>
 
       {/* Photos */}
       <div className="detail-card">
-        <h2>{t('detail.photos')}</h2>
-
+        <h2>Photos d'intervention</h2>
         <div className="photos-grid-section">
+
+          {/* Avant */}
           <div>
-            <p className="photos-section-label">{t('detail.photosAvant')}</p>
-            <div className="photos-grid">
-              {photosAvant.length === 0 && <p className="photos-empty">{t('detail.noPhotos')}</p>}
-              {photosAvant.map(p => (
-                <div key={p.id} className="photo-thumb">
-                  <img src={p.url} alt="avant" />
-                  {(isAdmin || isTechnicienAssigne) && ot.statut !== 'terminee' && (
-                    <button className="photo-delete-btn" onClick={() => handleDeletePhoto(p.id)}>
-                      <i className="ti ti-trash" aria-hidden="true" />
-                    </button>
-                  )}
+            <p className="photos-section-label">
+              <i className="ti ti-camera" style={{ marginRight: 4 }} />
+              Avant ({photosAvant.length})
+            </p>
+            {photosAvant.length === 0
+              ? <p className="photos-empty">Aucune photo avant</p>
+              : (
+                <div className="photos-grid">
+                  {photosAvant.map(p => (
+                    <div key={p.id} className="photo-thumb">
+                      <img
+                        src={getPhotoUrl(p.chemin_fichier)}
+                        alt="avant"
+                        onClick={() => setPhotoZoom(getPhotoUrl(p.chemin_fichier))}
+                        style={{ cursor: 'zoom-in' }}
+                        onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
+                      />
+                      {peutSupprimerPhoto && (
+                        <button
+                          className="photo-delete-btn"
+                          onClick={() => handleSupprimerPhoto(p.id)}
+                          title="Supprimer"
+                        >
+                          <i className="ti ti-x" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            {(isAdmin || isTechnicienAssigne) && (
-              <PhotoUploader
-                typePhoto="avant"
-                canUpload={canUploadPhotos}
-                onUpload={handlePhotoUploaded}
-              />
+              )
+            }
+            {peutUploaderPhoto && (
+              <label className="btn-upload-photo">
+                <i className="ti ti-upload" />
+                {uploadingPhoto === 'avant' ? 'Upload en cours...' : 'Ajouter une photo avant'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  style={{ display: 'none' }}
+                  onChange={e => handleUploadPhoto(e, 'avant')}
+                  disabled={uploadingPhoto !== null}
+                />
+              </label>
             )}
           </div>
 
+          {/* Après */}
           <div>
-            <p className="photos-section-label">{t('detail.photosApres')}</p>
-            <div className="photos-grid">
-              {photosApres.length === 0 && <p className="photos-empty">{t('detail.noPhotos')}</p>}
-              {photosApres.map(p => (
-                <div key={p.id} className="photo-thumb">
-                  <img src={p.url} alt="après" />
-                  {(isAdmin || isTechnicienAssigne) && ot.statut !== 'terminee' && (
-                    <button className="photo-delete-btn" onClick={() => handleDeletePhoto(p.id)}>
-                      <i className="ti ti-trash" aria-hidden="true" />
-                    </button>
-                  )}
+            <p className="photos-section-label">
+              <i className="ti ti-camera-check" style={{ marginRight: 4 }} />
+              Après ({photosApres.length})
+            </p>
+            {photosApres.length === 0
+              ? <p className="photos-empty">Aucune photo après</p>
+              : (
+                <div className="photos-grid">
+                  {photosApres.map(p => (
+                    <div key={p.id} className="photo-thumb">
+                      <img
+                        src={getPhotoUrl(p.chemin_fichier)}
+                        alt="après"
+                        onClick={() => setPhotoZoom(getPhotoUrl(p.chemin_fichier))}
+                        style={{ cursor: 'zoom-in' }}
+                        onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
+                      />
+                      {peutSupprimerPhoto && (
+                        <button
+                          className="photo-delete-btn"
+                          onClick={() => handleSupprimerPhoto(p.id)}
+                          title="Supprimer"
+                        >
+                          <i className="ti ti-x" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            {(isAdmin || isTechnicienAssigne) && (
-              <PhotoUploader
-                typePhoto="apres"
-                canUpload={canUploadPhotos}
-                onUpload={handlePhotoUploaded}
-              />
+              )
+            }
+            {peutUploaderPhoto && (
+              <label className="btn-upload-photo">
+                <i className="ti ti-upload" />
+                {uploadingPhoto === 'apres' ? 'Upload en cours...' : 'Ajouter une photo après'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  style={{ display: 'none' }}
+                  onChange={e => handleUploadPhoto(e, 'apres')}
+                  disabled={uploadingPhoto !== null}
+                />
+              </label>
             )}
           </div>
+
         </div>
       </div>
 
       {/* Commentaires */}
       <div className="detail-card">
-        <h2>{t('detail.comments')}</h2>
-        {ot.commentaires.length === 0 && <p className="detail-empty-text">{t('detail.noComments')}</p>}
-        <div className="comments-list">
-          {ot.commentaires.map(c => (
-            <div key={c.id} className="comment-item">
-              <div className="comment-header">
-                <strong>{c.user.nom}</strong>
-                <span>{formatDateTime(c.created_at)}</span>
-              </div>
-              <p>{c.contenu}</p>
+        <h2>Commentaires</h2>
+        {(ot.commentaires ?? []).length === 0
+          ? <p className="detail-empty-text">Aucun commentaire.</p>
+          : (
+            <div className="comments-list">
+              {ot.commentaires.map(c => (
+                <div key={c.id} className="comment-item">
+                  <div className="comment-header">
+                    <strong>{c.prenom ? `${c.prenom} ${c.nom}` : (c.user?.nom ?? '—')}</strong>
+                    <span>{formatDateTime(c.created_at)}</span>
+                  </div>
+                  <p>{c.contenu}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )
+        }
+
+        {/* Formulaire ajout commentaire */}
         {ot.statut !== 'annulee' && (
-          <form onSubmit={handleAddCommentaire} className="comment-form">
-            <textarea
-              placeholder={t('detail.commentPlaceholder')}
-              value={commentaire}
-              onChange={e => setCommentaire(e.target.value)}
-              rows={2}
-              required
-            />
-            <button type="submit" className="btn-primary">{t('detail.addComment')}</button>
-          </form>
+          <CommentaireForm interventionId={id} onAjout={(nouveauxCommentaires) =>
+            setOt(prev => ({ ...prev, commentaires: nouveauxCommentaires }))
+          } />
         )}
       </div>
 
       {/* Réouvertures */}
-      {ot.reouvertures.length > 0 && (
+      {(ot.reouvertures ?? []).length > 0 && (
         <div className="detail-card">
-          <h2>{t('detail.reopenings')}</h2>
+          <h2>Historique des réouvertures</h2>
           <div className="reouvertures-list">
             {ot.reouvertures.map(r => (
               <div key={r.id} className="reouverture-item">
                 <div className="reouverture-header">
-                  <strong>{r.user.nom}</strong>
+                  <strong>{r.user?.nom ?? r.auteur ?? '—'}</strong>
                   <span>{formatDateTime(r.created_at)}</span>
                 </div>
                 <p className="reouverture-motif">{r.motif}</p>
@@ -459,135 +544,185 @@ export default function DetailIntervention() {
         </div>
       )}
 
-      {/* ===== MODALES ===== */}
-
-      {/* Modal : Assigner */}
-      {modal === 'assigner' && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{t('detail.modals.assignerTitle')}</h2>
-              <button onClick={() => setModal(null)}><i className="ti ti-x" /></button>
-            </div>
-            <form onSubmit={handleAssigner} className="modal-form">
-              <div className="form-group">
-                <label>{t('detail.technicien')}</label>
-                <select
-                  value={assignForm.technicien_id}
-                  onChange={e => setAssignForm({ technicien_id: e.target.value })}
-                  required
-                >
-                  <option value="">{t('detail.modals.selectTechnicien')}</option>
-                  {mockTechniciens.map(t => (
-                    <option key={t.id} value={t.id}>{t.nom}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setModal(null)}>{t('common.cancel')}</button>
-                <button type="submit" className="btn-primary">{t('common.confirm')}</button>
-              </div>
-            </form>
+      {/* ── Zoom photo ────────────────────────────────────────────────────── */}
+      {photoZoom && (
+        <div
+          className="modal-overlay"
+          onClick={() => setPhotoZoom(null)}
+          style={{ zIndex: 200 }}
+        >
+          <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
+            <img
+              src={photoZoom}
+              alt="zoom"
+              style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 12, objectFit: 'contain' }}
+            />
+            <button
+              onClick={() => setPhotoZoom(null)}
+              style={{
+                position: 'absolute', top: -12, right: -12,
+                background: '#fff', border: 'none', borderRadius: '50%',
+                width: 32, height: 32, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+              }}
+            >
+              <i className="ti ti-x" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* Modal : Clôturer */}
-      {modal === 'cloturer' && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
+      {/* ── Modals ────────────────────────────────────────────────────────── */}
+      {modal && (
+        <div className="modal-overlay" onClick={fermerModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{t('detail.modals.cloturerTitle')}</h2>
-              <button onClick={() => setModal(null)}><i className="ti ti-x" /></button>
-            </div>
-            <form onSubmit={handleCloturer} className="modal-form">
-              <div className="form-group">
-                <label>{t('detail.modals.commentaireCloture')}</label>
-                <textarea
-                  placeholder={t('detail.modals.commentairePlaceholder')}
-                  value={cloturerForm.commentaire_cloture}
-                  onChange={e => setCloturerForm(f => ({ ...f, commentaire_cloture: e.target.value }))}
-                  rows={4}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>{t('detail.modals.dureeReelle')}</label>
-                <input
-                  type="number"
-                  min={1}
-                  placeholder={t('detail.modals.dureePlaceholder')}
-                  value={cloturerForm.duree_reelle_minutes}
-                  onChange={e => setCloturerForm(f => ({ ...f, duree_reelle_minutes: e.target.value }))}
-                  required
-                />
-              </div>
-              {ot.equipement.statut === 'en_panne' && (
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={cloturerForm.resolu}
-                    onChange={e => setCloturerForm(f => ({ ...f, resolu: e.target.checked }))}
-                  />
-                  {t('detail.modals.resolu')}
-                </label>
-              )}
-              <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setModal(null)}>{t('common.cancel')}</button>
-                <button type="submit" className="btn-action-close">{t('detail.actions.cloturer')}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* Modal : Rouvrir */}
-      {modal === 'rouvrir' && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{t('detail.modals.rouvrirTitle')}</h2>
-              <button onClick={() => setModal(null)}><i className="ti ti-x" /></button>
-            </div>
-            <form onSubmit={handleRouvrir} className="modal-form">
-              <div className="reouverture-warning">
-                <i className="ti ti-alert-triangle" aria-hidden="true" />
-                <p>{t('detail.modals.rouvrirWarning')}</p>
-              </div>
-              <div className="form-group">
-                <label>{t('detail.modals.motif')}</label>
-                <textarea
-                  placeholder={t('detail.modals.motifPlaceholder')}
-                  value={rouvrirForm.motif}
-                  onChange={e => setRouvrirForm({ motif: e.target.value })}
-                  rows={4}
-                  required
-                />
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setModal(null)}>{t('common.cancel')}</button>
-                <button type="submit" className="btn-action-reopen">{t('detail.actions.rouvrir')}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            {/* Assigner */}
+            {modal === 'assigner' && (
+              <>
+                <div className="modal-header">
+                  <h2>Assigner un technicien</h2>
+                  <button onClick={fermerModal}><i className="ti ti-x" /></button>
+                </div>
+                <div className="modal-form">
+                  <div className="form-group">
+                    <label>Technicien</label>
+                    <select
+                      value={assignForm.technicien_id}
+                      onChange={e => setAssignForm({ technicien_id: e.target.value })}
+                    >
+                      <option value="">Sélectionner un technicien</option>
+                      {techniciens.map(t => (
+                        <option key={t.id} value={t.id}>{t.prenom} {t.nom}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {errModal && <p style={{ color: '#ef4444', fontSize: '13px' }}>{errModal}</p>}
+                  <div className="modal-footer">
+                    <button className="btn-cancel" onClick={fermerModal}>Annuler</button>
+                    <button className="btn-primary" onClick={handleAssigner} disabled={submitting}>
+                      {submitting ? 'Assignation...' : 'Assigner'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
-      {/* Modal : Annuler */}
-      {modal === 'annuler' && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{t('detail.modals.annulerTitle')}</h2>
-              <button onClick={() => setModal(null)}><i className="ti ti-x" /></button>
-            </div>
-            <div className="modal-form">
-              <p className="annuler-warning">{t('detail.modals.annulerConfirm')}</p>
-              <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setModal(null)}>{t('common.cancel')}</button>
-                <button className="btn-action-cancel" onClick={handleAnnuler}>{t('detail.actions.annuler')}</button>
-              </div>
-            </div>
+            {/* Clôturer */}
+            {modal === 'cloturer' && (
+              <>
+                <div className="modal-header">
+                  <h2>Clôturer l'intervention</h2>
+                  <button onClick={fermerModal}><i className="ti ti-x" /></button>
+                </div>
+                <div className="modal-form">
+                  {/* Résumé photos */}
+                  <div style={{
+                    background: (ot.photos ?? []).length === 0 ? '#FFF7ED' : '#F0FDF4',
+                    border: `1px solid ${(ot.photos ?? []).length === 0 ? '#FDE68A' : '#BBF7D0'}`,
+                    borderRadius: 10, padding: '10px 14px',
+                    display: 'flex', alignItems: 'center', gap: 8, fontSize: 13
+                  }}>
+                    <i className={`ti ${(ot.photos ?? []).length === 0 ? 'ti-alert-triangle' : 'ti-circle-check'}`}
+                      style={{ color: (ot.photos ?? []).length === 0 ? '#F59E0B' : '#22C55E' }} />
+                    <span>
+                      {(ot.photos ?? []).length === 0
+                        ? 'Aucune photo uploadée — recommandé avant clôture'
+                        : `${(ot.photos ?? []).length} photo(s) uploadée(s)`
+                      }
+                    </span>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Commentaire de clôture <span className="required">*</span></label>
+                    <textarea
+                      placeholder="Décrivez les travaux effectués (min. 10 caractères)..."
+                      value={cloturerForm.commentaire_cloture}
+                      onChange={e => setCloturerForm(f => ({ ...f, commentaire_cloture: e.target.value }))}
+                      rows={4}
+                    />
+                    <span style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'right' }}>
+                      {cloturerForm.commentaire_cloture.length} / 10 min
+                    </span>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Durée réelle (minutes) <span className="required">*</span></label>
+                    <input
+                      type="number" min={1} placeholder="Ex: 90"
+                      value={cloturerForm.duree_reelle_minutes}
+                      onChange={e => setCloturerForm(f => ({ ...f, duree_reelle_minutes: e.target.value }))}
+                    />
+                  </div>
+
+                  {errModal && <p style={{ color: '#ef4444', fontSize: '13px' }}>{errModal}</p>}
+                  <div className="modal-footer">
+                    <button className="btn-cancel" onClick={fermerModal}>Annuler</button>
+                    <button className="btn-action-close" onClick={handleCloturer} disabled={submitting}>
+                      {submitting ? 'Clôture...' : 'Clôturer'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Rouvrir */}
+            {modal === 'rouvrir' && (
+              <>
+                <div className="modal-header">
+                  <h2>Rouvrir l'intervention</h2>
+                  <button onClick={fermerModal}><i className="ti ti-x" /></button>
+                </div>
+                <div className="modal-form">
+                  <div className="reouverture-warning">
+                    <i className="ti ti-alert-triangle" />
+                    <p>La réouverture invalidera le rapport PDF et repassera l'intervention en "En cours".</p>
+                  </div>
+                  <div className="form-group">
+                    <label>Motif de réouverture <span className="required">*</span> (min. 20 caractères)</label>
+                    <textarea
+                      placeholder="Décrivez la raison de la réouverture..."
+                      value={rouvrirForm.motif}
+                      onChange={e => setRouvrirForm({ motif: e.target.value })}
+                      rows={4}
+                    />
+                    <span style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'right' }}>
+                      {rouvrirForm.motif.length} / 20 min
+                    </span>
+                  </div>
+                  {errModal && <p style={{ color: '#ef4444', fontSize: '13px' }}>{errModal}</p>}
+                  <div className="modal-footer">
+                    <button className="btn-cancel" onClick={fermerModal}>Annuler</button>
+                    <button className="btn-action-reopen" onClick={handleRouvrir} disabled={submitting}>
+                      {submitting ? 'Réouverture...' : 'Rouvrir'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Annuler */}
+            {modal === 'annuler' && (
+              <>
+                <div className="modal-header">
+                  <h2>Annuler l'intervention</h2>
+                  <button onClick={fermerModal}><i className="ti ti-x" /></button>
+                </div>
+                <div className="modal-form">
+                  <p className="annuler-warning">
+                    Êtes-vous sûr de vouloir annuler <strong>"{ot.titre}"</strong> ? Cette action est irréversible.
+                  </p>
+                  <div className="modal-footer">
+                    <button className="btn-cancel" onClick={fermerModal}>Non, garder</button>
+                    <button className="btn-action-cancel" onClick={handleAnnuler} disabled={submitting}>
+                      {submitting ? 'Annulation...' : 'Oui, annuler'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
           </div>
         </div>
       )}

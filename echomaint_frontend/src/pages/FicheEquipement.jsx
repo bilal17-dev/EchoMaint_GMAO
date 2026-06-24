@@ -167,10 +167,17 @@ export default function FicheEquipement() {
           <p className="fiche-historique-empty">Aucune intervention enregistrée pour cet équipement.</p>
         ) : (
           <div className="historique-list">
+            
+
             {historique.map(ot => {
               const otStatutInfo = OT_STATUT_LABELS[ot.statut] || OT_STATUT_LABELS.terminee
               return (
-                <div key={ot.id} className="historique-item">
+                <div
+                  key={ot.id}
+                  className="historique-item historique-item-clickable"
+                  onClick={() => navigate(`/interventions/${ot.id}`)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="historique-item-top">
                     <div>
                       <p className="historique-titre">{ot.titre}</p>
@@ -178,7 +185,10 @@ export default function FicheEquipement() {
                         {ot.type === 'preventif' ? 'Préventif' : 'Curatif'} · {formatDate(ot.date_fin_reelle || ot.updated_at)} · {ot.technicien_nom || 'Non assigné'}
                       </p>
                     </div>
-                    <span className={`ot-badge ${otStatutInfo.className}`}>{otStatutInfo.label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className={`ot-badge ${otStatutInfo.className}`}>{otStatutInfo.label}</span>
+                      <i className="ti ti-chevron-right" style={{ color: '#94a3b8', fontSize: '14px' }} />
+                    </div>
                   </div>
                   {ot.commentaire_cloture && (
                     <p className="historique-commentaire">{ot.commentaire_cloture}</p>

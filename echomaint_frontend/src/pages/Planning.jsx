@@ -42,7 +42,7 @@ function getFirstDayOfMonth(year, month) {
 export default function Planning() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const user = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
 
   const today = new Date()
   const [viewYear, setViewYear] = useState(today.getFullYear())

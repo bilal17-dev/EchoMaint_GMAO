@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react'
 import './Stats.css'
-
-// On remplace mockOTs, mockBatiments et mockTechniciens
-// par les vraies fonctions connectées au backend
 import { getInterventions } from '../api/interventions.api'
 import { getBatiments } from '../api/batiments.api'
 import { getTechniciens } from '../api/utilisateurs.api'
@@ -14,16 +11,11 @@ const STATUT_LABELS = {
 }
 const TYPES = ['preventif', 'curatif']
 
-/**
- * Exporte les interventions filtrées en fichier CSV directement depuis le navigateur.
- * C'est un export "côté client" différent de l'export backend /exports/interventions
- * qui génère le fichier côté serveur avec plus de données.
- */
 function exportInterventionsCSV(data) {
-  const headers = ['ID', 'Titre', 'Type', 'Statut', 'Priorité', 'Équipement', 'Bâtiment', 'Technicien', 'Date planifiée', 'Durée (min)', 'Réouvertures']
+  const headers = ['ID', 'Titre', 'Type', 'Statut', 'Priorité', 'Équipement', 'Bâtiment', 'Technicien', 'Date planifiée', 'Durée (min)']
   const rows = data.map(ot => [
     ot.id,
-    ot.titre,
+    `"${(ot.titre || '').replace(/"/g, '""')}"`,
     ot.type,
     ot.statut,
     ot.priorite,
@@ -32,9 +24,7 @@ function exportInterventionsCSV(data) {
     ot.technicien_nom ? `${ot.technicien_prenom || ''} ${ot.technicien_nom}`.trim() : 'Non assigné',
     ot.date_planifiee ? new Date(ot.date_planifiee).toLocaleDateString('fr-FR') : '—',
     ot.duree_reelle_minutes || '—',
-    ot.reouvertures?.length || 0
   ])
-
   const csv = [headers, ...rows].map(r => r.join(';')).join('\n')
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -45,82 +35,101 @@ function exportInterventionsCSV(data) {
   URL.revokeObjectURL(url)
 }
 
+async function exportAvecToken(url, nomFichier) {
+  try {
+    const token = localStorage.getItem('echomaint_token')
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      window.alert(err.message || 'Erreur lors de l\'export.')
+      return
+    }
+    const blob = await res.blob()
+    const objectUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = objectUrl
+    a.download = nomFichier
+    a.click()
+    URL.revokeObjectURL(objectUrl)
+  } catch {
+    window.alert('Erreur réseau lors de l\'export.')
+  }
+}
+
 export default function Stats() {
-  const [interventions, setInterventions] = useState([])
-  const [batiments, setBatiments] = useState([])
-  const [techniciens, setTechniciens] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [erreur, setErreur] = useState('')
+  const [interventions,   setInterventions]   = useState([])
+  const [batiments,       setBatiments]       = useState([])
+  const [techniciens,     setTechniciens]     = useState([])
+  const [loading,         setLoading]         = useState(true)
+  const [erreur,          setErreur]          = useState('')
 
-  const [filterStatut, setFilterStatut] = useState('')
-  const [filterType, setFilterType] = useState('')
-  const [filterBatiment, setFilterBatiment] = useState('')
-  const [filterTechnicien, setFilterTechnicien] = useState('')
-  const [dateDebut, setDateDebut] = useState('')
-  const [dateFin, setDateFin] = useState('')
+  const [filterStatut,    setFilterStatut]    = useState('')
+  const [filterType,      setFilterType]      = useState('')
+  const [filterBatiment,  setFilterBatiment]  = useState('')
+  const [filterTechnicien,setFilterTechnicien]= useState('')
+  const [dateDebut,       setDateDebut]       = useState('')
+  const [dateFin,         setDateFin]         = useState('')
 
-  // ─── Chargement initial ───────────────────────────────────────────────────
-  useEffect(() => {
-    chargerDonnees()
-  }, [])
+  useEffect(() => { chargerDonnees() }, [])
 
   const chargerDonnees = async () => {
-    setLoading(true)
-    setErreur('')
+    setLoading(true); setErreur('')
     try {
-      // On charge toutes les interventions + bâtiments + techniciens en parallèle
-      const [resInterventions, resBatiments, resTechniciens] = await Promise.all([
+      const [resI, resB, resT] = await Promise.all([
         getInterventions(),
         getBatiments(),
         getTechniciens()
       ])
-
-      setInterventions(resInterventions.data)
-      setBatiments(resBatiments.data)
-      setTechniciens(resTechniciens.data)
+      setInterventions(Array.isArray(resI?.data) ? resI.data : [])
+      setBatiments(Array.isArray(resB?.data) ? resB.data : [])
+      setTechniciens(Array.isArray(resT?.data) ? resT.data : [])
     } catch (error) {
-      console.error('Erreur de chargement des statistiques:', error)
+      console.error('Erreur chargement stats:', error)
       setErreur('Impossible de charger les données.')
     } finally {
       setLoading(false)
     }
   }
 
-  // ─── Filtrage côté frontend ───────────────────────────────────────────────
   const filtered = interventions.filter(ot => {
-    if (filterStatut && ot.statut !== filterStatut) return false
-    if (filterType && ot.type !== filterType) return false
-    if (filterBatiment && ot.batiment_id !== filterBatiment) return false
-    if (filterTechnicien && ot.technicien_id !== filterTechnicien) return false
+    if (filterStatut    && ot.statut       !== filterStatut)    return false
+    if (filterType      && ot.type         !== filterType)      return false
+    if (filterBatiment  && ot.batiment_id  !== filterBatiment)  return false
+    if (filterTechnicien&& ot.technicien_id!== filterTechnicien)return false
     if (dateDebut && new Date(ot.date_planifiee) < new Date(dateDebut)) return false
-    if (dateFin && new Date(ot.date_planifiee) > new Date(dateFin)) return false
+    if (dateFin   && new Date(ot.date_planifiee) > new Date(dateFin))   return false
     return true
   })
 
-  if (loading) {
-    return (
-      <div className="stats">
-        <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-          Chargement des données...
-        </p>
-      </div>
-    )
+  const buildExportParams = (format) => {
+    const p = new URLSearchParams({ format })
+    if (filterStatut)     p.set('statut',              filterStatut)
+    if (filterType)       p.set('type',                filterType)
+    if (filterBatiment)   p.set('batiment_id',         filterBatiment)
+    if (filterTechnicien) p.set('technicien_id',       filterTechnicien)
+    if (dateDebut)        p.set('date_planifiee_debut', dateDebut)
+    if (dateFin)          p.set('date_planifiee_fin',   dateFin)
+    return p.toString()
   }
 
-  if (erreur) {
-    return (
-      <div className="stats">
-        <p style={{ textAlign: 'center', padding: '3rem', color: '#ef4444' }}>
-          {erreur}
-        </p>
-      </div>
-    )
-  }
+  if (loading) return (
+    <div className="stats">
+      <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>Chargement des données...</p>
+    </div>
+  )
+
+  if (erreur) return (
+    <div className="stats">
+      <p style={{ textAlign: 'center', padding: '3rem', color: '#ef4444' }}>{erreur}</p>
+    </div>
+  )
 
   return (
     <div className="stats">
 
-      {/* Section export interventions */}
+      {/* ── Export Interventions ── */}
       <div className="stats-section">
         <div className="stats-section-header">
           <div>
@@ -132,28 +141,17 @@ export default function Stats() {
               className="btn-export"
               onClick={() => exportInterventionsCSV(filtered)}
             >
-              <i className="ti ti-file-type-csv" aria-hidden="true" />
+              <i className="ti ti-file-type-csv" />
               Export CSV ({filtered.length} OT)
             </button>
             <button
               className="btn-export btn-export-pdf"
-              onClick={() => {
-                // Construit les paramètres de filtre pour l'endpoint backend
-                const params = new URLSearchParams()
-                params.set('format', 'pdf')
-                if (filterStatut) params.set('statut', filterStatut)
-                if (filterType) params.set('type', filterType)
-                if (filterBatiment) params.set('batiment_id', filterBatiment)
-                if (filterTechnicien) params.set('technicien_id', filterTechnicien)
-                if (dateDebut) params.set('date_planifiee_debut', dateDebut)
-                if (dateFin) params.set('date_planifiee_fin', dateFin)
-                window.open(
-                  `${import.meta.env.VITE_API_URL}/exports/interventions?${params.toString()}`,
-                  '_blank'
-                )
-              }}
+              onClick={() => exportAvecToken(
+                `http://localhost:5000/api/v1/exports/interventions?${buildExportParams('pdf')}`,
+                `echomaint_interventions_${new Date().toISOString().split('T')[0]}.pdf`
+              )}
             >
-              <i className="ti ti-file-type-pdf" aria-hidden="true" />
+              <i className="ti ti-file-type-pdf" />
               Export PDF
             </button>
           </div>
@@ -175,15 +173,18 @@ export default function Stats() {
           </select>
           <select value={filterTechnicien} onChange={e => setFilterTechnicien(e.target.value)}>
             <option value="">Tous les techniciens</option>
-            {techniciens.map(tech => <option key={tech.id} value={tech.id}>{tech.prenom} {tech.nom}</option>)}
+            {techniciens.map(t => <option key={t.id} value={t.id}>{t.prenom} {t.nom}</option>)}
           </select>
           <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)} title="Date début" />
-          <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)} title="Date fin" />
+          <input type="date" value={dateFin}   onChange={e => setDateFin(e.target.value)}   title="Date fin" />
         </div>
 
         {/* Tableau */}
         {filtered.length === 0 ? (
-          <p className="stats-empty">Aucune intervention trouvée avec ces filtres.</p>
+          <div className="stats-empty">
+            <i className="ti ti-clipboard-off" />
+            <p>Aucune intervention trouvée avec ces filtres.</p>
+          </div>
         ) : (
           <div className="stats-table-wrapper">
             <table className="stats-table">
@@ -198,7 +199,6 @@ export default function Stats() {
                   <th>Technicien</th>
                   <th>Date planifiée</th>
                   <th>Durée (min)</th>
-                  <th>Réouvertures</th>
                 </tr>
               </thead>
               <tbody>
@@ -217,11 +217,15 @@ export default function Stats() {
                     </td>
                     <td>{ot.priorite}</td>
                     <td>{ot.equipement_nom || '—'}</td>
-                    <td>{ot.batiment_nom || '—'}</td>
-                    <td>{ot.technicien_nom ? `${ot.technicien_prenom || ''} ${ot.technicien_nom}`.trim() : <span style={{ color: '#94a3b8' }}>—</span>}</td>
+                    <td>{ot.batiment_nom   || '—'}</td>
+                    <td>
+                      {ot.technicien_nom
+                        ? `${ot.technicien_prenom || ''} ${ot.technicien_nom}`.trim()
+                        : <span style={{ color: '#94a3b8' }}>—</span>
+                      }
+                    </td>
                     <td>{ot.date_planifiee ? new Date(ot.date_planifiee).toLocaleDateString('fr-FR') : '—'}</td>
-                    <td>{ot.duree_reelle_minutes || '—'}</td>
-                    <td className="stats-td-center">{ot.reouvertures?.length || 0}</td>
+                    <td className="stats-td-center">{ot.duree_reelle_minutes || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -230,17 +234,35 @@ export default function Stats() {
         )}
       </div>
 
-      {/* Section export KPI */}
+      {/* ── Export KPI ── */}
       <div className="stats-section stats-section-kpi">
         <div className="stats-section-header">
           <div>
             <h2>Export — Tableau de bord KPI</h2>
-            <p>Les exports CSV et PDF du tableau de bord sont disponibles directement depuis la page Tableau de bord.</p>
+            <p>Téléchargez l'état détaillé des indicateurs de performance au format CSV ou PDF.</p>
           </div>
-          <a href="/dashboard" className="btn-export">
-            <i className="ti ti-layout-dashboard" aria-hidden="true" />
-            Aller au tableau de bord
-          </a>
+          <div className="stats-export-btns">
+            <button
+              className="btn-export"
+              onClick={() => exportAvecToken(
+                'http://localhost:5000/api/v1/exports/kpi?format=csv&periode=30',
+                `echomaint_kpi_${new Date().toISOString().split('T')[0]}.csv`
+              )}
+            >
+              <i className="ti ti-file-type-csv" />
+              Export KPI CSV
+            </button>
+            <button
+              className="btn-export btn-export-pdf"
+              onClick={() => exportAvecToken(
+                'http://localhost:5000/api/v1/exports/kpi?format=pdf&periode=30',
+                `echomaint_kpi_${new Date().toISOString().split('T')[0]}.pdf`
+              )}
+            >
+              <i className="ti ti-file-type-pdf" />
+              Export KPI PDF
+            </button>
+          </div>
         </div>
       </div>
 

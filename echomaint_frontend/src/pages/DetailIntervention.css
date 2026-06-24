@@ -580,3 +580,28 @@
   .detail-grid { grid-template-columns: 1fr; }
   .photos-grid-section { grid-template-columns: 1fr; }
 }
+
+/* Bouton upload photo */
+.btn-upload-photo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px dashed #CBD5E1;
+  background: #F8FAFC;
+  color: #64748B;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+  width: 100%;
+  justify-content: center;
+}
+.btn-upload-photo:hover {
+  border-color: #2563EB;
+  color: #2563EB;
+  background: #EFF6FF;
+}
