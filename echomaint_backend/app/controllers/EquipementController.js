@@ -17,14 +17,18 @@ const EquipementController = {
     try {
       const { role, id_client } = req.user;
       const equipement = await Equipement.findById(req.params.id);
-      
+
+      // 404 : équipement inexistant ou soft-deleté
       if (!equipement) return res.status(404).json({ message: 'Équipement introuvable.' });
 
+      // Contrôle d'accès pour le rôle "client" :
+      // Equipement.findById expose désormais batiments.client_id as client_id.
+      // Un client ne peut consulter que les équipements appartenant à ses propres bâtiments.
       if (role === 'client' && equipement.client_id !== id_client) {
-        return res.status(403).json({ message: 'Accès interdit.' });
+        return res.status(403).json({ message: 'Accès non autorisé à cet équipement.' });
       }
 
-      // Stats interventions
+      // Stats interventions calculées côté serveur pour alléger le frontend
       const stats30j = await db('interventions')
         .where({ equipement_id: req.params.id, statut: 'terminee' })
         .where('created_at', '>=', db.raw('DATE_SUB(NOW(), INTERVAL 30 DAY)'))
@@ -34,8 +38,12 @@ const EquipementController = {
         .where({ equipement_id: req.params.id }).whereNotIn('statut', ['annulee'])
         .orderBy('created_at', 'desc').select('created_at').first();
 
-      return res.status(200).json({ 
-        data: { ...equipement, nb_interventions_30j: parseInt(stats30j.total) || 0, derniere_intervention: derniere?.created_at || null } 
+      return res.status(200).json({
+        data: {
+          ...equipement,
+          nb_interventions_30j: parseInt(stats30j.total) || 0,
+          derniere_intervention: derniere?.created_at || null
+        }
       });
     } catch (error) {
       console.error('[EquipementController.show]', error);
@@ -80,12 +88,25 @@ const EquipementController = {
 
   historique: async (req, res) => {
     try {
+      const { role, id_client } = req.user;
+
+      // Contrôle d'accès identique à show() : un client ne peut consulter
+      // l'historique que des équipements qui lui appartiennent.
+      if (role === 'client') {
+        const equipement = await Equipement.findById(req.params.id);
+        if (!equipement) return res.status(404).json({ message: 'Équipement introuvable.' });
+        if (equipement.client_id !== id_client) {
+          return res.status(403).json({ message: 'Accès non autorisé à cet équipement.' });
+        }
+      }
+
       const interventions = await db('interventions')
         .select('interventions.*', db.raw("CONCAT(users.prenom, ' ', users.nom) as technicien_nom"))
         .leftJoin('users', 'interventions.technicien_id', 'users.id')
         .where({ equipement_id: req.params.id })
         .whereIn('statut', ['terminee', 'annulee'])
         .orderBy('updated_at', 'desc');
+
       return res.status(200).json({ data: interventions });
     } catch (error) {
       return res.status(500).json({ message: 'Erreur historique.' });

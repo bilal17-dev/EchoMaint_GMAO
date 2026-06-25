@@ -1,25 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import './Batiments.css'
 
-// On importe les vraies fonctions qui parlent au backend
-// Elles remplacent les tableaux mockClients et mockBatiments qui étaient écrits en dur
 import { getBatiments, createBatiment, updateBatiment, deleteBatiment } from '../api/batiments.api'
 import { getClients } from '../api/clients.api'
 
 const ITEMS_PER_PAGE = 6
 
 export default function Batiments() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
-  // On démarre avec des tableaux vides : les vraies données arrivent via useEffect ci-dessous
   const [batiments, setBatiments] = useState([])
   const [clients, setClients] = useState([])
-
-  // États pour gérer le chargement et les erreurs de connexion au backend
   const [loading, setLoading] = useState(true)
   const [erreur, setErreur] = useState('')
-
   const [search, setSearch] = useState('')
   const [filterClient, setFilterClient] = useState('')
   const [page, setPage] = useState(1)
@@ -28,9 +24,6 @@ export default function Batiments() {
   const [form, setForm] = useState({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
   const user = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
 
-  // ─── Chargement des données au premier affichage de la page ────────────────
-  // Le tableau vide [] en deuxième argument veut dire :
-  // "exécute cette fonction une seule fois, juste après le premier rendu de la page"
   const chargerDonnees = async () => {
     setLoading(true)
     setErreur('')
@@ -43,15 +36,15 @@ export default function Batiments() {
       const bats    = Array.isArray(resBatiments)       ? resBatiments
                     : Array.isArray(resBatiments?.data)  ? resBatiments.data
                     : []
-      const clients = Array.isArray(resClients)         ? resClients
+      const cls     = Array.isArray(resClients)         ? resClients
                     : Array.isArray(resClients?.data)    ? resClients.data
                     : []
 
       setBatiments(bats)
-      setClients(clients)
+      setClients(cls)
     } catch (error) {
       console.error('Erreur de chargement des bâtiments:', error)
-      setErreur('Impossible de charger les bâtiments.')
+      setErreur(t('batiments.loadError'))
     } finally {
       setLoading(false)
     }
@@ -59,9 +52,8 @@ export default function Batiments() {
 
   useEffect(() => {
     chargerDonnees()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  
 
   const getClientNom = (clientId) => clients.find(c => c.id === clientId)?.nom || '—'
 
@@ -77,20 +69,14 @@ export default function Batiments() {
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
-  // ─── Suppression connectée au backend ──────────────────────────────────────
   const handleDelete = async (id) => {
-    if (!window.confirm('Supprimer ce bâtiment ?')) return
+    if (!window.confirm(t('batiments.deleteConfirm'))) return
 
     try {
-      // On appelle le vrai endpoint DELETE /batiments/:id
-      // Le backend lui-même vérifie la règle RG-REF-03 :
-      // impossible de supprimer si le bâtiment a encore des équipements actifs
       await deleteBatiment(id)
       setBatiments(prev => prev.filter(b => b.id !== id))
     } catch (error) {
-      // Si le backend refuse (équipements rattachés), on affiche son message exact
-      const message = error.response?.data?.message
-        || 'Impossible de supprimer ce bâtiment : il a encore des équipements rattachés.'
+      const message = error.response?.data?.message || t('batiments.deleteBlocked')
       window.alert(message)
     }
   }
@@ -107,19 +93,16 @@ export default function Batiments() {
     setShowModal(true)
   }
 
-  // ─── Création / modification connectée au backend ──────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
 
     try {
       if (editBatiment) {
-        // Modification d'un bâtiment existant
         const res = await updateBatiment(editBatiment.id, form)
         setBatiments(prev => prev.map(b =>
           b.id === editBatiment.id ? res.data : b
         ))
       } else {
-        // Création d'un nouveau bâtiment
         const res = await createBatiment(form)
         setBatiments(prev => [...prev, res.data])
       }
@@ -127,23 +110,21 @@ export default function Batiments() {
       setEditBatiment(null)
       setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
     } catch (error) {
-      const message = error.response?.data?.message || 'Erreur lors de l\'enregistrement.'
+      const message = error.response?.data?.message || t('common.error')
       window.alert(message)
     }
   }
 
-  // ─── Affichage pendant le chargement des données ────────────────────────────
   if (loading) {
     return (
       <div className="batiments">
         <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-          Chargement des bâtiments...
+          {t('batiments.loading')}
         </p>
       </div>
     )
   }
 
-  // ─── Affichage en cas d'erreur de connexion au backend ──────────────────────
   if (erreur) {
     return (
       <div className="batiments">
@@ -164,7 +145,7 @@ export default function Batiments() {
             <i className="ti ti-search" aria-hidden="true" />
             <input
               type="text"
-              placeholder="Rechercher un bâtiment..."
+              placeholder={t('batiments.search')}
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
             />
@@ -173,7 +154,7 @@ export default function Batiments() {
             value={filterClient}
             onChange={e => { setFilterClient(e.target.value); setPage(1) }}
           >
-            <option value="">Tous les clients</option>
+            <option value="">{t('batiments.allClients')}</option>
             {clients.map(c => (
               <option key={c.id} value={c.id}>{c.nom}</option>
             ))}
@@ -186,7 +167,7 @@ export default function Batiments() {
             setShowModal(true)
           }}>
             <i className="ti ti-plus" aria-hidden="true" />
-            Nouveau bâtiment
+            {t('batiments.new')}
           </button>
         )}
       </div>
@@ -195,7 +176,7 @@ export default function Batiments() {
       {paginated.length === 0 ? (
         <div className="batiments-empty">
           <i className="ti ti-building-off" aria-hidden="true" />
-          <p>Aucun bâtiment trouvé</p>
+          <p>{t('batiments.empty')}</p>
         </div>
       ) : (
         <div className="batiments-grid">
@@ -208,10 +189,10 @@ export default function Batiments() {
                 <div className="batiment-actions">
                   {user.role === 'admin' && (
                     <>
-                      <button onClick={() => handleEdit(batiment)} title="Modifier">
+                      <button onClick={() => handleEdit(batiment)} title={t('common.edit')}>
                         <i className="ti ti-edit" aria-hidden="true" />
                       </button>
-                      <button onClick={() => handleDelete(batiment.id)} title="Supprimer" className="btn-danger">
+                      <button onClick={() => handleDelete(batiment.id)} title={t('common.delete')} className="btn-danger">
                         <i className="ti ti-trash" aria-hidden="true" />
                       </button>
                     </>
@@ -228,13 +209,8 @@ export default function Batiments() {
               </div>
 
               <div className="batiment-meta">
-                {/*
-                  nb_equipements n'existe pas forcément dans la réponse du backend.
-                  On affiche "0" par défaut si le champ n'est pas fourni,
-                  pour éviter une erreur d'affichage (undefined).
-                */}
-                <span><strong>{batiment.nb_equipements ?? 0}</strong> équipements</span>
-                <span>Client: <strong>{getClientNom(batiment.client_id)}</strong></span>
+                <span><strong>{batiment.nb_equipements ?? 0}</strong> {t('batiments.equipments')}</span>
+                <span>{t('batiments.client')}: <strong>{getClientNom(batiment.client_id)}</strong></span>
               </div>
 
               <button
@@ -242,7 +218,7 @@ export default function Batiments() {
                 onClick={() => navigate(`/equipements?batiment=${batiment.id}`)}
               >
                 <i className="ti ti-eye" aria-hidden="true" />
-                Voir les équipements
+                {t('batiments.viewEquipments')}
               </button>
             </div>
           ))}
@@ -252,7 +228,9 @@ export default function Batiments() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="batiments-pagination">
-          <p>Affichage {(page - 1) * ITEMS_PER_PAGE + 1}-{Math.min(page * ITEMS_PER_PAGE, filtered.length)} sur {filtered.length} bâtiments</p>
+          <p>
+            {t('pagination.showing')} {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} {t('pagination.of')} {filtered.length} {t('pagination.buildings')}
+          </p>
           <div className="pagination-btns">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
               <i className="ti ti-chevron-left" aria-hidden="true" />
@@ -278,17 +256,17 @@ export default function Batiments() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editBatiment ? 'Modifier le bâtiment' : 'Nouveau bâtiment'}</h2>
+              <h2>{editBatiment ? t('batiments.edit') : t('batiments.new')}</h2>
               <button onClick={() => setShowModal(false)}>
                 <i className="ti ti-x" aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-group">
-                <label>Nom du bâtiment</label>
+                <label>{t('batiments.name')}</label>
                 <input
                   type="text"
-                  placeholder="Ex: Siège Social DGS Africa"
+                  placeholder={t('batiments.namePlaceholder')}
                   value={form.nom}
                   onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
                   required
@@ -297,20 +275,20 @@ export default function Batiments() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Adresse</label>
+                  <label>{t('batiments.address')}</label>
                   <input
                     type="text"
-                    placeholder="Ex: Route de Ngor"
+                    placeholder={t('batiments.addressPlaceholder')}
                     value={form.adresse}
                     onChange={e => setForm(f => ({ ...f, adresse: e.target.value }))}
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Ville</label>
+                  <label>{t('batiments.city')}</label>
                   <input
                     type="text"
-                    placeholder="Ex: Dakar"
+                    placeholder={t('batiments.cityPlaceholder')}
                     value={form.ville}
                     onChange={e => setForm(f => ({ ...f, ville: e.target.value }))}
                     required
@@ -319,13 +297,13 @@ export default function Batiments() {
               </div>
 
               <div className="form-group">
-                <label>Client associé</label>
+                <label>{t('batiments.client')}</label>
                 <select
                   value={form.client_id}
                   onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))}
                   required
                 >
-                  <option value="">Sélectionner un client</option>
+                  <option value="">{t('batiments.selectClient')}</option>
                   {clients.map(c => (
                     <option key={c.id} value={c.id}>{c.nom}</option>
                   ))}
@@ -333,9 +311,9 @@ export default function Batiments() {
               </div>
 
               <div className="form-group">
-                <label>Description (optionnel)</label>
+                <label>{t('batiments.description')} <span style={{ color: '#94a3b8', fontSize: '12px' }}>({t('common.optional')})</span></label>
                 <textarea
-                  placeholder="Notes ou précisions sur le bâtiment"
+                  placeholder={t('batiments.descriptionPlaceholder')}
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={3}
@@ -344,10 +322,10 @@ export default function Batiments() {
 
               <div className="modal-footer">
                 <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="btn-primary">
-                  {editBatiment ? 'Enregistrer' : 'Créer'}
+                  {editBatiment ? t('common.save') : t('common.create')}
                 </button>
               </div>
             </form>

@@ -10,6 +10,14 @@ const isAdmin = require('../middlewares/isAdmin');
  */
 router.get('/resume', auth, StatsController.kpiResume);
 
+// Tableau de bord agrégé pour les utilisateurs "client"
+// Toutes les données sont filtrées côté backend par id_client (JWT)
+router.get('/client-dashboard', auth, StatsController.getClientDashboard);
+
+// Tableau de bord agrégé pour les techniciens
+// Toutes les données sont filtrées par technicien_id = req.user.id (JWT)
+router.get('/technicien-dashboard', auth, StatsController.getTechnicienDashboard);
+
 // Nouvelles routes à ajouter
 router.get('/par-equipement', auth, isAdmin, StatsController.kpiParEquipement);
 router.get('/evolution', auth, isAdmin, StatsController.kpiEvolution);

@@ -19,15 +19,18 @@
   color: #ef4444;
 }
 
-/* ── Bandeau de bienvenue ──────────────────────────────────────── */
+/* ── Header client épuré ───────────────────────────────────────── */
+/* Remplace l'ancienne bannière bleue dégradée (supprimée).
+   Carte blanche sobre avec accent gauche coloré. */
 .dashboard-welcome {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, #1E293B 0%, #2563EB 100%);
+  background: #ffffff;
   border-radius: 20px;
   padding: 1.5rem 2rem;
-  color: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  border-left: 4px solid #3b82f6;
   gap: 1rem;
 }
 
@@ -35,35 +38,38 @@
   font-size: 20px;
   font-weight: 700;
   margin: 0 0 4px;
-  color: #fff;
+  color: #1E293B;
 }
 
 .dashboard-welcome-sub {
   font-size: 13px;
-  color: rgba(255,255,255,0.75);
+  color: #64748B;
   margin: 0;
 }
 
 /* ── Bouton nouvelle DI ────────────────────────────────────────── */
+/* Bouton bleu — contraste fort sur fond blanc */
 .btn-nouvelle-di {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  color: #1E293B;
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
   border-radius: 12px;
   padding: 10px 18px;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
   transition: background 0.15s, transform 0.15s;
   font-family: 'Inter', sans-serif;
   flex-shrink: 0;
 }
 
 .btn-nouvelle-di:hover {
-  background: #EFF6FF;
+  background: #2563eb;
   transform: translateY(-1px);
 }
 
@@ -72,7 +78,28 @@
   font-size: 12px;
 }
 
+/* Variante violet pour le bouton technicien dans la Navbar */
+.btn-nouvelle-di--violet {
+  background: #8b5cf6;
+}
+
+.btn-nouvelle-di--violet:hover {
+  background: #7c3aed;
+}
+
 /* ── Grilles KPI ───────────────────────────────────────────────── */
+.dashboard-kpi--7col {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1rem;
+}
+
+.dashboard-kpi--5col {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
 .dashboard-kpi--4col {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -84,6 +111,29 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
+
+/* 2 colonnes : Section 2 du dashboard client */
+.dashboard-kpi--2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+/* Bouton Actualiser — même base que btn-export mais couleur indigo */
+.btn-actualiser {
+  background: #EFF6FF;
+  color: #2563EB;
+  border-color: #BFDBFE;
+}
+.btn-actualiser:hover:not(:disabled) { background: #DBEAFE; }
+.btn-actualiser:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Animation de rotation pour l'icône loader */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 0.8s linear infinite; }
+
+/* Message "Données non disponibles" dans un donut */
+.chart-empty--unavailable { color: #94a3b8; font-style: italic; }
 
 /* ── Carte KPI ─────────────────────────────────────────────────── */
 .kpi-card {
@@ -290,10 +340,17 @@
   color: #ef4444;
 }
 
-/* ── Listes (Admin + Client) ───────────────────────────────────── */
+/* ── Listes Admin (1fr 1fr) ────────────────────────────────────── */
 .dashboard-lists-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* ── Listes Client (3fr 2fr) : DI à gauche, critiques à droite ── */
+.dashboard-client-lists {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
   gap: 1.5rem;
 }
 
@@ -412,6 +469,39 @@
 .badge-priorite--haute   { color: #F59E0B; background: #FFFBEB; }
 .badge-priorite--urgente { color: #ef4444; background: #FEF2F2; }
 
+/* ── Bouton "Voir tout" utilisé en <button> (Client) ──────────── */
+/* Reset nécessaire : .list-card-voir-tout est aussi utilisé sur <a> dans l'admin */
+button.list-card-voir-tout {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Bouton compact "Soumettre une DI" dans Section 5 ─────────── */
+.btn-di-equip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid #BFDBFE;
+  background: #EFF6FF;
+  color: #3b82f6;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.btn-di-equip:hover {
+  background: #DBEAFE;
+}
+
 /* ── Liste équipements en panne (Client) ───────────────────────── */
 .equip-panne-list {
   list-style: none;
@@ -467,6 +557,71 @@
   color: #64748B;
 }
 
+/* ── Barre de progression (Taux de clôture) ────────────────────── */
+/* Conteneur gris clair, la couleur réelle vient du fill inline */
+.taux-cloture-bar {
+  height: 6px;
+  background: #F1F5F9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.taux-cloture-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* ── Liste des OT du jour (Technicien) ─────────────────────────── */
+.ot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Chaque ligne OT : badge statut · infos · badge priorité · bouton */
+.ot-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #F8FAFC;
+  border-radius: 12px;
+  border: 1px solid #F1F5F9;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ot-item:hover {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+/* Zone titre + méta (prend toute la place disponible) */
+.ot-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ot-item-titre {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ot-item-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── Placeholder technicien ────────────────────────────────────── */
 .dashboard-placeholder {
   display: flex;
@@ -482,33 +637,171 @@
   font-size: 14px;
 }
 
-/* ── Responsive ────────────────────────────────────────────────── */
-@media (max-width: 1100px) {
+/* ══════════════════════════════════════════════════════════════════
+   Responsive
+   Breakpoints : tablette 768-1023px | mobile < 768px
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Tablette (768–1023 px) ───────────────────────────────────── */
+@media (max-width: 1023px) {
+  /* KPI 7 colonnes → 4 colonnes sur tablette */
+  .dashboard-kpi--7col {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* KPI 5 colonnes → 3 colonnes */
+  .dashboard-kpi--5col {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* KPI 4 colonnes → 2 colonnes */
   .dashboard-kpi--4col {
     grid-template-columns: repeat(2, 1fr);
   }
-}
 
-@media (max-width: 900px) {
-  .dashboard-charts-row,
+  /* KPI 2 colonnes → inchangé (assez large pour tenir) */
+  .dashboard-kpi--2col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Donuts côte à côte → empilés */
+  .dashboard-charts-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Listes admin côte à côte → empilées */
   .dashboard-lists-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Listes client 3fr/2fr → empilées sur tablette */
+  .dashboard-client-lists {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 600px) {
+/* ── Mobile (< 768 px) ────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* KPI 7, 5, 4, 3 colonnes → 2 colonnes sur mobile */
+  .dashboard-kpi--7col,
+  .dashboard-kpi--5col,
   .dashboard-kpi--4col,
   .dashboard-kpi--3col {
     grid-template-columns: 1fr 1fr;
   }
 
-  .dashboard-filters {
-    flex-direction: column;
-    align-items: flex-start;
+  /* 2 colonnes reste 2 colonnes sur mobile (assez compact) */
+  .dashboard-kpi--2col {
+    grid-template-columns: 1fr 1fr;
   }
 
+  /* Header client empilé */
   .dashboard-welcome {
     flex-direction: column;
     align-items: flex-start;
+    padding: 1.25rem;
+    border-left-width: 3px;
+  }
+
+  .dashboard-welcome-title {
+    font-size: 16px;
+  }
+
+  /* Filtres empilés */
+  .dashboard-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .dashboard-filters-left {
+    flex-direction: column;
+  }
+
+  .dashboard-select {
+    width: 100%;
+  }
+
+  /* Boutons export : icône seule — le text node hérite font-size: 0,
+     .ti garde son font-size explicite donc reste visible */
+  .dashboard-exports {
+    justify-content: flex-start;
+  }
+
+  .btn-export {
+    font-size: 0;
+    padding: 9px;
+    border-radius: 10px;
+  }
+
+  .btn-export .ti {
+    font-size: 18px;
+  }
+
+  /* ── Tables du dashboard → cartes empilées ──────────────────── */
+  /* Masque l'en-tête de colonne */
+  .dashboard-table thead {
+    display: none;
+  }
+
+  /* Chaque ligne devient une carte */
+  .dashboard-table tbody tr {
+    display: block;
+    margin-bottom: 0.75rem;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #ffffff;
+  }
+
+  .dashboard-table tbody tr:hover td {
+    background: transparent;
+  }
+
+  /* Chaque cellule prend toute la largeur avec label + valeur côte à côte */
+  .dashboard-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #F8FAFC;
+    font-size: 13px;
+  }
+
+  .dashboard-table td:last-child {
+    border-bottom: none;
+  }
+
+  /* Label de colonne généré depuis data-label */
+  .dashboard-table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+
+  /* Limite la largeur des titres truncatés */
+  .table-titre {
+    max-width: 120px;
+    text-align: right;
+  }
+}
+
+/* ── Très petit mobile (< 480 px) ──────────────────────────────── */
+@media (max-width: 479px) {
+  .dashboard-kpi--7col,
+  .dashboard-kpi--5col,
+  .dashboard-kpi--4col,
+  .dashboard-kpi--3col,
+  .dashboard-kpi--2col {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-value {
+    font-size: 18px;
   }
 }

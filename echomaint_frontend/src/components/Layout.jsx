@@ -1,38 +1,59 @@
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
 import './Layout.css'
 
-const PAGE_TITLES = {
-  '/dashboard':               { title: 'Tableau de bord',         subtitle: 'Vue d\'ensemble de vos opérations de maintenance.' },
-  '/batiments':               { title: 'Bâtiments',               subtitle: 'Gérez votre référentiel immobilier.' },
-  '/equipements':             { title: 'Équipements',             subtitle: 'Suivez l\'état de votre parc machines.' },
-  '/interventions':           { title: 'Interventions',           subtitle: 'Pilotez vos ordres de travail.' },
-  '/planning':                { title: 'Planning',                subtitle: 'Visualisez les interventions planifiées.' },
-  '/demandes-intervention':   { title: 'Demandes d\'intervention',subtitle: 'Traitez les signalements clients.' },
-  '/maintenance-plans':       { title: 'Plans de maintenance',    subtitle: 'Configurez la maintenance préventive automatique.' },
-  '/stats':                   { title: 'Statistiques & Exports',  subtitle: 'Analysez vos données de maintenance.' },
-  '/utilisateurs':            { title: 'Utilisateurs',            subtitle: 'Gérez les comptes et les accès.' },
+const PAGE_KEYS = {
+  '/dashboard':             'layout.dashboard',
+  '/batiments':             'layout.batiments',
+  '/equipements':           'layout.equipements',
+  '/interventions':         'layout.interventions',
+  '/planning':              'layout.planning',
+  '/demandes-intervention': 'layout.demandes',
+  '/maintenance-plans':     'layout.maintenancePlans',
+  '/stats':                 'layout.stats',
+  '/utilisateurs':          'layout.utilisateurs',
 }
 
 export default function Layout() {
-  const [collapsed, setCollapsed] = useState(true)
+  const { t } = useTranslation()
+  const [collapsed,   setCollapsed]   = useState(true)
+  const [mobileOpen,  setMobileOpen]  = useState(false)
   const location = useLocation()
 
-  const matched = Object.entries(PAGE_TITLES).find(([path]) =>
+  const matchedKey = Object.entries(PAGE_KEYS).find(([path]) =>
     location.pathname.startsWith(path)
-  )
-  const { title = '', subtitle = '' } = matched?.[1] || {}
+  )?.[1]
+
+  const title    = matchedKey ? t(`${matchedKey}.title`)    : ''
+  const subtitle = matchedKey ? t(`${matchedKey}.subtitle`) : ''
+
+  const handleMenuToggle = () => {
+    if (window.innerWidth < 768) setMobileOpen(o => !o)
+    else setCollapsed(c => !c)
+  }
+
+  const closeMobileSidebar = () => setMobileOpen(false)
 
   return (
     <div className="layout">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
+
+      {mobileOpen && (
+        <div className="sidebar-backdrop" onClick={closeMobileSidebar} />
+      )}
+
+      <Sidebar
+        collapsed={collapsed}
+        mobileOpen={mobileOpen}
+        onMobileClose={closeMobileSidebar}
+      />
       <div className="layout-main">
         <Navbar
           title={title}
           subtitle={subtitle}
-          onMenuToggle={() => setCollapsed(c => !c)}
+          onMenuToggle={handleMenuToggle}
         />
         <div className="layout-content">
           <Outlet />

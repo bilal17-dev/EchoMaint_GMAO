@@ -28,11 +28,11 @@ const PRIO_STYLES = {
 
 function formatDate(d) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Date(d).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 function formatDateTime(d) {
   if (!d) return '—'
-  return new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(d).toLocaleString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 // Les photos sont servies par Express via /storage (pas via /api/v1)
@@ -372,17 +372,19 @@ export default function DetailIntervention() {
       </div>
 
   
-      {/* Rapport PDF */}
+      {/* Rapport PDF — 3 états distincts selon statut + présence du rapport */}
       <div className="detail-card">
         <h2>Rapport d'intervention</h2>
-        {ot.statut === 'terminee' && ot.rapport_pdf_chemin ? (
+
+        {ot.statut === 'terminee' && ot.rapport_url ? (
+          // Cas 1 : OT clôturé ET rapport PDF généré → bouton de téléchargement
           <button
             className="btn-primary rapport-btn"
             onClick={async () => {
               try {
                 const token = localStorage.getItem('echomaint_token')
                 const res = await fetch(
-                  `http://localhost:5000/api/v1/interventions/${id}/rapport`,
+                  `http://localhost:5000${ot.rapport_url}`,
                   { headers: { Authorization: `Bearer ${token}` } }
                 )
                 if (!res.ok) {
@@ -404,12 +406,23 @@ export default function DetailIntervention() {
           >
             <i className="ti ti-file-type-pdf" /> Télécharger le rapport PDF
           </button>
-        ) : (
+
+        ) : ot.statut === 'en_cours' && !ot.rapport_url ? (
+          // Cas 2 : OT rouvert (rapport_url = null et statut revenu en_cours) → rapport invalidé
+          <p className="rapport-unavailable rapport-invalide">
+            <i className="ti ti-refresh-alert" /> Rapport invalidé — nouvelle clôture requise
+          </p>
+
+        ) : ot.statut === 'terminee' ? (
+          // Cas 3 : OT clôturé mais PDF non généré (erreur serveur ou rapport absent)
           <p className="rapport-unavailable">
-            {ot.statut === 'terminee'
-              ? 'Rapport en cours de génération...'
-              : 'Le rapport sera disponible après la clôture de l\'intervention.'
-            }
+            <i className="ti ti-file-off" /> Rapport non disponible — veuillez contacter l&apos;administrateur.
+          </p>
+
+        ) : (
+          // Cas 4 : OT pas encore clôturé (planifiee / assignee / en_cours première fois)
+          <p className="rapport-unavailable">
+            <i className="ti ti-clock" /> Le rapport sera disponible après la clôture de l&apos;intervention.
           </p>
         )}
       </div>

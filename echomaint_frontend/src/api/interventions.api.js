@@ -9,6 +9,9 @@ export const cloturer  = async (id, data) => (await api.post(`/interventions/${i
 export const rouvrir   = async (id, motif) => (await api.post(`/interventions/${id}/rouvrir`, { motif })).data;
 export const annuler   = async (id) => (await api.post(`/interventions/${id}/annuler`)).data;
 export const getRapportUrl = (id) => `${import.meta.env.VITE_API_URL}/interventions/${id}/rapport`;
+// Déplace la date planifiée d'un OT — admin ou technicien sur ses propres OT
+export const replanifier = async (id, nouvelle_date_planifiee) =>
+  (await api.put(`/interventions/${id}/replanifier`, { nouvelle_date_planifiee })).data;
 export const ajouterCommentaire = async (id, contenu) =>
   (await api.post(`/interventions/${id}/commentaires`, { contenu })).data;
 

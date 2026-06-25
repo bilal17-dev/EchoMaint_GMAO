@@ -248,3 +248,48 @@
   display: flex;
   align-items: center;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Responsive mobile — sidebar en overlay coulissant
+   ══════════════════════════════════════════════════════════════════════════
+
+   Sur desktop (>768px) : sidebar visible à gauche, largeur fixe ou réduite.
+   Sur mobile (<768px)  : sidebar sort de l'écran par la gauche (translateX -100%),
+                          revient en overlay quand .sidebar-mobile-open est ajouté. */
+
+@media (max-width: 767px) {
+  .sidebar {
+    /* Position fixe pour recouvrir le contenu principal */
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    margin: 0;
+    border-radius: 0 24px 24px 0;
+    z-index: 300;
+
+    /* Caché hors-écran par défaut */
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+
+    /* La largeur de la sidebar mobile est toujours 260px — pas de mode icône-seule */
+    width: 260px !important;
+    min-width: 260px !important;
+  }
+
+  /* Slide-in : déclenché par .sidebar-mobile-open (ajouté dans Layout.jsx) */
+  .sidebar.sidebar-mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Sur mobile la sidebar est toujours "étendue" : on force l'affichage des labels
+     et on neutralise la classe .sidebar-collapsed appliquée côté desktop. */
+  .sidebar.sidebar-collapsed .sidebar-link-label,
+  .sidebar.sidebar-collapsed .sidebar-user-info {
+    display: block;
+  }
+
+  .sidebar.sidebar-collapsed .sidebar-link {
+    justify-content: flex-start;
+  }
+}

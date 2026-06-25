@@ -1,6 +1,8 @@
 const Intervention = require('../models/Intervention');
 const Equipement   = require('../models/Equipement');
-const preventiveService = require('../services/preventive.service');
+const preventiveService  = require('../services/preventive.service');
+// Service de génération de rapport PDF (extrait du contrôleur pour séparation des responsabilités)
+const interventionService = require('../services/intervention.service');
 const db   = require('../../database/connection');
 const { v4: uuidv4 } = require('uuid');
 const fs   = require('fs');
@@ -35,19 +37,57 @@ const InterventionController = {
       const intervention = await Intervention.findById(req.params.id)
       if (!intervention) return res.status(404).json({ message: "Intervention non trouvée." })
 
-      // Charger commentaires avec nom de l'auteur
+      // ── Technicien ───────────────────────────────────────────────────────
+      // findById ne fait pas de JOIN sur users — on charge séparément pour ne pas
+      // alourdir toutes les requêtes internes qui utilisent aussi findById.
+      if (intervention.technicien_id) {
+        const tech = await db('users')
+          .where({ id: intervention.technicien_id })
+          .select('nom', 'prenom', 'email')
+          .first()
+        if (tech) {
+          intervention.technicien_nom    = tech.nom
+          intervention.technicien_prenom = tech.prenom
+          intervention.technicien_email  = tech.email
+        }
+      }
+
+      // ── Équipement : champs supplémentaires ──────────────────────────────
+      // findById ne sélectionne que equipements.nom — on récupère la référence ici.
+      if (intervention.equipement_id) {
+        const equip = await db('equipements')
+          .where({ id: intervention.equipement_id })
+          .select('reference', 'marque', 'modele', 'numero_serie')
+          .first()
+        if (equip) {
+          intervention.equipement_reference   = equip.reference
+          intervention.equipement_marque      = equip.marque
+          intervention.equipement_modele      = equip.modele
+          intervention.equipement_numero_serie = equip.numero_serie
+        }
+      }
+
+      // ── Commentaires avec nom de l'auteur ────────────────────────────────
       intervention.commentaires = await db('commentaires_intervention')
         .join('users', 'commentaires_intervention.user_id', 'users.id')
         .where('commentaires_intervention.intervention_id', req.params.id)
         .select('commentaires_intervention.*', 'users.nom', 'users.prenom')
         .orderBy('commentaires_intervention.created_at', 'asc')
 
-      // Charger réouvertures
+      // ── Réouvertures avec nom de l'auteur ────────────────────────────────
       intervention.reouvertures = await db('reouvertures_ot')
         .join('users', 'reouvertures_ot.user_id', 'users.id')
         .where('reouvertures_ot.intervention_id', req.params.id)
         .select('reouvertures_ot.*', 'users.nom', 'users.prenom')
         .orderBy('reouvertures_ot.created_at', 'asc')
+
+      // ── rapport_url ──────────────────────────────────────────────────────
+      // On expose une URL d'API relative, pas le chemin disque absolu.
+      // null  →  OT pas encore clôturé, ou rouvert (rapport invalidé)
+      // string → rapport disponible, le frontend peut le télécharger via fetch+Blob
+      intervention.rapport_url = intervention.rapport_pdf_chemin
+        ? `/api/v1/interventions/${req.params.id}/rapport`
+        : null
 
       return res.status(200).json({ data: intervention })
     } catch (error) {
@@ -159,105 +199,15 @@ const InterventionController = {
       if (intervention.type === 'preventif' && intervention.plan_maintenance_id)
         await preventiveService.planifierProchaineIntervention(intervention.plan_maintenance_id, new Date())
 
-      // ── Génération rapport PDF ──────────────────────────────────────────
+      // ── Génération rapport PDF via intervention.service.js ──────────────
+      // Non bloquant : un échec PDF ne doit pas annuler la clôture de l'OT
       try {
-        const PDFDocument = require('pdfkit')
-        const interventionComplete = await Intervention.findById(id)
-        const equipement = await db('equipements')
-          .join('batiments', 'equipements.batiment_id', 'batiments.id')
-          .join('clients',   'batiments.client_id',    'clients.id')
-          .where('equipements.id', interventionComplete.equipement_id)
-          .select('equipements.*', 'batiments.nom as batiment_nom', 'clients.nom as client_nom')
-          .first()
-        const technicien = interventionComplete.technicien_id
-          ? await db('users').where({ id: interventionComplete.technicien_id }).select('nom', 'prenom').first()
-          : null
-        const photos = await db('photos_intervention').where({ intervention_id: id })
-
-        const rapportDir = path.join(__dirname, '../../storage/rapports')
-        if (!fs.existsSync(rapportDir)) fs.mkdirSync(rapportDir, { recursive: true })
-        const rapportPath = path.join(rapportDir, `rapport_${id}.pdf`)
-
-        const doc = new PDFDocument({ size: 'A4', margin: 50 })
-        const stream = fs.createWriteStream(rapportPath)
-        doc.pipe(stream)
-
-        // En-tête
-        doc.fillColor('#1e3a8a').fontSize(20).text('RAPPORT D\'INTERVENTION', { align: 'center' })
-        doc.moveDown(0.5)
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#cbd5e1').stroke()
-        doc.moveDown(1)
-
-        // Infos générales
-        doc.fillColor('#1e293b').fontSize(13).text('Informations générales', { underline: true })
-        doc.moveDown(0.5)
-        doc.fontSize(11).fillColor('#334155')
-        doc.text(`Référence OT    : ${id}`)
-        doc.text(`Type            : ${interventionComplete.type}`)
-        doc.text(`Priorité        : ${interventionComplete.priorite}`)
-        doc.text(`Date planifiée  : ${interventionComplete.date_planifiee ? new Date(interventionComplete.date_planifiee).toLocaleDateString('fr-FR') : '—'}`)
-        doc.text(`Début réel      : ${interventionComplete.date_debut_reelle ? new Date(interventionComplete.date_debut_reelle).toLocaleString('fr-FR') : '—'}`)
-        doc.text(`Fin réelle      : ${new Date().toLocaleString('fr-FR')}`)
-        doc.text(`Durée réelle    : ${duree_reelle_minutes} minutes`)
-        doc.moveDown(1)
-
-        // Équipement
-        doc.fillColor('#1e293b').fontSize(13).text('Équipement & localisation', { underline: true })
-        doc.moveDown(0.5)
-        doc.fontSize(11).fillColor('#334155')
-        doc.text(`Équipement : ${equipement?.nom ?? '—'} (Réf. ${equipement?.reference ?? '—'})`)
-        doc.text(`Bâtiment   : ${equipement?.batiment_nom ?? '—'}`)
-        doc.text(`Client     : ${equipement?.client_nom ?? '—'}`)
-        doc.moveDown(1)
-
-        // Technicien
-        doc.fillColor('#1e293b').fontSize(13).text('Technicien', { underline: true })
-        doc.moveDown(0.5)
-        doc.fontSize(11).fillColor('#334155')
-        doc.text(technicien ? `${technicien.prenom} ${technicien.nom}` : 'Non assigné')
-        doc.moveDown(1)
-
-        // Description & clôture
-        doc.fillColor('#1e293b').fontSize(13).text('Détails des travaux', { underline: true })
-        doc.moveDown(0.5)
-        doc.fontSize(11).fillColor('#334155')
-        doc.text(`Description         : ${interventionComplete.description || '—'}`)
-        doc.text(`Commentaire clôture : ${commentaire_cloture.trim()}`)
-        doc.moveDown(1)
-
-        // Photos
-        if (photos.length > 0) {
-          doc.addPage()
-          doc.fillColor('#1e293b').fontSize(13).text('Photos d\'intervention', { underline: true })
-          doc.moveDown(1)
-          let x = 50, y = doc.y
-          photos.forEach((photo, index) => {
-            if (index > 0 && index % 2 === 0) { x = 50; y += 190 }
-            if (fs.existsSync(photo.chemin_fichier)) {
-              doc.image(photo.chemin_fichier, x, y, { width: 200, height: 140 })
-              doc.fontSize(9).fillColor('#475569')
-                .text(`${photo.type_photo.toUpperCase()} — ${new Date(photo.created_at).toLocaleDateString('fr-FR')}`, x, y + 145, { width: 200, align: 'center' })
-            }
-            x += 260
-          })
-        }
-
-        // Pied de page
-        const pageCount = doc.bufferedPageRange?.().count ?? 1
-        doc.y = 750
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#cbd5e1').stroke()
-        doc.moveDown(0.5)
-        doc.fontSize(9).fillColor('#94a3b8')
-          .text(`Document généré le ${new Date().toLocaleString('fr-FR')} — EchoMaint GMAO`, { align: 'center' })
-
-        doc.end()
-
-        await new Promise((resolve, reject) => {
-          stream.on('finish', resolve)
-          stream.on('error', reject)
-        })
-
-        await db('interventions').where({ id }).update({ rapport_pdf_chemin: rapportPath })
+        const cheminPDF = await interventionService.genererRapportPDF(
+          id,
+          commentaire_cloture.trim(),
+          parseInt(duree_reelle_minutes)
+        )
+        await db('interventions').where({ id }).update({ rapport_pdf_chemin: cheminPDF })
       } catch (pdfError) {
         console.error('[cloturer] Erreur génération PDF (non bloquant):', pdfError)
       }
@@ -447,6 +397,86 @@ const InterventionController = {
       return res.status(500).json({ message: "Erreur serveur." })
     }
   },
+
+  // ── PUT /interventions/:id/replanifier ────────────────────────────────────
+  // Permet de déplacer la date planifiée d'un OT qui n'a pas encore démarré.
+  // Droits :
+  //   - Admin    → peut replanifier n'importe quel OT en statut planifiee/assignee
+  //   - Technicien → uniquement ses propres OT (technicien_id = son ID)
+  replanifier: async (req, res) => {
+    try {
+      const { id } = req.params
+      const { nouvelle_date_planifiee } = req.body
+
+      // ── Validation 1 : champ obligatoire ──────────────────────────────
+      if (!nouvelle_date_planifiee) {
+        return res.status(422).json({
+          message: "Le champ 'nouvelle_date_planifiee' est requis (format YYYY-MM-DD).",
+        })
+      }
+
+      // ── Validation 2 : format YYYY-MM-DD ─────────────────────────────
+      // On découpe manuellement pour construire une date locale (minuit heure locale).
+      // new Date("YYYY-MM-DD") interpréterait en UTC et pourrait donner le jour précédent
+      // dans certains fuseaux horaires — ce découpage évite ce piège.
+      const parties = nouvelle_date_planifiee.split('-').map(Number)
+      if (parties.length !== 3 || parties.some(isNaN)) {
+        return res.status(422).json({ message: "Format de date invalide. Utilisez YYYY-MM-DD." })
+      }
+      const [annee, mois, jour] = parties
+      const nouvelleDate = new Date(annee, mois - 1, jour) // minuit heure locale
+
+      // ── Validation 3 : pas dans le passé ─────────────────────────────
+      // On compare avec le début de la journée d'aujourd'hui pour autoriser la date du jour
+      const aujourd_hui = new Date()
+      aujourd_hui.setHours(0, 0, 0, 0)
+      if (nouvelleDate < aujourd_hui) {
+        return res.status(422).json({ message: "La nouvelle date ne peut pas être dans le passé." })
+      }
+
+      // ── Existence de l'OT ─────────────────────────────────────────────
+      const intervention = await Intervention.findById(id)
+      if (!intervention) {
+        return res.status(404).json({ message: "Intervention non trouvée." })
+      }
+
+      // ── Vérification des droits d'accès ──────────────────────────────
+      // Un technicien ne peut replanifier que ses propres OT.
+      if (req.user.role !== 'admin') {
+        if (intervention.technicien_id !== req.user.id) {
+          return res.status(403).json({
+            message: "Vous ne pouvez replanifier que vos propres interventions.",
+          })
+        }
+      }
+
+      // ── Validation 4 : statut compatible ─────────────────────────────
+      // Un OT déjà démarré (en_cours), terminé ou annulé ne peut plus être déplacé.
+      if (!['planifiee', 'assignee'].includes(intervention.statut)) {
+        return res.status(422).json({
+          code: 'STATUT_INVALIDE',
+          message: `Impossible de replanifier un OT en statut '${intervention.statut}'. Seuls les statuts 'planifiee' et 'assignee' sont autorisés.`,
+        })
+      }
+
+      // ── Mise à jour en base ───────────────────────────────────────────
+      await db('interventions').where({ id }).update({
+        date_planifiee: nouvelleDate,
+        updated_at:     db.fn.now(),
+      })
+
+      // Retourne l'OT complet pour que le frontend puisse mettre à jour son état local
+      const updated = await Intervention.findById(id)
+      return res.status(200).json({
+        message: "Intervention replanifiée avec succès.",
+        data: updated,
+      })
+    } catch (error) {
+      console.error('[InterventionController.replanifier]', error)
+      return res.status(500).json({ message: "Erreur serveur." })
+    }
+  },
+
 };
 
 module.exports = InterventionController;

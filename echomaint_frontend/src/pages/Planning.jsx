@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import './Planning.css'
 
-// On remplace mockPlanningOTs, mockBatiments et mockTechniciens
-// par les vraies fonctions connectées au backend
 import { getPlanning } from '../api/planning.api'
 import { getBatiments } from '../api/batiments.api'
 import { getTechniciens } from '../api/utilisateurs.api'
+import { replanifier } from '../api/interventions.api'
 
 const STATUT_CHIP = {
   planifiee: 'chip-planifiee',
@@ -17,18 +16,7 @@ const STATUT_CHIP = {
   annulee:   'chip-annulee',
 }
 
-const STATUT_LABELS = {
-  planifiee: 'Planifiée',
-  assignee:  'Assignée',
-  en_cours:  'En cours',
-  terminee:  'Terminée',
-  annulee:   'Annulée',
-}
-
-const TYPE_LABELS = { preventif: 'Préventif', curatif: 'Curatif' }
-
-const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+const MONTH_KEYS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate()
@@ -44,66 +32,67 @@ export default function Planning() {
   const { t } = useTranslation()
   const user = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
 
+  const DAYS = [
+    t('planning.days.mon'), t('planning.days.tue'), t('planning.days.wed'),
+    t('planning.days.thu'), t('planning.days.fri'), t('planning.days.sat'), t('planning.days.sun'),
+  ]
+  const MONTHS = MONTH_KEYS.map(k => t(`planning.months.${k}`))
+
   const today = new Date()
   const [viewYear, setViewYear] = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth())
   const [selectedDay, setSelectedDay] = useState(today.getDate())
 
-  // Filtres
   const [filterBatiment, setFilterBatiment] = useState('')
   const [filterTechnicien, setFilterTechnicien] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
 
-  // Données chargées depuis le backend
   const [planningOTs, setPlanningOTs] = useState([])
   const [batiments, setBatiments] = useState([])
   const [techniciens, setTechniciens] = useState([])
   const [loading, setLoading] = useState(true)
   const [erreur, setErreur] = useState('')
 
-  // ─── Chargement des bâtiments et techniciens (une seule fois) ────────────
+  const [otReplanifier,      setOtReplanifier]      = useState(null)
+  const [nouvelleDate,       setNouvelleDate]       = useState('')
+  const [erreurReplanif,     setErreurReplanif]     = useState('')
+  const [submittingReplanif, setSubmittingReplanif] = useState(false)
+
   useEffect(() => {
     Promise.all([getBatiments(), getTechniciens()])
       .then(([resBat, resTech]) => {
-        const bats  = Array.isArray(resBat)  ? resBat  : (resBat.data  ?? [])
-        const techs = Array.isArray(resTech) ? resTech : (resTech.data ?? [])
-        setBatiments(bats)
-        setTechniciens(techs)
+        setBatiments(Array.isArray(resBat)  ? resBat  : (resBat.data  ?? []))
+        setTechniciens(Array.isArray(resTech) ? resTech : (resTech.data ?? []))
       })
       .catch(err => console.error('Erreur chargement filtres:', err))
   }, [])
 
-  // ─── Chargement du planning à chaque changement de mois ou de filtre ─────
-  // Le backend reçoit la période via date_debut et date_fin
-  
   const chargerPlanning = async () => {
-  setLoading(true)
-  setErreur('')
-  try {
-    const dateDebut = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-01`
-    const dateFin   = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${getDaysInMonth(viewYear, viewMonth)}`
+    setLoading(true)
+    setErreur('')
+    try {
+      const dateDebut = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-01`
+      const dateFin   = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${getDaysInMonth(viewYear, viewMonth)}`
 
-    const params = { date_debut: dateDebut, date_fin: dateFin }
-    if (filterBatiment)   params.batiment_id   = filterBatiment
-    if (filterTechnicien) params.technicien_id = filterTechnicien
-    if (filterStatut)     params.statut        = filterStatut
+      const params = { date_debut: dateDebut, date_fin: dateFin }
+      if (filterBatiment)   params.batiment_id   = filterBatiment
+      if (filterTechnicien) params.technicien_id = filterTechnicien
+      if (filterStatut)     params.statut        = filterStatut
 
-    const res = await getPlanning(params)
-    // Absorbe { data: [...] } ou tableau direct
-    const liste = Array.isArray(res) ? res : (res.data ?? [])
-    setPlanningOTs(liste)
-  } catch (error) {
-    console.error('Erreur de chargement du planning:', error)
-    // Affiche l'erreur mais ne bloque pas la page
-    setErreur(`Impossible de charger le planning. (${error.response?.status ?? 'réseau'})`)
-  } finally {
-    setLoading(false)
+      const res = await getPlanning(params)
+      setPlanningOTs(Array.isArray(res) ? res : (res.data ?? []))
+    } catch (error) {
+      console.error('Erreur de chargement du planning:', error)
+      setErreur(t('common.error'))
+    } finally {
+      setLoading(false)
+    }
   }
-  }
+
   useEffect(() => {
     chargerPlanning()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewYear, viewMonth, filterBatiment, filterTechnicien, filterStatut])
-
 
   const prevMonth = () => {
     if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
@@ -117,7 +106,6 @@ export default function Planning() {
     setSelectedDay(1)
   }
 
-  // Groupe les OT par jour pour colorier le calendrier
   const otsByDay = useMemo(() => {
     const map = {}
     planningOTs.forEach(ot => {
@@ -143,37 +131,71 @@ export default function Planning() {
   const isToday = (day) =>
     day === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear()
 
+  const peutReplanifier = (ot) => {
+    if (!['planifiee', 'assignee'].includes(ot.statut)) return false
+    if (user.role === 'admin') return true
+    return user.role === 'technicien' && ot.technicien_id === user.id
+  }
+
+  const fermerModalReplanif = () => {
+    setOtReplanifier(null)
+    setNouvelleDate('')
+    setErreurReplanif('')
+  }
+
+  const ouvrirModalReplanif = (ot, e) => {
+    e.stopPropagation()
+    setOtReplanifier(ot)
+    setNouvelleDate(ot.date_planifiee ? ot.date_planifiee.substring(0, 10) : '')
+    setErreurReplanif('')
+  }
+
+  const handleReplanifier = async () => {
+    if (!nouvelleDate) {
+      setErreurReplanif(t('planning.rescheduleRequired'))
+      return
+    }
+    setSubmittingReplanif(true)
+    setErreurReplanif('')
+    try {
+      await replanifier(otReplanifier.id, nouvelleDate)
+      fermerModalReplanif()
+      await chargerPlanning()
+    } catch (error) {
+      setErreurReplanif(error.response?.data?.message || t('common.error'))
+    } finally {
+      setSubmittingReplanif(false)
+    }
+  }
+
   return (
     <div className="planning">
 
       {/* Filtres */}
       <div className="planning-filters">
         <select value={filterBatiment} onChange={e => setFilterBatiment(e.target.value)}>
-          <option value="">Tous les bâtiments</option>
+          <option value="">{t('interventions.allBatiments')}</option>
           {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
         </select>
 
-        {/* Le filtre technicien n'est visible que pour les admins
-            RG-PLAN-01 : un technicien ne voit que ses propres OT (géré côté backend) */}
         {user?.role === 'admin' && (
           <select value={filterTechnicien} onChange={e => setFilterTechnicien(e.target.value)}>
-            <option value="">Tous les techniciens</option>
+            <option value="">{t('interventions.allTechniciens')}</option>
             {techniciens.map(tech => <option key={tech.id} value={tech.id}>{tech.prenom} {tech.nom}</option>)}
           </select>
         )}
 
         <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
-          <option value="">Tous les statuts</option>
-          {Object.entries(STATUT_LABELS).map(([val, label]) => (
-            <option key={val} value={val}>{label}</option>
+          <option value="">{t('interventions.allStatuts')}</option>
+          {Object.keys(STATUT_CHIP).map(val => (
+            <option key={val} value={val}>{t(`interventions.statuts.${val}`)}</option>
           ))}
         </select>
       </div>
 
-      {/* Affichage pendant le chargement */}
       {loading && (
         <p style={{ textAlign: 'center', padding: '1rem', color: '#64748B', fontSize: '13px' }}>
-          Chargement du planning...
+          {t('planning.loading')}
         </p>
       )}
 
@@ -183,7 +205,6 @@ export default function Planning() {
         </p>
       )}
 
-      {/* Layout principal : calendrier + panel jour */}
       <div className="planning-layout">
 
         {/* Calendrier */}
@@ -239,8 +260,12 @@ export default function Planning() {
           </div>
 
           <div className="calendar-legend">
-            <span className="legend-item"><span className="cal-dot dot-preventif" /> Préventif</span>
-            <span className="legend-item"><span className="cal-dot dot-curatif" /> Curatif</span>
+            <span className="legend-item">
+              <span className="cal-dot dot-preventif" /> {t('interventions.types.preventif')}
+            </span>
+            <span className="legend-item">
+              <span className="cal-dot dot-curatif" /> {t('interventions.types.curatif')}
+            </span>
           </div>
         </div>
 
@@ -254,7 +279,7 @@ export default function Planning() {
           {selectedDayOTs.length === 0 ? (
             <div className="day-panel-empty">
               <i className="ti ti-calendar-off" aria-hidden="true" />
-              <p>Aucune intervention ce jour</p>
+              <p>{t('planning.noEventsDay')}</p>
             </div>
           ) : (
             <div className="day-panel-list">
@@ -267,7 +292,7 @@ export default function Planning() {
                   <div className="planning-ot-top">
                     <p className="planning-ot-titre">{ot.titre}</p>
                     <span className={`planning-chip ${STATUT_CHIP[ot.statut] || ''}`}>
-                      {STATUT_LABELS[ot.statut]}
+                      {t(`interventions.statuts.${ot.statut}`)}
                     </span>
                   </div>
                   <p className="planning-ot-meta">
@@ -282,12 +307,24 @@ export default function Planning() {
                     </p>
                   ) : (
                     <p className="planning-ot-tech planning-ot-unassigned">
-                      <i className="ti ti-user-off" aria-hidden="true" /> Non assigné
+                      <i className="ti ti-user-off" aria-hidden="true" /> {t('planning.unassigned')}
                     </p>
                   )}
-                  <span className={`planning-chip-type ${ot.type === 'preventif' ? 'chip-type-prev' : 'chip-type-cur'}`}>
-                    {TYPE_LABELS[ot.type]}
-                  </span>
+                  <div className="planning-ot-footer">
+                    <span className={`planning-chip-type ${ot.type === 'preventif' ? 'chip-type-prev' : 'chip-type-cur'}`}>
+                      {t(`interventions.types.${ot.type}`)}
+                    </span>
+                    {peutReplanifier(ot) && (
+                      <button
+                        className="btn-replanifier"
+                        onClick={e => ouvrirModalReplanif(ot, e)}
+                        title={t('planning.reschedule')}
+                      >
+                        <i className="ti ti-calendar-event" aria-hidden="true" />
+                        {t('planning.reschedule')}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -298,12 +335,12 @@ export default function Planning() {
       {/* Liste complète du mois */}
       <div className="planning-month-section">
         <h3>
-          Toutes les interventions — {MONTHS[viewMonth]} {viewYear}
+          {t('planning.allInterventionsMonth')} — {MONTHS[viewMonth]} {viewYear}
           <span className="month-count">{monthOTs.length}</span>
         </h3>
 
         {monthOTs.length === 0 ? (
-          <p className="planning-month-empty">Aucune intervention ce mois-ci.</p>
+          <p className="planning-month-empty">{t('planning.noEventsMonth')}</p>
         ) : (
           <div className="planning-month-list">
             {monthOTs.map(ot => (
@@ -327,23 +364,99 @@ export default function Planning() {
                     {ot.equipement_nom} · {ot.batiment_nom}
                     {ot.technicien_nom
                       ? ` · ${ot.technicien_prenom || ''} ${ot.technicien_nom}`
-                      : ' · Non assigné'}
+                      : ` · ${t('planning.unassigned')}`}
                   </p>
                 </div>
 
                 <div className="planning-list-badges">
                   <span className={`planning-chip-type ${ot.type === 'preventif' ? 'chip-type-prev' : 'chip-type-cur'}`}>
-                    {TYPE_LABELS[ot.type]}
+                    {t(`interventions.types.${ot.type}`)}
                   </span>
                   <span className={`planning-chip ${STATUT_CHIP[ot.statut] || ''}`}>
-                    {STATUT_LABELS[ot.statut]}
+                    {t(`interventions.statuts.${ot.statut}`)}
                   </span>
+                  {peutReplanifier(ot) && (
+                    <button
+                      className="btn-replanifier btn-replanifier--sm"
+                      onClick={e => ouvrirModalReplanif(ot, e)}
+                      title={t('planning.reschedule')}
+                    >
+                      <i className="ti ti-calendar-event" aria-hidden="true" />
+                      {t('planning.reschedule')}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Modal de replanification */}
+      {otReplanifier && (
+        <div className="modal-overlay" onClick={fermerModalReplanif}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+
+            <div className="modal-header">
+              <h2>{t('planning.rescheduleTitle')}</h2>
+              <button onClick={fermerModalReplanif} aria-label={t('common.close')}>
+                <i className="ti ti-x" />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="replanif-info">
+                <p className="replanif-titre">{otReplanifier.titre}</p>
+                <p className="replanif-meta">
+                  <i className="ti ti-settings" aria-hidden="true" /> {otReplanifier.equipement_nom}
+                  {' · '}
+                  <i className="ti ti-building" aria-hidden="true" /> {otReplanifier.batiment_nom}
+                </p>
+                {otReplanifier.date_planifiee && (
+                  <p className="replanif-date-actuelle">
+                    {t('planning.currentDate')} :{' '}
+                    <strong>
+                      {new Date(otReplanifier.date_planifiee).toLocaleDateString()}
+                    </strong>
+                  </p>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="replanif-date">
+                  {t('planning.newDate')}{' '}
+                  <span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <input
+                  id="replanif-date"
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  value={nouvelleDate}
+                  onChange={e => setNouvelleDate(e.target.value)}
+                />
+              </div>
+
+              {erreurReplanif && (
+                <p className="erreur">{erreurReplanif}</p>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={fermerModalReplanif}>
+                {t('common.cancel')}
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleReplanifier}
+                disabled={submittingReplanif}
+              >
+                {submittingReplanif ? t('common.saving') : t('common.confirm')}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   )

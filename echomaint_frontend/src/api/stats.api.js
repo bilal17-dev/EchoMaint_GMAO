@@ -8,3 +8,9 @@ export const getKpiParEquipement = async () => (await api.get('/kpi/par-equipeme
 
 // Évolution des interventions sur les 12 derniers mois (nouveau)
 export const getKpiEvolution = async () => (await api.get('/kpi/evolution')).data;
+
+// Tableau de bord agrégé pour le rôle "client" : KPIs, répartitions, listes
+export const getClientDashboard = async (params) => (await api.get('/kpi/client-dashboard', { params })).data;
+
+// Tableau de bord agrégé pour le rôle "technicien" : KPIs, indicateurs, listes, graphique
+export const getTechnicienDashboard = async (params) => (await api.get('/kpi/technicien-dashboard', { params })).data;

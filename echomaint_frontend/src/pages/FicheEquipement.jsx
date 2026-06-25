@@ -21,7 +21,7 @@ const OT_STATUT_LABELS = {
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Date(dateStr).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 export default function FicheEquipement() {
@@ -31,7 +31,8 @@ export default function FicheEquipement() {
   const [equipement, setEquipement] = useState(null)
   const [historique, setHistorique] = useState([])
   const [loading, setLoading] = useState(true)
-  const [erreur, setErreur] = useState('')
+  // null = pas d'erreur | 403 = accès refusé | 404 = introuvable | 'reseau' = erreur serveur
+  const [erreurCode, setErreurCode] = useState(null)
 
   // ─── Chargement des données quand l'id change dans l'URL ────────────────────
   // Le tableau [id] en dépendance signifie : recharge à chaque fois que l'id
@@ -40,20 +41,27 @@ export default function FicheEquipement() {
 
   const chargerFiche = async () => {
     setLoading(true)
-    setErreur('')
+    setErreurCode(null)
     try {
-      // GET /equipements/:id renvoie l'équipement avec bâtiment, client et stats 30j
-      // GET /equipements/:id/historique renvoie la liste des OT terminés/annulés
-      const [resEquipement, resHistorique] = await Promise.all([
-        getEquipement(id),
-        getHistorique(id)
-      ])
-
+      // On charge d'abord l'équipement seul : c'est lui qui peut retourner 403 ou 404.
+      // Si ce premier appel échoue, on ne tente pas de charger l'historique.
+      const resEquipement = await getEquipement(id)
       setEquipement(resEquipement.data)
-      setHistorique(resHistorique.data)
+
+      // L'historique est secondaire : une erreur ici n'empêche pas d'afficher la fiche.
+      try {
+        const resHistorique = await getHistorique(id)
+        setHistorique(resHistorique.data ?? [])
+      } catch {
+        setHistorique([])
+      }
     } catch (error) {
       console.error('Erreur de chargement de la fiche équipement:', error)
-      setErreur('Impossible de charger cet équipement.')
+      const status = error.response?.status
+      // On distingue les trois cas pour afficher un message adapté à l'utilisateur.
+      if (status === 403)       setErreurCode(403)
+      else if (status === 404)  setErreurCode(404)
+      else                      setErreurCode('reseau')
     } finally {
       setLoading(false)
     }
@@ -72,12 +80,19 @@ export default function FicheEquipement() {
     )
   }
 
-  if (erreur || !equipement) {
+  if (erreurCode !== null) {
+    // Icône et message adaptés à la nature de l'erreur
+    const config = {
+      403: { icone: 'ti-lock',         message: "Vous n'avez pas accès à cet équipement." },
+      404: { icone: 'ti-database-off', message: 'Équipement introuvable.' },
+      reseau: { icone: 'ti-wifi-off',  message: 'Impossible de charger cet équipement. Vérifiez votre connexion.' },
+    }
+    const { icone, message } = config[erreurCode] ?? config.reseau
     return (
       <div className="fiche-equipement">
         <div className="fiche-empty">
-          <i className="ti ti-alert-circle" aria-hidden="true" />
-          <p>Équipement introuvable.</p>
+          <i className={`ti ${icone}`} aria-hidden="true" />
+          <p>{message}</p>
           <button className="btn-outline" onClick={() => navigate('/equipements')}>
             Retour à la liste
           </button>
@@ -85,6 +100,8 @@ export default function FicheEquipement() {
       </div>
     )
   }
+
+  if (!equipement) return null
 
   const statutInfo = STATUT_LABELS[equipement.statut] || STATUT_LABELS.actif
 

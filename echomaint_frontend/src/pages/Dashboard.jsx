@@ -1,43 +1,69 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts'
 import './Dashboard.css'
 
 import { useAuth } from '../hooks/useAuth'
-import { getKpiResume } from '../api/stats.api'
+import { getKpiResume, getClientDashboard, getTechnicienDashboard } from '../api/stats.api'
 import { getBatiments } from '../api/batiments.api'
-import { getDemandes } from '../api/demandes.api'       // ← nom réel du fichier
+import { getDemandes } from '../api/demandes.api'
 import { getEquipements } from '../api/equipements.api'
-// ─── Constantes ──────────────────────────────────────────────────────────────
-const STATUT_COLORS = {
-  planifiee: '#94a3b8',
-  assignee:  '#2563EB',
-  en_cours:  '#F59E0B',
-  terminee:  '#22C55E',
-  annulee:   '#ef4444',
-}
 
-const STATUT_LABELS = {
-  planifiee: 'Planifiée',
-  assignee:  'Assignée',
-  en_cours:  'En cours',
-  terminee:  'Terminée',
-  annulee:   'Annulée',
+const STATUT_COLORS = {
+  planifiee: '#2563EB',
+  assignee:  '#F97316',
+  en_cours:  '#8B5CF6',
+  terminee:  '#22C55E',
+  annulee:   '#94a3b8',
 }
 
 const RATIO_COLORS  = ['#2563EB', '#F59E0B']
 
-const tooltipStyle = {
-  background: '#fff',
-  border: '1px solid #E2E8F0',
-  borderRadius: '12px',
-  fontSize: '13px',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+const OT_STATUT_COLORS = {
+  planifiee: { color: '#6366f1', bg: '#EEF2FF' },
+  assignee:  { color: '#f59e0b', bg: '#FFFBEB' },
+  en_cours:  { color: '#8b5cf6', bg: '#F5F3FF' },
+  terminee:  { color: '#10b981', bg: '#F0FDF4' },
+  annulee:   { color: '#6b7280', bg: '#F9FAFB' },
 }
 
-// ─── Utilitaires ─────────────────────────────────────────────────────────────
+const OT_PRIORITE_COLORS = {
+  urgente: { color: '#ef4444', bg: '#FEF2F2' },
+  haute:   { color: '#f59e0b', bg: '#FFFBEB' },
+  normale: { color: '#6b7280', bg: '#F1F5F9' },
+  basse:   { color: '#10b981', bg: '#F0FDF4' },
+}
+
+const tooltipStyle = {
+  background: '#fff', border: '1px solid #E2E8F0',
+  borderRadius: '12px', fontSize: '13px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+}
+
+async function exportAvecToken(url, nomFichier, errMsg) {
+  try {
+    const token = localStorage.getItem('echomaint_token')
+    const res   = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      window.alert(err.message || errMsg)
+      return
+    }
+    const blob      = await res.blob()
+    const objectUrl = URL.createObjectURL(blob)
+    const a         = document.createElement('a')
+    a.href          = objectUrl
+    a.download      = nomFichier
+    a.click()
+    URL.revokeObjectURL(objectUrl)
+  } catch {
+    window.alert(errMsg)
+  }
+}
+
 function exportKpiCSV(kpi, periode, batimentNom) {
   const rows = [
     ['Indicateur', 'Valeur'],
@@ -52,10 +78,10 @@ function exportKpiCSV(kpi, periode, batimentNom) {
     [''],
     ['Période',   periode + ' jours'],
     ['Bâtiment',  batimentNom || 'Tous'],
-    ['Généré le', new Date().toLocaleDateString('fr-FR')],
+    ['Généré le', new Date().toLocaleDateString()],
   ]
   const csv  = rows.map(r => r.join(';')).join('\n')
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
   const url  = URL.createObjectURL(blob)
   const a    = document.createElement('a')
   a.href     = url
@@ -78,25 +104,26 @@ function DonutLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
   )
 }
 
-// ─── Badges réutilisables ─────────────────────────────────────────────────────
 function BadgeDI({ statut }) {
+  const { t } = useTranslation()
   const map = {
-    ouverte: { label: 'En attente', color: '#F59E0B', bg: '#FFFBEB' },
-    traitee: { label: 'Traitée',    color: '#22C55E', bg: '#F0FDF4' },
-    rejetee: { label: 'Rejetée',    color: '#ef4444', bg: '#FEF2F2' },
+    ouverte: { key: 'dashboard.badgeDI.pending', color: '#F59E0B', bg: '#FFFBEB' },
+    traitee: { key: 'dashboard.badgeDI.traitee', color: '#22C55E', bg: '#F0FDF4' },
+    rejetee: { key: 'dashboard.badgeDI.rejetee', color: '#ef4444', bg: '#FEF2F2' },
   }
-  const s = map[statut] || { label: statut, color: '#94a3b8', bg: '#F8FAFC' }
-  return <span className="badge-statut" style={{ color: s.color, background: s.bg }}>{s.label}</span>
+  const s = map[statut] || { key: null, color: '#94a3b8', bg: '#F8FAFC' }
+  return <span className="badge-statut" style={{ color: s.color, background: s.bg }}>{s.key ? t(s.key) : statut}</span>
 }
 
 function BadgeEquipement({ statut }) {
+  const { t } = useTranslation()
   const map = {
-    actif:        { label: 'Actif',        color: '#22C55E', bg: '#F0FDF4' },
-    en_panne:     { label: 'En panne',     color: '#ef4444', bg: '#FEF2F2' },
-    hors_service: { label: 'Hors service', color: '#94a3b8', bg: '#F8FAFC' },
+    actif:        { color: '#22C55E', bg: '#F0FDF4' },
+    en_panne:     { color: '#ef4444', bg: '#FEF2F2' },
+    hors_service: { color: '#94a3b8', bg: '#F8FAFC' },
   }
-  const s = map[statut] || { label: statut, color: '#94a3b8', bg: '#F8FAFC' }
-  return <span className="badge-statut" style={{ color: s.color, background: s.bg }}>{s.label}</span>
+  const s = map[statut] || { color: '#94a3b8', bg: '#F8FAFC' }
+  return <span className="badge-statut" style={{ color: s.color, background: s.bg }}>{t(`equipements.statuts.${statut}`)}</span>
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -112,6 +139,7 @@ function DashboardAdmin() {
   const [diEnAttente,    setDiEnAttente]    = useState([])
   const [equipEnPanne,   setEquipEnPanne]   = useState([])
   const [loading,        setLoading]        = useState(true)
+  const [refreshing,     setRefreshing]     = useState(false)
   const [erreur,         setErreur]         = useState('')
 
   useEffect(() => {
@@ -120,10 +148,12 @@ function DashboardAdmin() {
       .catch(err => console.error('Bâtiments:', err))
   }, [])
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { charger() }, [periode, filterBatiment])
 
-  const charger = async () => {
-    setLoading(true)
+  const charger = async (manuel = false) => {
+    if (manuel) setRefreshing(true)
+    else        setLoading(true)
     setErreur('')
     try {
       const params = { periode }
@@ -131,102 +161,109 @@ function DashboardAdmin() {
 
       const [resKpi, resDI, resEquip] = await Promise.all([
         getKpiResume(params),
-        getDemandes(),                                    // ← pas de filtre params pour l'instant
+        getDemandes(),
         getEquipements({ statut: 'en_panne', limit: 5, ...(filterBatiment ? { batiment_id: filterBatiment } : {}) }),
       ])
 
-      // Tes API retournent directement .data (pas { data: ... })
       setKpi(resKpi.data)
-      // getDemandes retourne { data: [...] } ou directement un tableau selon le backend
-      // filtre côté frontend les DI ouvertes et prend les 5 premières
       const toutesLesDI = Array.isArray(resDI) ? resDI : (resDI.data ?? [])
       setDiEnAttente(toutesLesDI.filter(d => d.statut === 'ouverte').slice(0, 5))
-      const tousLesEquip = Array.isArray(resEquip) ? resEquip : (resEquip.data ?? [])
-      setEquipEnPanne(tousLesEquip)
+      setEquipEnPanne(Array.isArray(resEquip) ? resEquip : (resEquip.data ?? []))
     } catch (err) {
       console.error('Dashboard admin:', err)
-      setErreur('Impossible de charger le tableau de bord.')
+      setErreur(t('common.error'))
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
- }
+  }
 
   const batimentNom = batiments.find(b => b.id === filterBatiment)?.nom || ''
 
   const donutStatuts = kpi
     ? Object.entries(kpi.interventions_par_statut ?? {})
-        .map(([key, val]) => ({ name: STATUT_LABELS[key] ?? key, value: val, key }))
+        .map(([key, val]) => ({ name: t(`interventions.statuts.${key}`), value: val, key }))
         .filter(d => d.value > 0)
     : []
 
   const donutRatio = kpi
     ? [
-        { name: 'Préventif', value: kpi.taux_preventif ?? 0 },
-        { name: 'Curatif',   value: kpi.taux_curatif   ?? 0 },
+        { name: t('interventions.types.preventif'), value: kpi.taux_preventif ?? 0 },
+        { name: t('interventions.types.curatif'),   value: kpi.taux_curatif   ?? 0 },
       ].filter(d => d.value > 0)
     : []
 
   const kpiCards = kpi ? [
     {
-      label: 'OT en retard',
-      value: kpi.ot_en_retard,
-      subtitle: 'Dépassement de date planifiée',
+      label: t('dashboard.otEnRetard'), value: kpi.ot_en_retard,
+      subtitle: t('dashboard.otEnRetardSub'),
       icon: 'ti-alert-circle', color: '#ef4444', bg: '#FEF2F2', bar: '#ef4444',
     },
     {
-      label: 'Équipements en panne',
-      value: kpi.nb_equipements_en_panne,
-      subtitle: 'Statut en_panne actuel',
+      label: t('dashboard.equipEnPanneKpi'), value: kpi.nb_equipements_en_panne,
+      subtitle: t('dashboard.equipEnPanneKpiSub'),
       icon: 'ti-alert-triangle', color: '#F59E0B', bg: '#FFFBEB', bar: '#F59E0B',
     },
     {
-      label: 'Taux de disponibilité',
+      label: t('dashboard.tauxDispo'),
       value: kpi.taux_curatif != null ? `${(100 - kpi.taux_curatif).toFixed(1)} %` : '—',
-      subtitle: 'Ratio OT préventifs terminés',
+      subtitle: t('dashboard.tauxDispoSub'),
       icon: 'ti-shield-check', color: '#22C55E', bg: '#F0FDF4', bar: '#22C55E',
     },
     {
-      label: 'MTTR global',
+      label: t('dashboard.mttrGlobal'),
       value: kpi.mttr_heures != null ? `${kpi.mttr_heures} h` : '—',
-      subtitle: 'Temps moyen de réparation',
+      subtitle: t('dashboard.mttrSub'),
       icon: 'ti-clock', color: '#2563EB', bg: '#EFF6FF', bar: '#2563EB',
+    },
+    {
+      label: t('dashboard.reouvertures'), value: kpi.nb_reouvertures_periode ?? 0,
+      subtitle: t('dashboard.reouverturesSub', { n: kpi.periode_jours }),
+      icon: 'ti-refresh-alert', color: '#8B5CF6', bg: '#F5F3FF', bar: '#8B5CF6',
     },
   ] : []
 
-  if (loading) return <div className="dashboard"><p className="dashboard-message">Chargement…</p></div>
-  if (erreur || !kpi) return <div className="dashboard"><p className="dashboard-message dashboard-message--error">{erreur || 'Aucune donnée.'}</p></div>
+  if (loading) return <div className="dashboard"><p className="dashboard-message">{t('dashboard.loading')}</p></div>
+  if (erreur || !kpi) return <div className="dashboard"><p className="dashboard-message dashboard-message--error">{erreur || t('dashboard.noData')}</p></div>
 
   return (
     <div className="dashboard">
 
-      {/* Filtres + exports */}
       <div className="dashboard-filters">
         <div className="dashboard-filters-left">
           <select value={periode} onChange={e => setPeriode(e.target.value)} className="dashboard-select">
-            <option value="7">7 derniers jours</option>
-            <option value="30">30 derniers jours</option>
-            <option value="90">90 derniers jours</option>
+            <option value="7">{t('common.periods.7')}</option>
+            <option value="30">{t('common.periods.30')}</option>
+            <option value="90">{t('common.periods.90')}</option>
           </select>
           <select value={filterBatiment} onChange={e => setFilterBatiment(e.target.value)} className="dashboard-select">
-            <option value="">Tous les bâtiments</option>
+            <option value="">{t('dashboard.filter.allBuildings')}</option>
             {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
           </select>
         </div>
         <div className="dashboard-exports">
+          <button
+            className="btn-export btn-actualiser"
+            onClick={() => charger(true)}
+            disabled={refreshing}
+            title={t('dashboard.refresh')}
+          >
+            <i className={`ti ${refreshing ? 'ti-loader-2 spin' : 'ti-refresh'}`} />
+            {refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}
+          </button>
           <button className="btn-export" onClick={() => exportKpiCSV(kpi, periode, batimentNom)}>
-            <i className="ti ti-file-type-csv" /> Export CSV
+            <i className="ti ti-file-type-csv" /> {t('dashboard.exportCsv')}
           </button>
           <button className="btn-export btn-export-pdf" onClick={() => {
             const url = `${import.meta.env.VITE_API_URL}/exports/kpi?format=pdf&periode=${periode}${filterBatiment ? `&batiment_id=${filterBatiment}` : ''}`
-            window.open(url, '_blank')
+            exportAvecToken(url, `echomaint_kpi_${new Date().toISOString().split('T')[0]}.pdf`, t('common.error'))
           }}>
-            <i className="ti ti-file-type-pdf" /> Export PDF
+            <i className="ti ti-file-type-pdf" /> {t('dashboard.exportPdf')}
           </button>
         </div>
       </div>
 
-      {/* 4 KPI scalaires */}
-      <div className="dashboard-kpi dashboard-kpi--4col">
+      <div className="dashboard-kpi dashboard-kpi--5col">
         {kpiCards.map((c, i) => (
           <div key={i} className="kpi-card">
             <div className="kpi-card-top">
@@ -244,20 +281,21 @@ function DashboardAdmin() {
         ))}
       </div>
 
-      {/* 2 donuts */}
       <div className="dashboard-charts-row">
         <div className="dashboard-chart">
           <div className="chart-header">
             <div className="chart-header-left">
               <div className="chart-icon-wrap"><i className="ti ti-chart-donut" /></div>
               <div>
-                <p className="chart-title">Répartition des OT par statut</p>
-                <p className="chart-subtitle">Sur la période sélectionnée</p>
+                <p className="chart-title">{t('dashboard.otByStatus')}</p>
+                <p className="chart-subtitle">{t('dashboard.selectedPeriod')}</p>
               </div>
             </div>
           </div>
-          {donutStatuts.length === 0
-            ? <p className="chart-empty">Aucun OT sur cette période</p>
+          {!kpi?.interventions_par_statut
+            ? <p className="chart-empty chart-empty--unavailable">{t('dashboard.unavailable')}</p>
+            : donutStatuts.length === 0
+            ? <p className="chart-empty">{t('dashboard.noOT')}</p>
             : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
@@ -280,13 +318,13 @@ function DashboardAdmin() {
                 <i className="ti ti-chart-pie" style={{ color: '#F59E0B' }} />
               </div>
               <div>
-                <p className="chart-title">Ratio préventif / curatif</p>
-                <p className="chart-subtitle">OT terminés sur la période</p>
+                <p className="chart-title">{t('dashboard.prevCurRatio')}</p>
+                <p className="chart-subtitle">{t('dashboard.closedPeriod')}</p>
               </div>
             </div>
           </div>
           {donutRatio.length === 0
-            ? <p className="chart-empty">Aucun OT terminé sur cette période</p>
+            ? <p className="chart-empty">{t('dashboard.noClosedOT')}</p>
             : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
@@ -303,9 +341,7 @@ function DashboardAdmin() {
         </div>
       </div>
 
-      {/* 2 listes */}
       <div className="dashboard-lists-row">
-        {/* DI en attente */}
         <div className="dashboard-list-card">
           <div className="list-card-header">
             <div className="chart-header-left">
@@ -313,28 +349,35 @@ function DashboardAdmin() {
                 <i className="ti ti-inbox" style={{ color: '#ef4444' }} />
               </div>
               <div>
-                <p className="chart-title">Demandes en attente</p>
-                <p className="chart-subtitle">5 dernières DI non traitées</p>
+                <p className="chart-title">{t('dashboard.pendingDI')}</p>
+                <p className="chart-subtitle">{t('dashboard.pendingDISub')}</p>
               </div>
             </div>
             <a href="/demandes-intervention" className="list-card-voir-tout">
-              Voir tout <i className="ti ti-arrow-right" />
+              {t('dashboard.seeAll')} <i className="ti ti-arrow-right" />
             </a>
           </div>
           {diEnAttente.length === 0
-            ? <p className="chart-empty">Aucune demande en attente</p>
+            ? <p className="chart-empty">{t('dashboard.noPendingDI')}</p>
             : (
               <table className="dashboard-table">
-                <thead><tr><th>Réf.</th><th>Équipement</th><th>Objet</th><th>Priorité</th><th>Date</th><th>Statut</th></tr></thead>
+                <thead><tr>
+                  <th>{t('dashboard.table.ref')}</th>
+                  <th>{t('dashboard.table.equipment')}</th>
+                  <th>{t('dashboard.table.objet')}</th>
+                  <th>{t('dashboard.table.priorite')}</th>
+                  <th>{t('dashboard.table.date')}</th>
+                  <th>{t('dashboard.table.statut')}</th>
+                </tr></thead>
                 <tbody>
                   {diEnAttente.map(di => (
                     <tr key={di.id}>
-                      <td className="table-ref">#{di.id}</td>
-                      <td>{di.equipement?.nom ?? '—'}</td>
-                      <td className="table-titre">{di.titre}</td>
-                      <td><span className={`badge-priorite badge-priorite--${di.priorite}`}>{di.priorite}</span></td>
-                      <td className="table-date">{new Date(di.created_at).toLocaleDateString('fr-FR')}</td>
-                      <td><BadgeDI statut={di.statut} /></td>
+                      <td className="table-ref" data-label={t('dashboard.table.ref')}>#{di.id}</td>
+                      <td data-label={t('dashboard.table.equipment')}>{di.equipement?.nom ?? '—'}</td>
+                      <td className="table-titre" data-label={t('dashboard.table.objet')}>{di.titre}</td>
+                      <td data-label={t('dashboard.table.priorite')}><span className={`badge-priorite badge-priorite--${di.priorite}`}>{di.priorite}</span></td>
+                      <td className="table-date" data-label={t('dashboard.table.date')}>{new Date(di.created_at).toLocaleDateString()}</td>
+                      <td data-label={t('dashboard.table.statut')}><BadgeDI statut={di.statut} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -342,7 +385,6 @@ function DashboardAdmin() {
             )}
         </div>
 
-        {/* Équipements en panne */}
         <div className="dashboard-list-card">
           <div className="list-card-header">
             <div className="chart-header-left">
@@ -350,26 +392,31 @@ function DashboardAdmin() {
                 <i className="ti ti-tool" style={{ color: '#F59E0B' }} />
               </div>
               <div>
-                <p className="chart-title">Équipements en panne</p>
-                <p className="chart-subtitle">Flux temps réel</p>
+                <p className="chart-title">{t('dashboard.equipEnPanne')}</p>
+                <p className="chart-subtitle">{t('dashboard.equipEnPanneSub')}</p>
               </div>
             </div>
             <a href="/equipements?statut=en_panne" className="list-card-voir-tout">
-              Voir tout <i className="ti ti-arrow-right" />
+              {t('dashboard.seeAll')} <i className="ti ti-arrow-right" />
             </a>
           </div>
           {equipEnPanne.length === 0
-            ? <p className="chart-empty" style={{ color: '#22C55E' }}><i className="ti ti-circle-check" /> Aucun équipement en panne</p>
+            ? <p className="chart-empty" style={{ color: '#22C55E' }}><i className="ti ti-circle-check" /> {t('dashboard.noEquipEnPanne')}</p>
             : (
               <table className="dashboard-table">
-                <thead><tr><th>Équipement</th><th>Réf.</th><th>Bâtiment</th><th>Statut</th></tr></thead>
+                <thead><tr>
+                  <th>{t('dashboard.table.equipment')}</th>
+                  <th>{t('dashboard.table.ref')}</th>
+                  <th>{t('dashboard.table.batiment')}</th>
+                  <th>{t('dashboard.table.statut')}</th>
+                </tr></thead>
                 <tbody>
                   {equipEnPanne.map(eq => (
                     <tr key={eq.id}>
-                      <td className="table-titre">{eq.nom}</td>
-                      <td className="table-ref">{eq.reference}</td>
-                      <td>{eq.batiment?.nom ?? '—'}</td>
-                      <td><BadgeEquipement statut={eq.statut} /></td>
+                      <td className="table-titre" data-label={t('dashboard.table.equipment')}>{eq.nom}</td>
+                      <td className="table-ref" data-label={t('dashboard.table.ref')}>{eq.reference}</td>
+                      <td data-label={t('dashboard.table.batiment')}>{eq.batiment?.nom ?? '—'}</td>
+                      <td data-label={t('dashboard.table.statut')}><BadgeEquipement statut={eq.statut} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -386,68 +433,102 @@ function DashboardAdmin() {
 // VUE CLIENT
 // ═══════════════════════════════════════════════════════════════════════════════
 function DashboardClient() {
+  const { t } = useTranslation()
   const { user } = useAuth()
+  const navigate = useNavigate()
 
-  const [mesDI,          setMesDI]          = useState([])
-  const [mesEquipements, setMesEquipements] = useState([])
+  const [data,           setData]           = useState(null)
   const [loading,        setLoading]        = useState(true)
   const [erreur,         setErreur]         = useState('')
-
-  
+  const [periode,        setPeriode]        = useState('30')
+  const [filterBatiment, setFilterBatiment] = useState('')
+  const [batiments,      setBatiments]      = useState([])
 
   const charger = async () => {
     setLoading(true)
     setErreur('')
     try {
-      const [resDI, resEquip] = await Promise.all([
-        getDemandes(),
-        getEquipements({ statut: 'en_panne', limit: 5 }),
-      ])
-
-      const toutesLesDI = Array.isArray(resDI) ? resDI : (resDI.data ?? [])
-      setMesDI(toutesLesDI.slice(0, 5))
-
-      const tousLesEquip = Array.isArray(resEquip) ? resEquip : (resEquip.data ?? [])
-      setMesEquipements(tousLesEquip)
+      const params = { periode }
+      if (filterBatiment) params.batiment_id = filterBatiment
+      const res = await getClientDashboard(params)
+      setData(res.data)
+      if (res.data.batiments?.length > 0) setBatiments(res.data.batiments)
     } catch (err) {
       console.error('Dashboard client:', err)
-      setErreur('Impossible de charger votre tableau de bord.')
+      setErreur(t('common.error'))
     } finally {
       setLoading(false)
     }
   }
-  useEffect(() => { charger() }, [])
 
-  if (loading) return <div className="dashboard"><p className="dashboard-message">Chargement…</p></div>
-  if (erreur)  return <div className="dashboard"><p className="dashboard-message dashboard-message--error">{erreur}</p></div>
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { charger() }, [periode, filterBatiment])
 
-  const diEnAttente     = mesDI.filter(d => d.statut === 'ouverte').length
-  const diEnCours       = mesDI.filter(d => d.statut === 'traitee').length
-  const equipIndisponibles = mesEquipements.length
+  if (loading) return <div className="dashboard"><p className="dashboard-message">{t('dashboard.loading')}</p></div>
+  if (erreur || !data) return <div className="dashboard"><p className="dashboard-message dashboard-message--error">{erreur || t('dashboard.noData')}</p></div>
 
-  const kpiCards = [
-    { label: 'Demandes en attente',     value: diEnAttente,     subtitle: 'En attente de validation admin', icon: 'ti-hourglass',       color: '#F59E0B', bg: '#FFFBEB', bar: '#F59E0B' },
-    { label: 'Demandes en cours',       value: diEnCours,       subtitle: 'OT créé, intervention en cours', icon: 'ti-progress',        color: '#2563EB', bg: '#EFF6FF', bar: '#2563EB' },
-    { label: 'Équipements indisponibles',value: equipIndisponibles,subtitle: 'En panne actuellement',       icon: 'ti-alert-triangle',  color: '#ef4444', bg: '#FEF2F2', bar: '#ef4444' },
+  const donutParc = [
+    { name: t('equipements.statuts.actif'),        value: data.repartition_equipements.actif,        color: '#10b981' },
+    { name: t('equipements.statuts.en_panne'),     value: data.repartition_equipements.en_panne,      color: '#ef4444' },
+    { name: t('equipements.statuts.hors_service'), value: data.repartition_equipements.hors_service,  color: '#f59e0b' },
+  ].filter(d => d.value > 0)
+
+  const donutDI = [
+    { name: t('dashboard.badgeDI.pending'), value: data.repartition_demandes.ouverte,  color: '#3b82f6' },
+    { name: t('dashboard.badgeDI.traitee'), value: data.repartition_demandes.traitee,  color: '#10b981' },
+    { name: t('dashboard.badgeDI.rejetee'), value: data.repartition_demandes.rejetee,  color: '#94a3b8' },
+  ].filter(d => d.value > 0)
+
+  const kpiAll = [
+    {
+      label: t('dashboard.client.myEquipments'), value: data.nb_equipements,
+      subtitle: t('dashboard.client.allBuildings'),
+      icon: 'ti-settings', color: '#3b82f6', bg: '#EFF6FF', bar: '#3b82f6',
+    },
+    {
+      label: t('dashboard.equipEnPanneKpi'), value: data.nb_equipements_en_panne,
+      subtitle: data.nb_equipements_en_panne > 0 ? t('dashboard.client.interventionRequired') : t('dashboard.client.allOperational'),
+      icon: 'ti-alert-triangle',
+      color: data.nb_equipements_en_panne > 0 ? '#ef4444' : '#10b981',
+      bg:    data.nb_equipements_en_panne > 0 ? '#FEF2F2' : '#F0FDF4',
+      bar:   data.nb_equipements_en_panne > 0 ? '#ef4444' : '#10b981',
+    },
+    {
+      label: t('dashboard.client.pendingDemands'), value: data.nb_demandes_en_attente,
+      subtitle: t('dashboard.client.inProgress'),
+      icon: 'ti-clock', color: '#f59e0b', bg: '#FFFBEB', bar: '#f59e0b',
+    },
+    {
+      label: t('dashboard.client.myInterventions'), value: data.nb_interventions_en_cours,
+      subtitle: t('dashboard.client.onYourEquipments'),
+      icon: 'ti-tools', color: '#8b5cf6', bg: '#F5F3FF', bar: '#8b5cf6',
+    },
+    {
+      label: t('dashboard.client.terminatedPeriod'), value: data.nb_interventions_terminees_mois,
+      subtitle: t('common.periods.' + periode),
+      icon: 'ti-circle-check', color: '#10b981', bg: '#F0FDF4', bar: '#10b981',
+    },
   ]
 
   return (
     <div className="dashboard">
 
-      {/* Bandeau de bienvenue */}
-      <div className="dashboard-welcome">
-        <div className="dashboard-welcome-text">
-          <h2 className="dashboard-welcome-title">Bonjour, {user?.prenom} {user?.nom} 👋</h2>
-          <p className="dashboard-welcome-sub">Voici un résumé de l'état de vos équipements et de vos demandes d'intervention.</p>
+      <div className="dashboard-filters">
+        <div className="dashboard-filters-left">
+          <select value={periode} onChange={e => setPeriode(e.target.value)} className="dashboard-select">
+            <option value="7">{t('common.periods.7')}</option>
+            <option value="30">{t('common.periods.30')}</option>
+            <option value="90">{t('common.periods.90')}</option>
+          </select>
+          <select value={filterBatiment} onChange={e => setFilterBatiment(e.target.value)} className="dashboard-select">
+            <option value="">{t('dashboard.filter.allBuildings')}</option>
+            {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
+          </select>
         </div>
-        <a href="/demandes-intervention/new" className="btn-nouvelle-di">
-          <i className="ti ti-plus" /> Nouvelle demande
-        </a>
       </div>
 
-      {/* 3 KPI */}
-      <div className="dashboard-kpi dashboard-kpi--3col">
-        {kpiCards.map((c, i) => (
+      <div className="dashboard-kpi dashboard-kpi--5col">
+        {kpiAll.map((c, i) => (
           <div key={i} className="kpi-card">
             <div className="kpi-card-top">
               <div className="kpi-icon" style={{ background: c.bg }}>
@@ -455,7 +536,7 @@ function DashboardClient() {
               </div>
               <div className="kpi-info">
                 <p className="kpi-label">{c.label}</p>
-                <p className="kpi-value">{c.value}</p>
+                <p className="kpi-value" style={{ color: c.color }}>{c.value}</p>
                 <p className="kpi-subtitle">{c.subtitle}</p>
               </div>
             </div>
@@ -464,49 +545,116 @@ function DashboardClient() {
         ))}
       </div>
 
-      {/* 2 listes */}
-      <div className="dashboard-lists-row">
+      <div className="dashboard-charts-row">
+        <div className="dashboard-chart">
+          <div className="chart-header">
+            <div className="chart-header-left">
+              <div className="chart-icon-wrap"><i className="ti ti-chart-donut" /></div>
+              <div>
+                <p className="chart-title">{t('dashboard.client.parcTitle')}</p>
+                <p className="chart-subtitle">{t('dashboard.client.parcSubtitle')}</p>
+              </div>
+            </div>
+          </div>
+          {donutParc.length === 0
+            ? <p className="chart-empty">{t('dashboard.client.noEquipements')}</p>
+            : (
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie data={donutParc} cx="50%" cy="45%" innerRadius={60} outerRadius={95}
+                       paddingAngle={3} dataKey="value" labelLine={false} label={DonutLabel}>
+                    {donutParc.map((d, i) => <Cell key={i} fill={d.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend iconType="circle" iconSize={8}
+                    formatter={v => <span style={{ color: '#64748B', fontSize: '12px' }}>{v}</span>} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+        </div>
 
-        {/* Mes dernières DI */}
+        <div className="dashboard-chart">
+          <div className="chart-header">
+            <div className="chart-header-left">
+              <div className="chart-icon-wrap" style={{ background: '#EFF6FF' }}>
+                <i className="ti ti-file-text" style={{ color: '#3b82f6' }} />
+              </div>
+              <div>
+                <p className="chart-title">{t('dashboard.client.myDI')}</p>
+                <p className="chart-subtitle">{t('common.periods.' + periode)}</p>
+              </div>
+            </div>
+          </div>
+          {donutDI.length === 0
+            ? <p className="chart-empty">{t('dashboard.client.noDIPeriod')}</p>
+            : (
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie data={donutDI} cx="50%" cy="45%" innerRadius={60} outerRadius={95}
+                       paddingAngle={3} dataKey="value" labelLine={false} label={DonutLabel}>
+                    {donutDI.map((d, i) => <Cell key={i} fill={d.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Legend iconType="circle" iconSize={8}
+                    formatter={v => <span style={{ color: '#64748B', fontSize: '12px' }}>{v}</span>} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+        </div>
+      </div>
+
+      <div className="dashboard-client-lists">
+
         <div className="dashboard-list-card">
           <div className="list-card-header">
             <div className="chart-header-left">
               <div className="chart-icon-wrap"><i className="ti ti-file-text" /></div>
               <div>
-                <p className="chart-title">Mes dernières demandes</p>
-                <p className="chart-subtitle">5 demandes les plus récentes</p>
+                <p className="chart-title">{t('dashboard.client.lastDI')}</p>
+                <p className="chart-subtitle">{t('dashboard.client.lastDISub')}</p>
               </div>
             </div>
-            <a href="/demandes-intervention" className="list-card-voir-tout">
-              Voir tout <i className="ti ti-arrow-right" />
-            </a>
+            <button className="list-card-voir-tout" onClick={() => navigate('/demandes-intervention')}>
+              {t('dashboard.seeAll')} <i className="ti ti-arrow-right" />
+            </button>
           </div>
-          {mesDI.length === 0
-            ? (
-              <div className="chart-empty chart-empty--action">
-                <i className="ti ti-inbox" style={{ fontSize: '2rem', color: '#CBD5E1' }} />
-                <p>Aucune demande pour le moment.</p>
-                <a href="/demandes-intervention/new" className="btn-nouvelle-di btn-nouvelle-di--sm">Soumettre une demande</a>
-              </div>
-            ) : (
-              <table className="dashboard-table">
-                <thead><tr><th>Réf.</th><th>Équipement</th><th>Objet</th><th>Statut</th><th>Date</th></tr></thead>
-                <tbody>
-                  {mesDI.map(di => (
-                    <tr key={di.id}>
-                      <td className="table-ref">#{di.id}</td>
-                      <td>{di.equipement?.nom ?? '—'}</td>
-                      <td className="table-titre">{di.titre}</td>
-                      <td><BadgeDI statut={di.statut} /></td>
-                      <td className="table-date">{new Date(di.created_at).toLocaleDateString('fr-FR')}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+
+          {data.dernieres_demandes.length === 0 ? (
+            <div className="chart-empty chart-empty--action">
+              <i className="ti ti-inbox" style={{ fontSize: '2rem', color: '#CBD5E1' }} />
+              <p>{t('dashboard.client.noDI')}</p>
+              <button className="btn-nouvelle-di btn-nouvelle-di--sm" onClick={() => navigate('/demandes-intervention')}>
+                <i className="ti ti-plus" /> {t('dashboard.client.newDemand')}
+              </button>
+            </div>
+          ) : (
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>{t('dashboard.table.ref')}</th>
+                  <th>{t('dashboard.table.objet')}</th>
+                  <th>{t('dashboard.table.equipment')}</th>
+                  <th>{t('dashboard.table.statut')}</th>
+                  <th>{t('dashboard.table.date')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.dernieres_demandes.map(di => (
+                  <tr key={di.id}>
+                    <td className="table-ref" data-label={t('dashboard.table.ref')}>{di.id.slice(0, 8).toUpperCase()}</td>
+                    <td className="table-titre" data-label={t('dashboard.table.objet')}>{di.titre}</td>
+                    <td data-label={t('dashboard.table.equipment')}>{di.equipement_nom ?? '—'}</td>
+                    <td data-label={t('dashboard.table.statut')}><BadgeDI statut={di.statut} /></td>
+                    <td className="table-date" data-label={t('dashboard.table.date')}>
+                      {new Date(di.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        {/* Équipements critiques */}
         <div className="dashboard-list-card">
           <div className="list-card-header">
             <div className="chart-header-left">
@@ -514,34 +662,45 @@ function DashboardClient() {
                 <i className="ti ti-alert-triangle" style={{ color: '#ef4444' }} />
               </div>
               <div>
-                <p className="chart-title">Équipements critiques</p>
-                <p className="chart-subtitle">Actuellement en panne</p>
+                <p className="chart-title">{t('dashboard.client.criticalEquipments')}</p>
+                <p className="chart-subtitle">{t('dashboard.client.criticalEquipmentsSub')}</p>
               </div>
             </div>
-            <a href="/equipements?statut=en_panne" className="list-card-voir-tout">
-              Voir tout <i className="ti ti-arrow-right" />
-            </a>
-          </div>
-          {mesEquipements.length === 0
-            ? (
-              <div className="chart-empty">
-                <i className="ti ti-circle-check" style={{ fontSize: '2rem', color: '#22C55E' }} />
-                <p style={{ color: '#22C55E', fontWeight: 600 }}>Tous vos équipements sont opérationnels</p>
-              </div>
-            ) : (
-              <ul className="equip-panne-list">
-                {mesEquipements.map(eq => (
-                  <li key={eq.id} className="equip-panne-item">
-                    <div className="equip-panne-icon"><i className="ti ti-cpu" /></div>
-                    <div className="equip-panne-info">
-                      <span className="equip-panne-nom">{eq.nom}</span>
-                      <span className="equip-panne-ref">{eq.reference} · {eq.batiment?.nom ?? '—'}</span>
-                    </div>
-                    <span className="badge-statut" style={{ color: '#ef4444', background: '#FEF2F2' }}>En panne</span>
-                  </li>
-                ))}
-              </ul>
+            {data.equipements_en_panne.length > 0 && (
+              <button className="list-card-voir-tout" onClick={() => navigate('/equipements?statut=en_panne')}>
+                {t('dashboard.seeAll')} <i className="ti ti-arrow-right" />
+              </button>
             )}
+          </div>
+
+          {data.equipements_en_panne.length === 0 ? (
+            <div className="chart-empty">
+              <i className="ti ti-circle-check" style={{ fontSize: '2rem', color: '#10b981' }} />
+              <p style={{ color: '#10b981', fontWeight: 600 }}>
+                ✓ {t('dashboard.client.allEquipmentsOk')}
+              </p>
+            </div>
+          ) : (
+            <ul className="equip-panne-list">
+              {data.equipements_en_panne.map(eq => (
+                <li key={eq.id} className="equip-panne-item">
+                  <div className="equip-panne-icon"><i className="ti ti-cpu" /></div>
+                  <div className="equip-panne-info">
+                    <span className="equip-panne-nom">{eq.nom}</span>
+                    <span className="equip-panne-ref">
+                      {eq.reference ? `${eq.reference} · ` : ''}{eq.batiment_nom ?? '—'}
+                    </span>
+                  </div>
+                  <span className="badge-statut" style={{ color: '#ef4444', background: '#FEF2F2' }}>
+                    {t('dashboard.client.enPanne')}
+                  </span>
+                  <button className="btn-di-equip" onClick={() => navigate('/demandes-intervention')} title={t('dashboard.client.newDemand')}>
+                    <i className="ti ti-plus" /> DI
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
       </div>
@@ -550,35 +709,280 @@ function DashboardClient() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// VUE TECHNICIEN (placeholder — à implémenter au prochain sprint)
+// VUE TECHNICIEN
 // ═══════════════════════════════════════════════════════════════════════════════
 function DashboardTechnicien() {
-  const { user } = useAuth()
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  const [data,    setData]    = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [erreur,  setErreur]  = useState(null)
+  const [periode, setPeriode] = useState('30')
+
+  const chargerTech = (p) => {
+    setLoading(true)
+    setErreur(null)
+    getTechnicienDashboard({ periode: p })
+      .then(res => setData(res.data))
+      .catch(() => setErreur(t('common.error')))
+      .finally(() => setLoading(false))
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { chargerTech(periode) }, [periode])
+
+  if (loading) return <div className="dashboard-message">{t('dashboard.loading')}</div>
+  if (erreur)  return <div className="dashboard-message dashboard-message--error">{erreur}</div>
+  if (!data)   return null
+
+  const kpi4 = [
+    {
+      label:    t('dashboard.tech.todayOT'), value: data.nb_ot_planifies_aujourd_hui,
+      subtitle: t('dashboard.tech.todayOTSub'),
+      icon: 'ti-calendar', color: '#3b82f6', bg: '#EFF6FF', bar: '#3b82f6',
+    },
+    {
+      label:    t('dashboard.tech.inProgress'), value: data.nb_ot_en_cours,
+      subtitle: t('dashboard.tech.inProgressSub'),
+      icon: 'ti-tools', color: '#8b5cf6', bg: '#F5F3FF', bar: '#8b5cf6',
+    },
+    {
+      label:    t('dashboard.tech.terminatedPeriod'), value: data.nb_ot_termines_mois,
+      subtitle: t('common.periods.' + periode),
+      icon: 'ti-circle-check', color: '#10b981', bg: '#F0FDF4', bar: '#10b981',
+    },
+    {
+      label:    t('dashboard.tech.myMttr'), value: data.mttr_formate,
+      subtitle: t('dashboard.tech.myMttrSub', { n: periode }),
+      icon: 'ti-stopwatch', color: '#f59e0b', bg: '#FFFBEB', bar: '#f59e0b',
+    },
+  ]
+
+  const tauxColor = data.taux_cloture >= 80 ? '#10b981' : data.taux_cloture >= 50 ? '#f59e0b' : '#ef4444'
+  const tauxBg    = data.taux_cloture >= 80 ? '#F0FDF4' : data.taux_cloture >= 50 ? '#FFFBEB' : '#FEF2F2'
+
   return (
     <div className="dashboard">
-      <div className="dashboard-welcome">
-        <div className="dashboard-welcome-text">
-          <h2 className="dashboard-welcome-title">Bonjour, {user?.prenom} {user?.nom} 👋</h2>
-          <p className="dashboard-welcome-sub">Votre tableau de bord technicien arrive bientôt.</p>
+
+      <div className="dashboard-filters">
+        <div className="dashboard-filters-left">
+          <select value={periode} onChange={e => setPeriode(e.target.value)} className="dashboard-select">
+            <option value="7">{t('common.periods.7')}</option>
+            <option value="30">{t('common.periods.30')}</option>
+            <option value="90">{t('common.periods.90')}</option>
+          </select>
         </div>
-        <a href="/interventions" className="btn-nouvelle-di">
-          <i className="ti ti-list-check" /> Mes interventions
-        </a>
       </div>
-      <div className="dashboard-placeholder">
-        <i className="ti ti-tools" style={{ fontSize: '3rem', color: '#CBD5E1' }} />
-        <p>Le tableau de bord technicien sera disponible prochainement.</p>
-        <a href="/interventions" className="btn-nouvelle-di btn-nouvelle-di--sm">Consulter mes OT</a>
+
+      <div className="dashboard-kpi dashboard-kpi--7col">
+
+        {kpi4.map((c, i) => (
+          <div key={i} className="kpi-card">
+            <div className="kpi-card-top">
+              <div className="kpi-icon" style={{ background: c.bg }}>
+                <i className={`ti ${c.icon}`} style={{ color: c.color }} />
+              </div>
+              <div className="kpi-info">
+                <p className="kpi-label">{c.label}</p>
+                <p className="kpi-value" style={{ color: c.color }}>{c.value}</p>
+                <p className="kpi-subtitle">{c.subtitle}</p>
+              </div>
+            </div>
+            <div className="kpi-bar" style={{ background: c.bar }} />
+          </div>
+        ))}
+
+        <div className="kpi-card">
+          <div className="kpi-card-top">
+            <div className="kpi-icon" style={{ background: tauxBg }}>
+              <i className="ti ti-percentage" style={{ color: tauxColor }} />
+            </div>
+            <div className="kpi-info">
+              <p className="kpi-label">{t('dashboard.tech.tauxCloture')}</p>
+              <p className="kpi-value" style={{ color: tauxColor }}>{data.taux_cloture} %</p>
+              <p className="kpi-subtitle">{t('dashboard.tech.tauxClotureSub')}</p>
+            </div>
+          </div>
+          <div className="taux-cloture-bar">
+            <div className="taux-cloture-fill" style={{ width: `${data.taux_cloture}%`, background: tauxColor }} />
+          </div>
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-card-top">
+            <div className="kpi-icon" style={{ background: data.nb_ot_en_retard > 0 ? '#FEF2F2' : '#F0FDF4' }}>
+              <i className="ti ti-clock-exclamation" style={{ color: data.nb_ot_en_retard > 0 ? '#ef4444' : '#10b981' }} />
+            </div>
+            <div className="kpi-info">
+              <p className="kpi-label">{t('dashboard.otEnRetard')}</p>
+              <p className="kpi-value" style={{ color: data.nb_ot_en_retard > 0 ? '#ef4444' : '#10b981' }}>
+                {data.nb_ot_en_retard}
+              </p>
+              <p className="kpi-subtitle">
+                {data.nb_ot_en_retard > 0 ? t('dashboard.otEnRetardSub') : t('dashboard.tech.noLate')}
+              </p>
+            </div>
+          </div>
+          <div className="kpi-bar" style={{ background: data.nb_ot_en_retard > 0 ? '#ef4444' : '#10b981' }} />
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-card-top">
+            <div className="kpi-icon" style={{ background: data.nb_reouvertures > 0 ? '#FEF2F2' : '#F9FAFB' }}>
+              <i className="ti ti-refresh" style={{ color: data.nb_reouvertures > 0 ? '#ef4444' : '#94a3b8' }} />
+            </div>
+            <div className="kpi-info">
+              <p className="kpi-label">{t('dashboard.tech.reouvertures')}</p>
+              <p className="kpi-value" style={{ color: data.nb_reouvertures > 0 ? '#ef4444' : '#94a3b8' }}>
+                {data.nb_reouvertures}
+              </p>
+              <p className="kpi-subtitle">{t('dashboard.tech.reouverturesSub', { n: periode })}</p>
+            </div>
+          </div>
+          <div className="kpi-bar" style={{ background: data.nb_reouvertures > 0 ? '#ef4444' : '#E2E8F0' }} />
+        </div>
+
       </div>
+
+      <div className="dashboard-lists-row">
+
+        <div className="dashboard-list-card">
+          <div className="list-card-header">
+            <div className="chart-header-left">
+              <div className="chart-icon-wrap"><i className="ti ti-calendar-event" /></div>
+              <div>
+                <p className="chart-title">{t('dashboard.tech.todayTitle')}</p>
+                <p className="chart-subtitle">{t('dashboard.tech.todaySubtitle')}</p>
+              </div>
+            </div>
+            {data.ot_aujourd_hui.length > 0 && (
+              <button className="list-card-voir-tout" onClick={() => navigate('/interventions')}>
+                {t('dashboard.tech.seeAll')} <i className="ti ti-arrow-right" />
+              </button>
+            )}
+          </div>
+
+          {data.ot_aujourd_hui.length === 0 ? (
+            <div className="chart-empty">
+              <i className="ti ti-circle-check" style={{ fontSize: '2rem', color: '#10b981' }} />
+              <p style={{ color: '#10b981', fontWeight: 600 }}>✓ {t('dashboard.tech.noTodayOT')}</p>
+            </div>
+          ) : (
+            <div className="ot-list">
+              {data.ot_aujourd_hui.map(ot => {
+                const sc = OT_STATUT_COLORS[ot.statut]  || OT_STATUT_COLORS.planifiee
+                const pc = OT_PRIORITE_COLORS[ot.priorite] || OT_PRIORITE_COLORS.normale
+                return (
+                  <div key={ot.id} className="ot-item" onClick={() => navigate(`/interventions/${ot.id}`)}>
+                    <span className="badge-statut" style={{ color: sc.color, background: sc.bg }}>
+                      {t(`interventions.statuts.${ot.statut}`)}
+                    </span>
+                    <div className="ot-item-info">
+                      <p className="ot-item-titre">{ot.titre}</p>
+                      <p className="ot-item-meta">{ot.equipement_nom} · {ot.batiment_nom}</p>
+                    </div>
+                    <span className="badge-priorite" style={{ color: pc.color, background: pc.bg }}>
+                      {ot.priorite || 'normale'}
+                    </span>
+                    <button className="list-card-voir-tout" onClick={e => { e.stopPropagation(); navigate(`/interventions/${ot.id}`) }}>
+                      → {t('common.seeAll')}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="dashboard-list-card">
+          <div className="list-card-header">
+            <div className="chart-header-left">
+              <div className="chart-icon-wrap" style={{ background: '#EEF2FF' }}>
+                <i className="ti ti-calendar-stats" style={{ color: '#6366f1' }} />
+              </div>
+              <div>
+                <p className="chart-title">{t('dashboard.tech.nextOTTitle')}</p>
+                <p className="chart-subtitle">{t('dashboard.tech.nextOTSub')}</p>
+              </div>
+            </div>
+          </div>
+
+          {data.prochains_ot.length === 0 ? (
+            <div className="chart-empty">
+              <i className="ti ti-calendar-off" style={{ fontSize: '2rem', color: '#CBD5E1' }} />
+              <p>{t('dashboard.tech.noNextOT')}</p>
+            </div>
+          ) : (
+            <>
+              <table className="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>{t('dashboard.table.date')}</th>
+                    <th>{t('dashboard.table.equipment')}</th>
+                    <th>{t('dashboard.table.type')}</th>
+                    <th>{t('dashboard.table.priorite')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.prochains_ot.map(ot => {
+                    const pc = OT_PRIORITE_COLORS[ot.priorite] || OT_PRIORITE_COLORS.normale
+                    return (
+                      <tr key={ot.id} onClick={() => navigate(`/interventions/${ot.id}`)} style={{ cursor: 'pointer' }}>
+                        <td className="table-date" data-label={t('dashboard.table.date')}>
+                          {ot.date_planifiee ? new Date(ot.date_planifiee).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
+                        </td>
+                        <td data-label={t('dashboard.table.equipment')}>{ot.equipement_nom}</td>
+                        <td data-label={t('dashboard.table.type')} style={{ textTransform: 'capitalize' }}>{ot.type}</td>
+                        <td data-label={t('dashboard.table.priorite')}>
+                          <span className="badge-priorite" style={{ color: pc.color, background: pc.bg }}>{ot.priorite || '—'}</span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              <button className="list-card-voir-tout" onClick={() => navigate('/planning')} style={{ alignSelf: 'flex-end', marginTop: 'auto' }}>
+                {t('dashboard.tech.seeMyPlanning')} <i className="ti ti-arrow-right" />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="dashboard-chart">
+        <div className="chart-header">
+          <div className="chart-header-left">
+            <div className="chart-icon-wrap" style={{ background: '#F0FDF4' }}>
+              <i className="ti ti-chart-bar" style={{ color: '#10b981' }} />
+            </div>
+            <div>
+              <p className="chart-title">{t('dashboard.tech.activityTitle')}</p>
+              <p className="chart-subtitle">{t('dashboard.tech.activitySub')}</p>
+            </div>
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={data.activite_semaines} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+            <XAxis dataKey="semaine" tick={{ fontSize: 12, fill: '#64748B' }} axisLine={false} tickLine={false} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+            <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '13px' }} />
+            <Bar dataKey="nb" name={t('dashboard.tech.otTermines')} fill="#10b981" radius={[6, 6, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
     </div>
   )
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROUTEUR DE RÔLE — export par défaut
+// ROUTEUR DE RÔLE
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function Dashboard() {
   const { user } = useAuth()
+  const { t } = useTranslation()
 
   if (!user) return null
 
@@ -588,7 +992,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: '3rem', textAlign: 'center', color: '#ef4444' }}>
-      Rôle inconnu : {user.role}
+      {t('common.error')}: {user.role}
     </div>
   )
 }

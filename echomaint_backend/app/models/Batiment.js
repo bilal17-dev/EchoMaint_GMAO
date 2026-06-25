@@ -6,22 +6,36 @@ const Batiment = {
   findAll: async (userRole, userClientId, filters = {}) => {
     let query = db('batiments')
       .select(
-        'batiments.id', 
-        'batiments.nom', 
-        'batiments.adresse', 
-        'batiments.ville', 
-        'batiments.description', 
-        'batiments.client_id', 
-        'clients.nom as client_nom'
+        'batiments.id',
+        'batiments.nom',
+        'batiments.adresse',
+        'batiments.ville',
+        'batiments.description',
+        'batiments.client_id',
+        'clients.nom as client_nom',
+        db.raw('COUNT(equipements.id) as nb_equipements')
       )
-      .leftJoin('clients', 'batiments.client_id', 'clients.id');
-    
+      .leftJoin('clients', 'batiments.client_id', 'clients.id')
+      .leftJoin('equipements', function () {
+        this.on('equipements.batiment_id', '=', 'batiments.id')
+            .andOnNull('equipements.deleted_at')
+      })
+      .groupBy(
+        'batiments.id',
+        'batiments.nom',
+        'batiments.adresse',
+        'batiments.ville',
+        'batiments.description',
+        'batiments.client_id',
+        'clients.nom'
+      );
+
     if (userRole === 'client') {
       query = query.where('batiments.client_id', userClientId);
     } else if (filters.client_id) {
       query = query.where('batiments.client_id', filters.client_id);
     }
-    
+
     return query;
   },
 

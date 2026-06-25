@@ -377,3 +377,276 @@
   padding-top: 1.5rem;
   border-top: 1px solid #F1F5F9;
 }
+
+/* ── Bouton "Modifier" dans le tableau ──────────────────────────────────── */
+.btn-modifier {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+.btn-modifier:hover { background: #DBEAFE; }
+
+/* ── Toggle switch Actif / Inactif dans le modal de modification ─────────
+   Technique CSS : on cache l'input natif et on stylise le span à la place.
+   Le <label> parent capte le clic et coche/décoche l'input invisible. */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+}
+
+.toggle-row-label {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E293B;
+}
+
+/* Le label englobant le toggle — cursor: pointer le rend entièrement cliquable */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* L'input natif est rendu invisible mais reste fonctionnel pour l'accessibilité */
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+/* La piste du toggle (gris = off) */
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #CBD5E1;
+  border-radius: 22px;
+  transition: background 0.2s;
+}
+
+/* Le rond blanc qui glisse */
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+
+/* Quand l'input est coché : piste verte et rond à droite */
+.toggle-switch input:checked + .toggle-slider          { background: #22C55E; }
+.toggle-switch input:checked + .toggle-slider::before  { transform: translateX(18px); }
+
+/* ── Bannière de confirmation de changement de rôle ──────────────────────
+   Fond ambre pour attirer l'attention sans être une erreur rouge. */
+.confirm-role-banner {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confirm-role-banner p {
+  font-size: 13px;
+  color: #92400E;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.confirm-role-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Bouton "Oui, modifier le rôle" — orange pour marquer l'action irréversible */
+.btn-confirm-role {
+  padding: 6px 14px;
+  background: #F59E0B;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+.btn-confirm-role:hover:not(:disabled) { background: #D97706; }
+.btn-confirm-role:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Bouton "Annuler" dans la bannière — neutre */
+.btn-cancel-role {
+  padding: 6px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #64748B;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+.btn-cancel-role:hover { background: #E2E8F0; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Responsive mobile
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablette (768–1023 px) ───────────────────────────────────── */
+@media (max-width: 1023px) {
+  .utilisateurs-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Mobile (<768 px) ─────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Header : bouton "Nouvel utilisateur" passe en dessous des filtres */
+  .utilisateurs-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .utilisateurs-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .utilisateurs-filters select {
+    width: 100%;
+  }
+
+  /* Bouton "Nouvel utilisateur" pleine largeur */
+  .utilisateurs-header > .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Stats : 2 colonnes → 2 colonnes (OK) — 1 colonne en dessous de 480px */
+  .utilisateurs-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* ── Table → cartes empilées ────────────────────────────────── */
+  .utilisateurs-table-wrap {
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  /* Masque l'en-tête du tableau */
+  .utilisateurs-table thead {
+    display: none;
+  }
+
+  /* Chaque ligne devient une carte indépendante */
+  .utilisateurs-table tbody tr {
+    display: block;
+    padding: 12px 14px;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .utilisateurs-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .utilisateurs-table tbody tr:hover {
+    background: #F8FAFC;
+  }
+
+  /* Chaque cellule affiche label + valeur en ligne */
+  .utilisateurs-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #F8FAFC;
+    font-size: 13px;
+  }
+
+  .utilisateurs-table td:last-child {
+    border-bottom: none;
+    padding-top: 8px;
+    margin-top: 4px;
+    border-top: 1px solid #F1F5F9;
+  }
+
+  /* Label de colonne généré depuis data-label */
+  .utilisateurs-table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+
+  /* La cellule "Utilisateur" (avatar + nom) n'a pas besoin de label — elle est auto-descriptive */
+  .utilisateurs-table td:first-child::before {
+    display: none;
+  }
+
+  /* Les boutons d'action s'adaptent */
+  .table-actions {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .btn-toggle {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* ── Très petit mobile (<480 px) ──────────────────────────────── */
+@media (max-width: 479px) {
+  .utilisateurs-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+}
+
+/* ── Modal responsif ──────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .modal {
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  /* Formulaire : form-row (2 colonnes) → 1 colonne */
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

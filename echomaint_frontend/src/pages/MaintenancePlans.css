@@ -159,3 +159,115 @@
   border-radius: 999px;
   vertical-align: middle;
 }
+
+/* ── Groupe de boutons dans la colonne Actions ──────────────────────────────── */
+.mplans-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Bouton Modifier — bleu indigo */
+.btn-edit-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+  background: #EFF6FF;
+  color: #2563EB;
+}
+.btn-edit-plan:hover { background: #DBEAFE; }
+
+/* Bouton Supprimer — rouge discret */
+.btn-delete-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+  background: #FEF2F2;
+  color: #EF4444;
+}
+.btn-delete-plan:hover { background: #FEE2E2; }
+
+/* ── Dialog de confirmation de suppression ──────────────────────────────────── */
+.confirm-dialog {
+  background: #fff;
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(15,23,42,0.18);
+  text-align: center;
+  animation: fadeInScale 0.15s ease;
+}
+
+.confirm-dialog__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #FEF2F2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 22px;
+  color: #EF4444;
+}
+
+.confirm-dialog__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 0.5rem;
+}
+
+.confirm-dialog__body {
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Bouton danger (rouge plein) utilisé dans la confirmation */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  background: #EF4444;
+  color: #fff;
+  transition: background 0.15s;
+}
+.btn-danger:hover { background: #DC2626; }
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}

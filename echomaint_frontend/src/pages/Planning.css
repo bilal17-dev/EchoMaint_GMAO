@@ -428,3 +428,315 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Mobile (<768 px) — vue liste uniquement ──────────────────────────────
+   Le calendrier mensuel et le panel du jour sélectionné sont masqués.
+   Seule la section ".planning-month-section" (liste d'OT du mois) reste visible.
+   Pas de changement JS nécessaire — la liste s'adapte naturellement. */
+@media (max-width: 767px) {
+  /* Header filtres + navigation mensuelle : empilés */
+  .planning-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  .planning-filters {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .planning-filters select {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .planning-nav {
+    justify-content: center;
+  }
+
+  /* Cache le calendrier grille + panel du jour (trop étroit sur mobile) */
+  .planning-layout {
+    display: none;
+  }
+
+  /* La liste mensuelle prend toute la largeur */
+  .planning-month-section {
+    border-radius: 14px;
+  }
+
+  /* Items de liste compacts */
+  .planning-list-item {
+    gap: 0.75rem;
+    padding: 10px;
+  }
+
+  .planning-list-date {
+    width: 40px;
+    height: 40px;
+  }
+
+  .planning-list-day {
+    font-size: 15px;
+  }
+
+  /* Les badges se déroulent sur plusieurs lignes si besoin */
+  .planning-list-badges {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  /* Bouton replanifier compact */
+  .btn-replanifier--sm {
+    font-size: 11px;
+    padding: 3px 7px;
+  }
+
+  /* Modal replanification — slide depuis le bas sur mobile */
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  .modal {
+    border-radius: 20px 20px 0 0;
+    max-width: 100%;
+  }
+}
+
+/* ── Footer des cartes OT dans le panel jour ────────────────────────────────
+   Contient le chip de type ET le bouton "Replanifier" côte à côte. */
+.planning-ot-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* ── Bouton "Replanifier" ────────────────────────────────────────────────────
+   Affiché dans les cartes OT du panel jour et dans la liste mensuelle.
+   Fond indigo clair, texte indigo — cohérent avec le thème du calendrier. */
+.btn-replanifier {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: #EFF6FF;
+  color: #2563EB;
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-replanifier:hover {
+  background: #DBEAFE;
+  border-color: #93C5FD;
+}
+
+.btn-replanifier .ti { font-size: 13px; }
+
+/* Variante compacte pour la liste mensuelle (texte masqué sur petits écrans) */
+.btn-replanifier--sm {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Modal de replanification
+   Classes partagées avec les autres modals de l'app (Interventions, etc.)
+   mais copiées ici car Planning.css est le seul CSS importé par Planning.jsx.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Fond semi-transparent qui couvre tout l'écran */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  backdrop-filter: blur(4px);
+}
+
+/* Boîte blanche du modal */
+.modal {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+  overflow: hidden;
+}
+
+/* En-tête : titre + bouton fermeture */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.modal-header h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+}
+
+/* Bouton croix de fermeture */
+.modal-header button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #F4F7FC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.modal-header button .ti { font-size: 15px; color: #64748B; }
+
+/* Corps du modal */
+.modal-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Pied : boutons Annuler / Confirmer */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #E2E8F0;
+}
+
+/* ── Champ de formulaire (label + input) ─────────────────────────────────── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E293B;
+}
+
+.form-group input[type="date"] {
+  padding: 9px 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #1E293B;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s;
+  background: #fff;
+}
+
+.form-group input[type="date"]:focus {
+  border-color: #2563EB;
+}
+
+/* ── Bloc informatif sur l'OT en cours de replanification ───────────────── */
+.replanif-info {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Titre de l'OT dans le récapitulatif */
+.replanif-titre {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0;
+}
+
+/* Ligne équipement · bâtiment */
+.replanif-meta {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.replanif-meta .ti { font-size: 12px; }
+
+/* Date actuelle affichée en dessous — rappel de ce qu'on va remplacer */
+.replanif-date-actuelle {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+  margin-top: 4px;
+}
+
+/* ── Message d'erreur ────────────────────────────────────────────────────── */
+.erreur {
+  font-size: 13px;
+  color: #EF4444;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+/* ── Bouton "Annuler" ────────────────────────────────────────────────────── */
+.btn-cancel {
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  background: #F4F7FC;
+  font-size: 13px;
+  color: #64748B;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+
+.btn-cancel:hover { background: #E2E8F0; }
+
+/* ── Bouton "Confirmer" / action principale ──────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #2563EB;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) { background: #1D4ED8; }
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

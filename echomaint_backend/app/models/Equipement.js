@@ -6,7 +6,8 @@ const Equipement = {
     let query = db('equipements')
       .select('equipements.*', 'batiments.nom as batiment_nom', 'clients.nom as client_nom')
       .leftJoin('batiments', 'equipements.batiment_id', 'batiments.id')
-      .leftJoin('clients', 'batiments.client_id', 'clients.id');
+      .leftJoin('clients', 'batiments.client_id', 'clients.id')
+      .whereNull('equipements.deleted_at'); // Bug #4 — exclut les équipements supprimés (soft delete)
 
     if (userRole === 'client') {
       query = query.where('batiments.client_id', userClientId);
@@ -26,10 +27,18 @@ const Equipement = {
 
   findById: async (id) => {
     return db('equipements')
-      .select('equipements.*', 'batiments.nom as batiment_nom', 'clients.nom as client_nom')
+      .select(
+        'equipements.*',
+        'batiments.nom       as batiment_nom',
+        // client_id du bâtiment : nécessaire pour le contrôle d'accès dans EquipementController.show
+        // (un utilisateur "client" ne peut voir que les équipements de ses propres bâtiments)
+        'batiments.client_id as client_id',
+        'clients.nom         as client_nom'
+      )
       .leftJoin('batiments', 'equipements.batiment_id', 'batiments.id')
       .leftJoin('clients', 'batiments.client_id', 'clients.id')
       .where('equipements.id', id)
+      .whereNull('equipements.deleted_at') // soft delete : n'expose pas un équipement archivé
       .first();
   },
 
@@ -75,8 +84,8 @@ const Equipement = {
   },
 
   delete: async (id) => {
-    // Soft delete via updated_at uniquement — pas de deleted_at dans le schéma
-    return db('equipements').where({ id }).update({ updated_at: db.fn.now() });
+    // Bug #4 — vrai soft delete : on horodate deleted_at au lieu de supprimer la ligne
+    return db('equipements').where({ id }).update({ deleted_at: db.fn.now() });
   }
 };
 

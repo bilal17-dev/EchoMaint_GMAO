@@ -299,3 +299,43 @@
 .navbar-dropdown-logout:hover {
   background: #FEF2F2;
 }
+
+/* ── Responsive mobile ────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .navbar {
+    padding: 10px 12px 6px;
+  }
+
+  .navbar-inner {
+    padding: 8px 12px;
+    border-radius: 14px;
+    gap: 8px;
+  }
+
+  /* Masque le sous-titre de page (trop long sur mobile) */
+  .navbar-subtitle {
+    display: none;
+  }
+
+  /* Masque les séparateurs visuels */
+  .navbar-sep {
+    display: none;
+  }
+
+  /* Masque le sélecteur de langue sur très petit écran */
+  .navbar-lang-wrap {
+    display: none;
+  }
+
+  /* Réduit le titre de salutation */
+  .navbar-title {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Masque aussi le bouton notifications sur très petits écrans */
+  .navbar-icon-btn {
+    display: none;
+  }
+}

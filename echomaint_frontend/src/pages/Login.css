@@ -110,6 +110,7 @@
   flex: 1;
   background: #F8FAFC;
   padding: 2.5rem;
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -271,4 +272,46 @@
   text-align: center;
   margin-top: 1.5rem;
   margin-bottom: 0;
+}
+
+/* Sélecteur de langue — positionné en haut à droite de la carte */
+.login-lang {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 1;
+}
+
+.login-lang-icon {
+  font-size: 14px;
+  color: #64748B;
+}
+
+.login-lang-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.login-lang-btn:hover {
+  color: #0F172A;
+}
+
+.login-lang-btn--active {
+  color: #2563EB;
+}
+
+.login-lang-sep {
+  font-size: 11px;
+  color: #CBD5E1;
+  user-select: none;
 }

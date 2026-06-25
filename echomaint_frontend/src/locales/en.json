@@ -22,7 +22,17 @@
     "required": "required",
     "noResults": "No results found",
     "error": "An error occurred",
-    "success": "Operation successful"
+    "success": "Operation successful",
+    "saving": "Saving…",
+    "submitting": "Submitting…",
+    "seeAll": "See all",
+    "status": "Status",
+    "saveChanges": "Save changes",
+    "periods": {
+      "7": "Last 7 days",
+      "30": "Last 30 days",
+      "90": "Last 90 days"
+    }
   },
   "lang": {
     "fr": "Français",
@@ -41,7 +51,23 @@
     "logout": "Sign out",
     "profile": "Profile",
     "maintenanceplans": "Maintenance plans",
-    "interventions_client": "My interventions"
+    "interventions_client": "My interventions",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "notifications": "Notifications",
+    "nouvelleDemande": "New request",
+    "mesInterventions": "My interventions",
+    "monProfil": "My profile",
+    "parametres": "Settings",
+    "deconnexion": "Sign out",
+    "roleLabels": {
+      "admin": "Administrator",
+      "technicien": "Technician",
+      "client": "Client"
+    }
   },
   "auth": {
     "welcome": "Welcome!",
@@ -55,12 +81,43 @@
     "login": "Sign in",
     "loggingIn": "Signing in...",
     "invalidCredentials": "Invalid credentials.",
-    "footer": "© 2026 EchoMaint. All rights reserved."
+    "serverError": "Unable to connect to the server.",
+    "footer": "© 2026 EchoMaint. All rights reserved.",
+    "slides": {
+      "0": {
+        "title": "Centralised equipment management",
+        "text": "Track the status, history and location of all your equipment from a single platform."
+      },
+      "1": {
+        "title": "Automated preventive maintenance",
+        "text": "Schedule interventions in advance and reduce the risk of breakdowns."
+      },
+      "2": {
+        "title": "Intervention tracking",
+        "text": "Assign technicians and monitor operations in real time."
+      },
+      "3": {
+        "title": "Dashboards and statistics",
+        "text": "Analyse maintenance performance with clear indicators."
+      }
+    }
+  },
+  "layout": {
+    "dashboard":       { "title": "Dashboard",               "subtitle": "Overview of your maintenance operations." },
+    "batiments":       { "title": "Buildings",               "subtitle": "Manage your building portfolio." },
+    "equipements":     { "title": "Equipment",               "subtitle": "Track the status of your equipment." },
+    "interventions":   { "title": "Interventions",           "subtitle": "Manage your work orders." },
+    "planning":        { "title": "Planning",                "subtitle": "View scheduled interventions." },
+    "demandes":        { "title": "Intervention requests",   "subtitle": "Process client reports." },
+    "maintenancePlans":{ "title": "Maintenance plans",       "subtitle": "Configure automated preventive maintenance." },
+    "stats":           { "title": "Statistics & Exports",    "subtitle": "Analyse your maintenance data." },
+    "utilisateurs":    { "title": "Users",                   "subtitle": "Manage accounts and access." }
   },
   "batiments": {
     "title": "Buildings",
     "new": "New building",
     "edit": "Edit building",
+    "name": "Name",
     "search": "Search a building...",
     "allClients": "All clients",
     "client": "Client",
@@ -76,12 +133,15 @@
     "namePlaceholder": "E.g. DGS Africa HQ",
     "addressPlaceholder": "E.g. Ngor Road",
     "cityPlaceholder": "E.g. Dakar",
-    "selectClient": "Select a client"
+    "selectClient": "Select a client",
+    "loading": "Loading buildings...",
+    "loadError": "Unable to load buildings."
   },
   "equipements": {
     "title": "Equipment",
     "new": "New equipment",
     "edit": "Edit equipment",
+    "name": "Name",
     "search": "Search equipment...",
     "allBatiments": "All buildings",
     "allStatuts": "All statuses",
@@ -96,11 +156,30 @@
     "viewFiche": "View details",
     "empty": "No equipment found",
     "selectBatiment": "Select a building",
+    "loading": "Loading equipment...",
+    "loadError": "Unable to load equipment.",
+    "reference": "Reference",
+    "editTitle": "Edit equipment",
+    "namePlaceholder": "E.g.: Air conditioner Hall A",
+    "referencePlaceholder": "E.g.: CLIM-001",
+    "typePlaceholder": "E.g.: Air conditioning",
+    "brandPlaceholder": "E.g.: Daikin",
+    "modelPlaceholder": "E.g.: FTXM50",
+    "serialPlaceholder": "E.g.: SN-2024-001",
+    "descriptionPlaceholder": "Notes or details about the equipment",
+    "deleteConfirm": "Delete this equipment?",
+    "installDateFuture": "Installation date cannot be in the future.",
     "statuts": {
       "actif": "Active",
       "en_panne": "Broken down",
       "hors_service": "Out of service"
     }
+  },
+  "pagination": {
+    "showing": "Showing",
+    "of": "of",
+    "buildings": "buildings",
+    "equipments": "equipment"
   },
   "ficheEquipement": {
     "technicalSpecs": "Technical specifications",
@@ -159,6 +238,66 @@
       "moyenne": "Medium",
       "haute": "High",
       "urgente": "Urgent"
+    },
+    "actions": {
+      "assign": "Assign",
+      "start": "Start",
+      "close": "Close",
+      "reopen": "Reopen",
+      "cancel": "Cancel",
+      "detail": "Detail"
+    },
+    "modal": {
+      "assignTitle": "Assign a technician",
+      "selectTech": "Select a technician",
+      "closeTitle": "Close intervention",
+      "closureComment": "Closure comment",
+      "closureCommentPlaceholder": "Minimum 10 characters...",
+      "realDuration": "Actual duration (minutes)",
+      "reopenTitle": "Reopen intervention",
+      "reopenWarning": "Reopening will invalidate the existing PDF report and set the intervention back to \"In progress\".",
+      "reopenReason": "Reason for reopening",
+      "reopenReasonPlaceholder": "Minimum 20 characters...",
+      "cancelTitle": "Cancel intervention",
+      "cancelConfirm": "Are you sure you want to cancel",
+      "cancelIrreversible": "This action is irreversible.",
+      "noKeep": "No, keep it",
+      "yesCancel": "Yes, cancel",
+      "selectEquip": "Select equipment",
+      "curatifInfo": "In curative mode, the equipment will automatically switch to \"broken\" status.",
+      "techOptional": "Technician (optional)"
+    },
+    "errors": {
+      "selectTech": "Please select a technician.",
+      "assignError": "Error assigning technician.",
+      "startError": "Error starting intervention.",
+      "commentMin": "Comment must be at least 10 characters.",
+      "durationPositive": "Duration must be a positive integer.",
+      "closeError": "Error closing intervention.",
+      "reasonMin": "Reason must be at least 20 characters.",
+      "reopenError": "Error reopening intervention.",
+      "cancelError": "Error cancelling intervention.",
+      "titleRequired": "Title is required.",
+      "dateRequired": "Planned date is required.",
+      "equipRequired": "Equipment is required.",
+      "createError": "Error creating intervention.",
+      "reportError": "Unable to download report.",
+      "loadError": "Unable to load interventions."
+    },
+    "detail": {
+      "info": "Information",
+      "equipBatiment": "Equipment & Building",
+      "reference": "Reference",
+      "startReal": "Actual start",
+      "endReal": "Actual end",
+      "realDuration": "Actual duration",
+      "closureComment": "Closure comment",
+      "reopenings": "Reopenings",
+      "date": "Date",
+      "author": "Author",
+      "prevStatus": "Previous status",
+      "reason": "Reason",
+      "downloadPdf": "Download PDF report"
     }
   },
   "detail": {
@@ -230,10 +369,45 @@
   },
   "planning": {
     "title": "Planning",
-    "noEvents": "No intervention scheduled for this period."
+    "noEvents": "No intervention scheduled for this period.",
+    "loading": "Loading planning...",
+    "noEventsDay": "No intervention today",
+    "noEventsMonth": "No intervention this month.",
+    "allInterventionsMonth": "All interventions",
+    "reschedule": "Reschedule",
+    "rescheduleTitle": "Reschedule intervention",
+    "rescheduleRequired": "Please select a new date.",
+    "newDate": "New planned date",
+    "currentDate": "Current date",
+    "unassigned": "Unassigned",
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "months": {
+      "jan": "January",
+      "feb": "February",
+      "mar": "March",
+      "apr": "April",
+      "may": "May",
+      "jun": "June",
+      "jul": "July",
+      "aug": "August",
+      "sep": "September",
+      "oct": "October",
+      "nov": "November",
+      "dec": "December"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
+    "loading": "Loading…",
+    "noData": "No data.",
     "mttr": "MTTR",
     "global": "Global",
     "openInterventions": "Open interventions",
@@ -249,6 +423,104 @@
       "open": "Open",
       "inProgress": "In progress",
       "closed": "Closed"
+    },
+    "filter": {
+      "7days": "Last 7 days",
+      "30days": "Last 30 days",
+      "90days": "Last 90 days",
+      "allBuildings": "All buildings"
+    },
+    "refreshing": "Refreshing…",
+    "refresh": "Refresh",
+    "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
+    "otByStatus": "Work orders by status",
+    "selectedPeriod": "Over the selected period",
+    "unavailable": "Data unavailable",
+    "noOT": "No work orders in this period",
+    "prevCurRatio": "Preventive / curative ratio",
+    "closedPeriod": "Completed WOs in the period",
+    "noClosedOT": "No completed WO in this period",
+    "pendingDI": "Pending requests",
+    "pendingDISub": "Last 5 unprocessed requests",
+    "seeAll": "See all",
+    "noPendingDI": "No pending requests",
+    "equipEnPanne": "Broken-down equipment",
+    "equipEnPanneSub": "Real-time feed",
+    "noEquipEnPanne": "No broken-down equipment",
+    "otEnRetard": "Late WOs",
+    "otEnRetardSub": "Planned date exceeded",
+    "equipEnPanneKpi": "Broken-down equipment",
+    "equipEnPanneKpiSub": "Current en_panne status",
+    "tauxDispo": "Availability rate",
+    "tauxDispoSub": "Ratio of completed preventive WOs",
+    "mttrGlobal": "Global MTTR",
+    "mttrSub": "Mean time to repair",
+    "reouvertures": "Reopenings in the period",
+    "reouverturesSub": "Last {{n}} days",
+    "table": {
+      "ref": "Ref.",
+      "equipment": "Equipment",
+      "objet": "Subject",
+      "priorite": "Priority",
+      "date": "Date",
+      "statut": "Status",
+      "batiment": "Building",
+      "type": "Type"
+    },
+    "badgeDI": {
+      "pending": "Pending",
+      "traitee": "Processed",
+      "rejetee": "Rejected"
+    },
+    "client": {
+      "myEquipments": "My equipment",
+      "allBuildings": "All buildings combined",
+      "interventionRequired": "Intervention required",
+      "allOperational": "Everything is operational",
+      "pendingDemands": "Pending requests",
+      "inProgress": "Being processed",
+      "myInterventions": "Ongoing interventions",
+      "onYourEquipments": "On your equipment",
+      "terminatedPeriod": "Completed in the period",
+      "parcTitle": "My fleet status",
+      "parcSubtitle": "Breakdown by status",
+      "noEquipements": "No equipment registered",
+      "myDI": "My intervention requests",
+      "noDIPeriod": "No requests in this period",
+      "lastDI": "My latest intervention requests",
+      "lastDISub": "5 most recent requests",
+      "noDI": "You have not submitted any request yet.",
+      "criticalEquipments": "Critical equipment",
+      "criticalEquipmentsSub": "Currently broken down",
+      "allEquipmentsOk": "All your equipment is operational",
+      "enPanne": "Broken down",
+      "newDemand": "New request"
+    },
+    "tech": {
+      "todayOT": "WOs planned today",
+      "todayOTSub": "Assigned or planned today",
+      "inProgress": "In progress",
+      "inProgressSub": "Started interventions",
+      "terminatedPeriod": "Completed in the period",
+      "myMttr": "My MTTR",
+      "myMttrSub": "Mean repair time ({{n}}d)",
+      "tauxCloture": "Closure rate",
+      "tauxClotureSub": "Completed WOs / total assigned",
+      "noLate": "No delays — well done!",
+      "reouvertures": "Reopenings",
+      "reouverturesSub": "Last {{n}} days",
+      "todayTitle": "My WOs today",
+      "todaySubtitle": "Planned or in progress today",
+      "seeAll": "See all",
+      "noTodayOT": "No intervention scheduled today",
+      "nextOTTitle": "My upcoming WOs",
+      "nextOTSub": "Next 5 interventions",
+      "noNextOT": "No upcoming intervention scheduled.",
+      "seeMyPlanning": "View my planning",
+      "activityTitle": "My activity over 30 days",
+      "activitySub": "Completed WOs per week",
+      "otTermines": "Completed WOs"
     }
   },
   "di": {
@@ -268,10 +540,193 @@
     "convertConfirm": "Convert this request into a curative intervention?",
     "rejectConfirm": "Reject this request?",
     "converted": "Converted to",
+    "loading": "Loading…",
+    "loadError": "Unable to load intervention requests.",
+    "new": "New request",
+    "empty": "No request found",
+    "takenCare": "Taken care of",
+    "rejected": "Request rejected",
+    "newModalTitle": "New intervention request",
+    "equipement": "Equipment concerned",
+    "selectEquipement": "— Select —",
+    "submitting": "Submitting…",
+    "submit": "Submit",
+    "rejectTitle": "Reject request",
+    "motifRejet": "Rejection reason",
+    "motifRejetPlaceholder": "Explain why this request is rejected (min. 10 characters)...",
+    "confirmRejet": "Confirm rejection",
     "statuts": {
       "ouverte": "Open",
       "traitee": "Processed",
-      "rejetee": "Rejected"
+      "rejetee": "Rejected",
+      "ouvertePlural": "Open",
+      "traiteePlural": "Processed",
+      "rejeteePlural": "Rejected"
+    },
+    "errors": {
+      "equipement": "Please select a piece of equipment.",
+      "titre": "Title is required.",
+      "description": "Description is required.",
+      "motifMin": "Reason must be at least 10 characters."
+    }
+  },
+  "stats": {
+    "loading": "Loading data...",
+    "kpiResume": "KPI Summary",
+    "kpiDesc": "Same figures as the dashboard",
+    "kpiIndisponible": "KPI data unavailable",
+    "exportInterventionsTitle": "Export — Intervention list",
+    "exportInterventionsDesc": "Filter then export the WO list as CSV or PDF.",
+    "otMatchFilters": "WOs match the filters",
+    "exportCsvOT": "Export CSV",
+    "exportPdfOT": "Export PDF",
+    "empty": "No intervention found with these filters.",
+    "table": {
+      "titre": "Title",
+      "type": "Type",
+      "statut": "Status",
+      "priorite": "Priority",
+      "equipement": "Equipment",
+      "batiment": "Building",
+      "technicien": "Technician",
+      "datePlanifiee": "Planned date",
+      "duree": "Duration (min)",
+      "reouvertures": "Reop."
+    },
+    "exportKpiTitle": "Export — KPI Dashboard",
+    "exportKpiDesc": "Download indicators as CSV or PDF for the selected period.",
+    "batimentFiltre": "filtered building",
+    "exportKpiCsv": "Export KPI CSV",
+    "exportKpiPdf": "Export KPI PDF",
+    "kpiCards": {
+      "interventionsCloturees": "Closed interventions",
+      "otEnRetard": "Late WOs",
+      "tauxPreventif": "Preventive rate",
+      "mttrMoyen": "Average MTTR",
+      "reouvertures": "Reopenings"
+    }
+  },
+  "utilisateurs": {
+    "title": "Users",
+    "new": "New user",
+    "search": "Search a user...",
+    "allRoles": "All roles",
+    "empty": "No user found",
+    "loading": "Loading…",
+    "loadError": "Unable to load users.",
+    "disabled": "Disabled",
+    "table": {
+      "user": "User",
+      "email": "Email",
+      "role": "Role",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "statuts": {
+      "actif": "Active",
+      "inactif": "Disabled"
+    },
+    "modify": "Edit",
+    "deactivate": "Disable",
+    "activate": "Enable",
+    "loginInfo": "Login information",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "role": "Role",
+    "password": "Password",
+    "passwordMin": "Min. 6 characters",
+    "clientCompany": "Client company",
+    "companyName": "Company name",
+    "companyEmail": "Contact email",
+    "phone": "Phone",
+    "address": "Address",
+    "editTitle": "Edit user",
+    "sectionIdentity": "Identity",
+    "sectionAccess": "Rights and access",
+    "accountActive": "Active account",
+    "accountDisabled": "Disabled account",
+    "confirmRoleChange": "Are you sure you want to change this role?",
+    "confirmRole": "Yes, change role",
+    "creating": "Creating…",
+    "saving": "Saving…",
+    "roles": {
+      "admin": "Admin",
+      "technicien": "Technician",
+      "client": "Client"
+    },
+    "rolesCounts": {
+      "admins": "Admins",
+      "techniciens": "Technicians",
+      "clients": "Clients"
+    },
+    "errors": {
+      "required": "Last name, first name and email are required.",
+      "firstName": "First name is required.",
+      "lastName": "Last name is required.",
+      "email": "Email is required.",
+      "passwordMin": "Password must be at least 6 characters.",
+      "companyName": "Company name is required."
+    }
+  },
+  "plans": {
+    "title": "Preventive maintenance plans",
+    "subtitle": "Configure regular equipment maintenance",
+    "new": "New plan",
+    "loading": "Loading maintenance plans…",
+    "mockBanner": "Preview mode — the backend (maintenance plans) is not yet available. Displayed data is local examples.",
+    "empty": "No maintenance plan configured",
+    "createFirst": "Create the first plan",
+    "table": {
+      "plan": "Plan",
+      "equipement": "Equipment",
+      "periodicite": "Frequency",
+      "taches": "Tasks",
+      "lastGeneration": "Last generated",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "days": "days",
+    "taskCount": "task",
+    "taskCountPlural": "tasks",
+    "neverGenerated": "Never generated",
+    "statuts": {
+      "actif": "Active",
+      "inactif": "Inactive"
+    },
+    "activate": "Enable",
+    "deactivate": "Disable",
+    "newTitle": "New maintenance plan",
+    "editTitle": "Edit plan",
+    "equipement": "Target equipment",
+    "selectEquipement": "Select equipment",
+    "label": "Plan label",
+    "periodiciteLabel": "Frequency",
+    "periodicites": {
+      "monthly": "Every month",
+      "quarterly": "Every 3 months",
+      "biannual": "Every 6 months",
+      "annual": "Every year",
+      "custom": "Custom (days)"
+    },
+    "nombreJours": "Number of days",
+    "actifLabel": "Active plan (automatic WO generation)",
+    "gammeTaches": "Task list",
+    "tachePlaceholder": "E.g. Check pressure",
+    "obligatoire": "Required",
+    "ajouterTache": "Add a task",
+    "saveChanges": "Save changes",
+    "createPlan": "Create plan",
+    "addMock": "Add (local preview)",
+    "saving": "Saving…",
+    "preview": "preview",
+    "deleteTitle": "Delete this plan?",
+    "deleteBody": "This action is irreversible. Already generated WOs will not be deleted.",
+    "deleteConfirm": "Delete permanently",
+    "errors": {
+      "selectEquipement": "Please select equipment.",
+      "labelRequired": "Label is required.",
+      "tachesRequired": "All tasks must have a label.",
+      "periodiciteMin": "Frequency must be ≥ 1 day."
     }
   },
   "pagination": {

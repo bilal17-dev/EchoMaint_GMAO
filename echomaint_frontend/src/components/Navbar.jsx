@@ -1,14 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getUser, clearSession } from '../store/auth.store'
 import './Navbar.css'
-
-const ROLE_LABELS = {
-  admin:      'Administrateur',
-  technicien: 'Technicien',
-  client:     'Client',
-}
 
 const LANG_LABELS = { fr: 'FR', en: 'EN' }
 
@@ -18,9 +12,13 @@ function getInitiales(nom = '', prenom = '') {
 
 // eslint-disable-next-line no-unused-vars
 export default function Navbar({ title, subtitle, onMenuToggle }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const user = getUser()
+
+  const isClientDashboard     = user?.role === 'client'     && location.pathname === '/dashboard'
+  const isTechnicienDashboard = user?.role === 'technicien' && location.pathname === '/dashboard'
 
   const [showLangMenu, setShowLangMenu] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -32,7 +30,7 @@ export default function Navbar({ title, subtitle, onMenuToggle }) {
   const displayName = user
     ? `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email
     : '—'
-  const roleLabel = ROLE_LABELS[user?.role] || ''
+  const roleLabel = t(`nav.roleLabels.${user?.role}`) || ''
   const currentLang = LANG_LABELS[i18n.language] || 'FR'
 
   const handleLogout = () => {
@@ -46,7 +44,6 @@ export default function Navbar({ title, subtitle, onMenuToggle }) {
     setShowLangMenu(false)
   }
 
-  // Fermeture des menus au clic extérieur
   useEffect(() => {
     const handleClick = (e) => {
       if (langRef.current && !langRef.current.contains(e.target)) setShowLangMenu(false)
@@ -56,12 +53,11 @@ export default function Navbar({ title, subtitle, onMenuToggle }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Salutation selon l'heure
   const getGreeting = () => {
     const h = new Date().getHours()
-    if (h < 12) return 'Bonjour'
-    if (h < 18) return 'Bon après-midi'
-    return 'Bonsoir'
+    if (h < 12) return t('nav.greeting.morning')
+    if (h < 18) return t('nav.greeting.afternoon')
+    return t('nav.greeting.evening')
   }
 
   const firstName = user?.prenom || user?.nom || 'Admin'
@@ -86,11 +82,36 @@ export default function Navbar({ title, subtitle, onMenuToggle }) {
         {/* Partie droite */}
         <div className="navbar-right">
 
-          {/* Séparateur */}
+          {/* Bouton contextuel : visible uniquement sur le dashboard client */}
+          {isClientDashboard && (
+            <>
+              <button
+                className="btn-nouvelle-di btn-nouvelle-di--sm"
+                onClick={() => navigate('/demandes-intervention')}
+              >
+                <i className="ti ti-plus" /> {t('nav.nouvelleDemande')}
+              </button>
+              <div className="navbar-sep" />
+            </>
+          )}
+
+          {/* Bouton contextuel : visible uniquement sur le dashboard technicien */}
+          {isTechnicienDashboard && (
+            <>
+              <button
+                className="btn-nouvelle-di btn-nouvelle-di--sm btn-nouvelle-di--violet"
+                onClick={() => navigate('/interventions')}
+              >
+                <i className="ti ti-list-check" /> {t('nav.mesInterventions')}
+              </button>
+              <div className="navbar-sep" />
+            </>
+          )}
+
           <div className="navbar-sep" />
 
           {/* Notifications */}
-          <button className="navbar-icon-btn" title="Notifications">
+          <button className="navbar-icon-btn" title={t('nav.notifications')}>
             <i className="ti ti-bell" aria-hidden="true" />
             <span className="navbar-notif-badge">3</span>
           </button>
@@ -113,13 +134,13 @@ export default function Navbar({ title, subtitle, onMenuToggle }) {
                   className={`navbar-dropdown-item ${i18n.language === 'fr' ? 'active' : ''}`}
                   onClick={() => changeLang('fr')}
                 >
-                  🇫🇷 Français
+                  🇫🇷 {t('lang.fr')}
                 </button>
                 <button
                   className={`navbar-dropdown-item ${i18n.language === 'en' ? 'active' : ''}`}
                   onClick={() => changeLang('en')}
                 >
-                  🇬🇧 English
+                  🇬🇧 {t('lang.en')}
                 </button>
               </div>
             )}
@@ -144,14 +165,14 @@ export default function Navbar({ title, subtitle, onMenuToggle }) {
                 </div>
                 <div className="navbar-dropdown-divider" />
                 <button className="navbar-dropdown-item">
-                  <i className="ti ti-user" aria-hidden="true" /> Mon profil
+                  <i className="ti ti-user" aria-hidden="true" /> {t('nav.monProfil')}
                 </button>
                 <button className="navbar-dropdown-item">
-                  <i className="ti ti-settings" aria-hidden="true" /> Paramètres
+                  <i className="ti ti-settings" aria-hidden="true" /> {t('nav.parametres')}
                 </button>
                 <div className="navbar-dropdown-divider" />
                 <button className="navbar-dropdown-item navbar-dropdown-logout" onClick={handleLogout}>
-                  <i className="ti ti-logout" aria-hidden="true" /> Déconnexion
+                  <i className="ti ti-logout" aria-hidden="true" /> {t('nav.deconnexion')}
                 </button>
               </div>
             )}

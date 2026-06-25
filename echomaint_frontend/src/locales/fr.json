@@ -22,7 +22,17 @@
     "required": "obligatoire",
     "noResults": "Aucun résultat trouvé",
     "error": "Une erreur est survenue",
-    "success": "Opération réussie"
+    "success": "Opération réussie",
+    "saving": "Enregistrement…",
+    "submitting": "Envoi…",
+    "seeAll": "Voir tout",
+    "status": "Statut",
+    "saveChanges": "Enregistrer les modifications",
+    "periods": {
+      "7": "7 derniers jours",
+      "30": "30 derniers jours",
+      "90": "90 derniers jours"
+    }
   },
   "lang": {
     "fr": "Français",
@@ -41,7 +51,23 @@
     "logout": "Se déconnecter",
     "profile": "Profil",
     "maintenanceplans": "Plans de maintenance",
-    "interventions_client": "Mes interventions"
+    "interventions_client": "Mes interventions",
+    "greeting": {
+      "morning": "Bonjour",
+      "afternoon": "Bon après-midi",
+      "evening": "Bonsoir"
+    },
+    "notifications": "Notifications",
+    "nouvelleDemande": "Nouvelle demande",
+    "mesInterventions": "Mes interventions",
+    "monProfil": "Mon profil",
+    "parametres": "Paramètres",
+    "deconnexion": "Déconnexion",
+    "roleLabels": {
+      "admin": "Administrateur",
+      "technicien": "Technicien",
+      "client": "Client"
+    }
   },
   "auth": {
     "welcome": "Bienvenue !",
@@ -55,12 +81,43 @@
     "login": "Se connecter",
     "loggingIn": "Connexion...",
     "invalidCredentials": "Identifiants incorrects.",
-    "footer": "© 2026 EchoMaint. Tous droits réservés."
+    "serverError": "Impossible de se connecter au serveur.",
+    "footer": "© 2026 EchoMaint. Tous droits réservés.",
+    "slides": {
+      "0": {
+        "title": "Gestion centralisée des équipements",
+        "text": "Suivez l'état, l'historique et la localisation de tous vos équipements depuis une seule plateforme."
+      },
+      "1": {
+        "title": "Maintenance préventive automatisée",
+        "text": "Planifiez les interventions à l'avance et réduisez les risques de panne."
+      },
+      "2": {
+        "title": "Suivi des interventions",
+        "text": "Assignez les techniciens et suivez l'avancement des opérations en temps réel."
+      },
+      "3": {
+        "title": "Tableaux de bord et statistiques",
+        "text": "Analysez les performances de maintenance grâce à des indicateurs clairs."
+      }
+    }
+  },
+  "layout": {
+    "dashboard":       { "title": "Tableau de bord",          "subtitle": "Vue d'ensemble de vos opérations de maintenance." },
+    "batiments":       { "title": "Bâtiments",                "subtitle": "Gérez votre référentiel immobilier." },
+    "equipements":     { "title": "Équipements",              "subtitle": "Suivez l'état de votre parc machines." },
+    "interventions":   { "title": "Interventions",            "subtitle": "Pilotez vos ordres de travail." },
+    "planning":        { "title": "Planning",                 "subtitle": "Visualisez les interventions planifiées." },
+    "demandes":        { "title": "Demandes d'intervention",  "subtitle": "Traitez les signalements clients." },
+    "maintenancePlans":{ "title": "Plans de maintenance",     "subtitle": "Configurez la maintenance préventive automatique." },
+    "stats":           { "title": "Statistiques & Exports",   "subtitle": "Analysez vos données de maintenance." },
+    "utilisateurs":    { "title": "Utilisateurs",             "subtitle": "Gérez les comptes et les accès." }
   },
   "batiments": {
     "title": "Bâtiments",
     "new": "Nouveau bâtiment",
     "edit": "Modifier le bâtiment",
+    "name": "Nom",
     "search": "Rechercher un bâtiment...",
     "allClients": "Tous les clients",
     "client": "Client",
@@ -76,12 +133,15 @@
     "namePlaceholder": "Ex: Siège Social DGS Africa",
     "addressPlaceholder": "Ex: Route de Ngor",
     "cityPlaceholder": "Ex: Dakar",
-    "selectClient": "Sélectionner un client"
+    "selectClient": "Sélectionner un client",
+    "loading": "Chargement des bâtiments...",
+    "loadError": "Impossible de charger les bâtiments."
   },
   "equipements": {
     "title": "Équipements",
     "new": "Nouvel équipement",
     "edit": "Modifier l'équipement",
+    "name": "Nom",
     "search": "Rechercher un équipement...",
     "allBatiments": "Tous les bâtiments",
     "allStatuts": "Tous les statuts",
@@ -96,11 +156,30 @@
     "viewFiche": "Voir la fiche",
     "empty": "Aucun équipement trouvé",
     "selectBatiment": "Sélectionner un bâtiment",
+    "loading": "Chargement des équipements...",
+    "loadError": "Impossible de charger les équipements.",
+    "reference": "Référence",
+    "editTitle": "Modifier l'équipement",
+    "namePlaceholder": "Ex: Climatiseur Hall A",
+    "referencePlaceholder": "Ex: CLIM-001",
+    "typePlaceholder": "Ex: Climatisation",
+    "brandPlaceholder": "Ex: Daikin",
+    "modelPlaceholder": "Ex: FTXM50",
+    "serialPlaceholder": "Ex: SN-2024-001",
+    "descriptionPlaceholder": "Notes ou précisions sur l'équipement",
+    "deleteConfirm": "Supprimer cet équipement ?",
+    "installDateFuture": "La date d'installation ne peut pas être dans le futur.",
     "statuts": {
       "actif": "Actif",
       "en_panne": "En panne",
       "hors_service": "Hors service"
     }
+  },
+  "pagination": {
+    "showing": "Affichage",
+    "of": "sur",
+    "buildings": "bâtiments",
+    "equipments": "équipements"
   },
   "ficheEquipement": {
     "technicalSpecs": "Caractéristiques techniques",
@@ -159,6 +238,66 @@
       "moyenne": "Moyenne",
       "haute": "Haute",
       "urgente": "Urgente"
+    },
+    "actions": {
+      "assign": "Assigner",
+      "start": "Démarrer",
+      "close": "Clôturer",
+      "reopen": "Rouvrir",
+      "cancel": "Annuler",
+      "detail": "Détail"
+    },
+    "modal": {
+      "assignTitle": "Assigner un technicien",
+      "selectTech": "Sélectionner un technicien",
+      "closeTitle": "Clôturer l'intervention",
+      "closureComment": "Commentaire de clôture",
+      "closureCommentPlaceholder": "Minimum 10 caractères...",
+      "realDuration": "Durée réelle (minutes)",
+      "reopenTitle": "Rouvrir l'intervention",
+      "reopenWarning": "La réouverture invalidera le rapport PDF existant et repassera l'intervention en statut \"En cours\".",
+      "reopenReason": "Motif de réouverture",
+      "reopenReasonPlaceholder": "Minimum 20 caractères...",
+      "cancelTitle": "Annuler l'intervention",
+      "cancelConfirm": "Êtes-vous sûr de vouloir annuler",
+      "cancelIrreversible": "Cette action est irréversible.",
+      "noKeep": "Non, garder",
+      "yesCancel": "Oui, annuler",
+      "selectEquip": "Sélectionner un équipement",
+      "curatifInfo": "En mode curatif, l'équipement passera automatiquement au statut \"en panne\".",
+      "techOptional": "Technicien (optionnel)"
+    },
+    "errors": {
+      "selectTech": "Sélectionnez un technicien.",
+      "assignError": "Erreur lors de l'assignation.",
+      "startError": "Erreur lors du démarrage.",
+      "commentMin": "Le commentaire doit contenir au moins 10 caractères.",
+      "durationPositive": "La durée doit être un entier positif.",
+      "closeError": "Erreur lors de la clôture.",
+      "reasonMin": "Le motif doit contenir au moins 20 caractères.",
+      "reopenError": "Erreur lors de la réouverture.",
+      "cancelError": "Erreur lors de l'annulation.",
+      "titleRequired": "Le titre est obligatoire.",
+      "dateRequired": "La date planifiée est obligatoire.",
+      "equipRequired": "L'équipement est obligatoire.",
+      "createError": "Erreur lors de la création.",
+      "reportError": "Impossible de télécharger le rapport.",
+      "loadError": "Impossible de charger les interventions."
+    },
+    "detail": {
+      "info": "Informations",
+      "equipBatiment": "Équipement & Bâtiment",
+      "reference": "Référence",
+      "startReal": "Début réel",
+      "endReal": "Fin réelle",
+      "realDuration": "Durée réelle",
+      "closureComment": "Commentaire de clôture",
+      "reopenings": "Réouvertures",
+      "date": "Date",
+      "author": "Auteur",
+      "prevStatus": "Statut précédent",
+      "reason": "Motif",
+      "downloadPdf": "Télécharger le rapport PDF"
     }
   },
   "detail": {
@@ -230,10 +369,45 @@
   },
   "planning": {
     "title": "Planning",
-    "noEvents": "Aucune intervention planifiée sur cette période."
+    "noEvents": "Aucune intervention planifiée sur cette période.",
+    "loading": "Chargement du planning...",
+    "noEventsDay": "Aucune intervention ce jour",
+    "noEventsMonth": "Aucune intervention ce mois-ci.",
+    "allInterventionsMonth": "Toutes les interventions",
+    "reschedule": "Replanifier",
+    "rescheduleTitle": "Replanifier l'intervention",
+    "rescheduleRequired": "Veuillez sélectionner une nouvelle date.",
+    "newDate": "Nouvelle date planifiée",
+    "currentDate": "Date actuelle",
+    "unassigned": "Non assigné",
+    "days": {
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam",
+      "sun": "Dim"
+    },
+    "months": {
+      "jan": "Janvier",
+      "feb": "Février",
+      "mar": "Mars",
+      "apr": "Avril",
+      "may": "Mai",
+      "jun": "Juin",
+      "jul": "Juillet",
+      "aug": "Août",
+      "sep": "Septembre",
+      "oct": "Octobre",
+      "nov": "Novembre",
+      "dec": "Décembre"
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",
+    "loading": "Chargement…",
+    "noData": "Aucune donnée.",
     "mttr": "MTTR",
     "global": "Global",
     "openInterventions": "Interventions ouvertes",
@@ -249,6 +423,104 @@
       "open": "Ouvertes",
       "inProgress": "En cours",
       "closed": "Clôturées"
+    },
+    "filter": {
+      "7days": "7 derniers jours",
+      "30days": "30 derniers jours",
+      "90days": "90 derniers jours",
+      "allBuildings": "Tous les bâtiments"
+    },
+    "refreshing": "Actualisation…",
+    "refresh": "Actualiser",
+    "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
+    "otByStatus": "Répartition des OT par statut",
+    "selectedPeriod": "Sur la période sélectionnée",
+    "unavailable": "Données non disponibles",
+    "noOT": "Aucun OT sur cette période",
+    "prevCurRatio": "Ratio préventif / curatif",
+    "closedPeriod": "OT terminés sur la période",
+    "noClosedOT": "Aucun OT terminé sur cette période",
+    "pendingDI": "Demandes en attente",
+    "pendingDISub": "5 dernières DI non traitées",
+    "seeAll": "Voir tout",
+    "noPendingDI": "Aucune demande en attente",
+    "equipEnPanne": "Équipements en panne",
+    "equipEnPanneSub": "Flux temps réel",
+    "noEquipEnPanne": "Aucun équipement en panne",
+    "otEnRetard": "OT en retard",
+    "otEnRetardSub": "Dépassement de date planifiée",
+    "equipEnPanneKpi": "Équipements en panne",
+    "equipEnPanneKpiSub": "Statut en_panne actuel",
+    "tauxDispo": "Taux de disponibilité",
+    "tauxDispoSub": "Ratio OT préventifs terminés",
+    "mttrGlobal": "MTTR global",
+    "mttrSub": "Temps moyen de réparation",
+    "reouvertures": "Réouvertures sur la période",
+    "reouverturesSub": "Sur les {{n}} derniers jours",
+    "table": {
+      "ref": "Réf.",
+      "equipment": "Équipement",
+      "objet": "Objet",
+      "priorite": "Priorité",
+      "date": "Date",
+      "statut": "Statut",
+      "batiment": "Bâtiment",
+      "type": "Type"
+    },
+    "badgeDI": {
+      "pending": "En attente",
+      "traitee": "Traitée",
+      "rejetee": "Rejetée"
+    },
+    "client": {
+      "myEquipments": "Mes équipements",
+      "allBuildings": "Tous bâtiments confondus",
+      "interventionRequired": "Intervention requise",
+      "allOperational": "Tout est opérationnel",
+      "pendingDemands": "Demandes en attente",
+      "inProgress": "En cours de traitement",
+      "myInterventions": "Interventions en cours",
+      "onYourEquipments": "Sur vos équipements",
+      "terminatedPeriod": "Terminées sur la période",
+      "parcTitle": "État de mon parc",
+      "parcSubtitle": "Répartition par statut",
+      "noEquipements": "Aucun équipement enregistré",
+      "myDI": "Mes demandes d'intervention",
+      "noDIPeriod": "Aucune demande sur cette période",
+      "lastDI": "Mes dernières demandes d'intervention",
+      "lastDISub": "5 demandes les plus récentes",
+      "noDI": "Vous n'avez pas encore soumis de demande.",
+      "criticalEquipments": "Équipements critiques",
+      "criticalEquipmentsSub": "Actuellement en panne",
+      "allEquipmentsOk": "Tous vos équipements sont opérationnels",
+      "enPanne": "En panne",
+      "newDemand": "Nouvelle demande"
+    },
+    "tech": {
+      "todayOT": "OT planifiés aujourd'hui",
+      "todayOTSub": "Assignés ou planifiés ce jour",
+      "inProgress": "En cours",
+      "inProgressSub": "Interventions démarrées",
+      "terminatedPeriod": "Terminés sur la période",
+      "myMttr": "Mon MTTR",
+      "myMttrSub": "Durée moyenne de réparation ({{n}}j)",
+      "tauxCloture": "Taux de clôture",
+      "tauxClotureSub": "OT terminés / total assignés",
+      "noLate": "Aucun retard — bien joué !",
+      "reouvertures": "Réouvertures subies",
+      "reouverturesSub": "{{n}} derniers jours",
+      "todayTitle": "Mes OT d'aujourd'hui",
+      "todaySubtitle": "Planifiés aujourd'hui ou en cours",
+      "seeAll": "Tout voir",
+      "noTodayOT": "Aucune intervention planifiée aujourd'hui",
+      "nextOTTitle": "Mes prochains OT",
+      "nextOTSub": "5 prochaines interventions",
+      "noNextOT": "Aucune intervention planifiée à venir.",
+      "seeMyPlanning": "Voir mon planning",
+      "activityTitle": "Mon activité sur 30 jours",
+      "activitySub": "OT terminés par semaine",
+      "otTermines": "OT terminés"
     }
   },
   "di": {
@@ -268,10 +540,193 @@
     "convertConfirm": "Convertir cette demande en intervention curative ?",
     "rejectConfirm": "Rejeter cette demande ?",
     "converted": "Convertie en",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger les demandes d'intervention.",
+    "new": "Nouvelle demande",
+    "empty": "Aucune demande trouvée",
+    "takenCare": "Prise en charge",
+    "rejected": "Demande rejetée",
+    "newModalTitle": "Nouvelle demande d'intervention",
+    "equipement": "Équipement concerné",
+    "selectEquipement": "— Sélectionner —",
+    "submitting": "Envoi…",
+    "submit": "Soumettre",
+    "rejectTitle": "Rejeter la demande",
+    "motifRejet": "Motif du rejet",
+    "motifRejetPlaceholder": "Expliquez pourquoi cette demande est rejetée (min. 10 caractères)...",
+    "confirmRejet": "Confirmer le rejet",
     "statuts": {
       "ouverte": "Ouverte",
       "traitee": "Traitée",
-      "rejetee": "Rejetée"
+      "rejetee": "Rejetée",
+      "ouvertePlural": "Ouvertes",
+      "traiteePlural": "Traitées",
+      "rejeteePlural": "Rejetées"
+    },
+    "errors": {
+      "equipement": "Veuillez sélectionner un équipement.",
+      "titre": "Le titre est obligatoire.",
+      "description": "La description est obligatoire.",
+      "motifMin": "Le motif doit faire au moins 10 caractères."
+    }
+  },
+  "stats": {
+    "loading": "Chargement des données...",
+    "kpiResume": "Résumé KPI",
+    "kpiDesc": "Chiffres identiques au tableau de bord",
+    "kpiIndisponible": "Données KPI non disponibles",
+    "exportInterventionsTitle": "Export — Liste des interventions",
+    "exportInterventionsDesc": "Filtrez puis exportez la liste des OT au format CSV ou PDF.",
+    "otMatchFilters": "OT correspondent aux filtres",
+    "exportCsvOT": "Exporter CSV",
+    "exportPdfOT": "Exporter PDF",
+    "empty": "Aucune intervention trouvée avec ces filtres.",
+    "table": {
+      "titre": "Titre",
+      "type": "Type",
+      "statut": "Statut",
+      "priorite": "Priorité",
+      "equipement": "Équipement",
+      "batiment": "Bâtiment",
+      "technicien": "Technicien",
+      "datePlanifiee": "Date planifiée",
+      "duree": "Durée (min)",
+      "reouvertures": "Réouv."
+    },
+    "exportKpiTitle": "Export — Tableau de bord KPI",
+    "exportKpiDesc": "Téléchargez les indicateurs au format CSV ou PDF pour la période sélectionnée.",
+    "batimentFiltre": "bâtiment filtré",
+    "exportKpiCsv": "Exporter KPI CSV",
+    "exportKpiPdf": "Exporter KPI PDF",
+    "kpiCards": {
+      "interventionsCloturees": "Interventions clôturées",
+      "otEnRetard": "OT en retard",
+      "tauxPreventif": "Taux préventif",
+      "mttrMoyen": "MTTR moyen",
+      "reouvertures": "Réouvertures"
+    }
+  },
+  "utilisateurs": {
+    "title": "Utilisateurs",
+    "new": "Nouvel utilisateur",
+    "search": "Rechercher un utilisateur...",
+    "allRoles": "Tous les rôles",
+    "empty": "Aucun utilisateur trouvé",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger les utilisateurs.",
+    "disabled": "Désactivés",
+    "table": {
+      "user": "Utilisateur",
+      "email": "Email",
+      "role": "Rôle",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "statuts": {
+      "actif": "Actif",
+      "inactif": "Désactivé"
+    },
+    "modify": "Modifier",
+    "deactivate": "Désactiver",
+    "activate": "Activer",
+    "loginInfo": "Informations de connexion",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "role": "Rôle",
+    "password": "Mot de passe",
+    "passwordMin": "Min. 6 caractères",
+    "clientCompany": "Entreprise du client",
+    "companyName": "Nom de l'entreprise",
+    "companyEmail": "Email de contact",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "editTitle": "Modifier l'utilisateur",
+    "sectionIdentity": "Identité",
+    "sectionAccess": "Droits et accès",
+    "accountActive": "Compte actif",
+    "accountDisabled": "Compte désactivé",
+    "confirmRoleChange": "Êtes-vous sûr de vouloir changer le rôle ?",
+    "confirmRole": "Oui, modifier le rôle",
+    "creating": "Création…",
+    "saving": "Enregistrement…",
+    "roles": {
+      "admin": "Admin",
+      "technicien": "Technicien",
+      "client": "Client"
+    },
+    "rolesCounts": {
+      "admins": "Admins",
+      "techniciens": "Techniciens",
+      "clients": "Clients"
+    },
+    "errors": {
+      "required": "Nom, prénom et email sont obligatoires.",
+      "firstName": "Le prénom est obligatoire.",
+      "lastName": "Le nom est obligatoire.",
+      "email": "L'email est obligatoire.",
+      "passwordMin": "Le mot de passe doit faire au moins 6 caractères.",
+      "companyName": "Le nom de l'entreprise est obligatoire."
+    }
+  },
+  "plans": {
+    "title": "Plans de maintenance préventive",
+    "subtitle": "Configurez les révisions régulières de vos équipements",
+    "new": "Nouveau plan",
+    "loading": "Chargement des plans de maintenance…",
+    "mockBanner": "Mode aperçu — le backend (plans de maintenance) n'est pas encore disponible. Les données affichées sont des exemples locaux.",
+    "empty": "Aucun plan de maintenance configuré",
+    "createFirst": "Créer le premier plan",
+    "table": {
+      "plan": "Plan",
+      "equipement": "Équipement",
+      "periodicite": "Périodicité",
+      "taches": "Tâches",
+      "lastGeneration": "Dernière génération",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "days": "jours",
+    "taskCount": "tâche",
+    "taskCountPlural": "tâches",
+    "neverGenerated": "Jamais générée",
+    "statuts": {
+      "actif": "Actif",
+      "inactif": "Inactif"
+    },
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "newTitle": "Nouveau plan de maintenance",
+    "editTitle": "Modifier le plan",
+    "equipement": "Équipement ciblé",
+    "selectEquipement": "Sélectionner un équipement",
+    "label": "Libellé du plan",
+    "periodiciteLabel": "Périodicité",
+    "periodicites": {
+      "monthly": "Tous les mois",
+      "quarterly": "Tous les 3 mois",
+      "biannual": "Tous les 6 mois",
+      "annual": "Tous les ans",
+      "custom": "Personnalisé (jours)"
+    },
+    "nombreJours": "Nombre de jours",
+    "actifLabel": "Plan actif (génération automatique des OT)",
+    "gammeTaches": "Gamme de tâches",
+    "tachePlaceholder": "Ex : Vérifier la pression",
+    "obligatoire": "Obligatoire",
+    "ajouterTache": "Ajouter une tâche",
+    "saveChanges": "Enregistrer les modifications",
+    "createPlan": "Créer le plan",
+    "addMock": "Ajouter (aperçu local)",
+    "saving": "Enregistrement…",
+    "preview": "aperçu",
+    "deleteTitle": "Supprimer ce plan ?",
+    "deleteBody": "Cette action est irréversible. Les OT déjà générés ne seront pas supprimés.",
+    "deleteConfirm": "Supprimer définitivement",
+    "errors": {
+      "selectEquipement": "Sélectionnez un équipement.",
+      "labelRequired": "Le libellé est obligatoire.",
+      "tachesRequired": "Toutes les tâches doivent avoir un libellé.",
+      "periodiciteMin": "La périodicité doit être ≥ 1 jour."
     }
   },
   "pagination": {

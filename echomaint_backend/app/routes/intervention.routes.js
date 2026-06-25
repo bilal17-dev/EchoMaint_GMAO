@@ -26,9 +26,12 @@ router.post('/:id/rouvrir', auth, isAdmin, validerReouverture, InterventionContr
 router.post('/:id/annuler', auth, isAdmin, InterventionController.annuler);
 
 // 3. TERRAIN / CYCLE DE VIE
-router.post('/:id/demarrer', auth, InterventionController.demarrer);
-router.post('/:id/cloturer', auth, validerCloture, InterventionController.cloturer);
-router.post('/:id/commentaires', auth, InterventionController.ajouterCommentaire);
+router.post('/:id/demarrer',     auth,          InterventionController.demarrer);
+router.post('/:id/cloturer',     auth,          validerCloture, InterventionController.cloturer);
+// Replanifier : admin (tous les OT planifiee/assignee) ou technicien (ses OT assignés)
+// PUT car on modifie partiellement une ressource existante (date_planifiee seulement)
+router.put('/:id/replanifier',   auth,          InterventionController.replanifier);
+router.post('/:id/commentaires', auth,          InterventionController.ajouterCommentaire);
 
 // 4. PHOTOS
 router.post('/:id/photos', auth, handleUploadPhoto, InterventionController.uploaderPhoto);

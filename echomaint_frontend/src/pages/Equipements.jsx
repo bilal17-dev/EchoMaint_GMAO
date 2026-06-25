@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import './Equipements.css'
 
-// On importe les vraies fonctions qui parlent au backend
-// Ces fonctions remplacent les données mockées qui étaient en dur dans le fichier
 import { getEquipements, createEquipement, updateEquipement, deleteEquipement } from '../api/equipements.api'
 import { getBatiments } from '../api/batiments.api'
 
 const STATUTS = [
-  { value: 'actif', label: 'Actif', className: 'badge-actif' },
-  { value: 'en_panne', label: 'En panne', className: 'badge-en-panne' },
-  { value: 'hors_service', label: 'Hors service', className: 'badge-hors-service' },
+  { value: 'actif',        className: 'badge-actif' },
+  { value: 'en_panne',     className: 'badge-en-panne' },
+  { value: 'hors_service', className: 'badge-hors-service' },
 ]
 
 const ITEMS_PER_PAGE = 6
@@ -21,19 +20,15 @@ const emptyForm = {
 }
 
 export default function Equipements() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const batimentFilterFromUrl = searchParams.get('batiment') || ''
 
-  // On remplace useState(mockEquipements) par un tableau vide au départ
-  // Les vraies données seront chargées depuis le backend avec useEffect ci-dessous
   const [equipements, setEquipements] = useState([])
   const [batiments, setBatiments] = useState([])
-
-  // On ajoute un état de chargement pour informer l'utilisateur que les données arrivent
   const [loading, setLoading] = useState(true)
   const [erreur, setErreur] = useState('')
-
   const [search, setSearch] = useState('')
   const [filterBatiment, setFilterBatiment] = useState(batimentFilterFromUrl)
   const [filterStatut, setFilterStatut] = useState('')
@@ -43,41 +38,39 @@ export default function Equipements() {
   const [form, setForm] = useState(emptyForm)
   const user = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
 
-  // ─── Chargement des données au montage de la page ──────────────────────────
-  // useEffect avec un tableau vide [] en deuxième argument signifie :
-  // "exécute cette fonction une seule fois, quand la page s'affiche pour la première fois"
   const chargerDonnees = async () => {
-  setLoading(true)
-  setErreur('')
-  try {
-    const [resEquipements, resBatiments] = await Promise.all([
-      getEquipements(),
-      getBatiments()
-    ])
+    setLoading(true)
+    setErreur('')
+    try {
+      const [resEquipements, resBatiments] = await Promise.all([
+        getEquipements(),
+        getBatiments()
+      ])
 
-    const equips = Array.isArray(resEquipements)       ? resEquipements
-                 : Array.isArray(resEquipements?.data)  ? resEquipements.data
-                 : []
-    const bats   = Array.isArray(resBatiments)         ? resBatiments
-                 : Array.isArray(resBatiments?.data)    ? resBatiments.data
-                 : []
+      const equips = Array.isArray(resEquipements)       ? resEquipements
+                   : Array.isArray(resEquipements?.data)  ? resEquipements.data
+                   : []
+      const bats   = Array.isArray(resBatiments)         ? resBatiments
+                   : Array.isArray(resBatiments?.data)    ? resBatiments.data
+                   : []
 
-    setEquipements(equips)
-    setBatiments(bats)
-  } catch (error) {
-    console.error('Erreur de chargement des équipements:', error)
-    setErreur('Impossible de charger les équipements.')
-  } finally {
-    setLoading(false)
+      setEquipements(equips)
+      setBatiments(bats)
+    } catch (error) {
+      console.error('Erreur de chargement des équipements:', error)
+      setErreur(t('equipements.loadError'))
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
-useEffect(() => {
-  chargerDonnees()
-}, [])
+  useEffect(() => {
+    chargerDonnees()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const getBatimentNom = (id) => batiments.find(b => b.id === id)?.nom || '—'
-  const getStatutInfo = (statut) => STATUTS.find(s => s.value === statut) || STATUTS[0]
+  const getStatutClassName = (statut) => STATUTS.find(s => s.value === statut)?.className || 'badge-actif'
 
   const filtered = equipements.filter(eq => {
     const matchSearch =
@@ -97,19 +90,14 @@ useEffect(() => {
     setSearchParams(value ? { batiment: value } : {})
   }
 
-  // ─── Suppression connectée au backend ──────────────────────────────────────
   const handleDelete = async (id) => {
-    if (!window.confirm('Supprimer cet équipement ?')) return
+    if (!window.confirm(t('equipements.deleteConfirm'))) return
 
     try {
-      // On appelle le vrai endpoint DELETE /equipements/:id
       await deleteEquipement(id)
-      // Si la suppression a réussi, on retire l'équipement de la liste affichée
       setEquipements(prev => prev.filter(eq => eq.id !== id))
     } catch (error) {
-      // Le backend peut refuser la suppression si l'équipement a des interventions
-      // en cours (RG-REF-02) — on affiche le message d'erreur exact du backend
-      const message = error.response?.data?.message || 'Erreur lors de la suppression.'
+      const message = error.response?.data?.message || t('common.error')
       window.alert(message)
     }
   }
@@ -120,27 +108,21 @@ useEffect(() => {
     setShowModal(true)
   }
 
-  // ─── Création / modification connectée au backend ──────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // RG-REF-04 : date_installation ne peut pas être dans le futur
-    // Cette vérification est aussi faite côté backend, mais on la garde ici
-    // pour donner un retour immédiat à l'utilisateur sans attendre le serveur
     if (form.date_installation && new Date(form.date_installation) > new Date()) {
-      window.alert("La date d'installation ne peut pas être dans le futur.")
+      window.alert(t('equipements.installDateFuture'))
       return
     }
 
     try {
       if (editEquipement) {
-        // Modification d'un équipement existant
         const res = await updateEquipement(editEquipement.id, form)
         setEquipements(prev => prev.map(eq =>
           eq.id === editEquipement.id ? res.data : eq
         ))
       } else {
-        // Création d'un nouvel équipement
         const res = await createEquipement(form)
         setEquipements(prev => [...prev, res.data])
       }
@@ -148,26 +130,21 @@ useEffect(() => {
       setEditEquipement(null)
       setForm(emptyForm)
     } catch (error) {
-      // Le backend peut refuser la création si :
-      // - la référence existe déjà pour ce bâtiment (RG-REF-01, erreur 409)
-      // - un champ obligatoire manque (erreur 400)
-      const message = error.response?.data?.message || 'Erreur lors de l\'enregistrement.'
+      const message = error.response?.data?.message || t('common.error')
       window.alert(message)
     }
   }
 
-  // ─── Affichage pendant le chargement ────────────────────────────────────────
   if (loading) {
     return (
       <div className="equipements">
         <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-          Chargement des équipements...
+          {t('equipements.loading')}
         </p>
       </div>
     )
   }
 
-  // ─── Affichage en cas d'erreur de connexion au backend ──────────────────────
   if (erreur) {
     return (
       <div className="equipements">
@@ -188,21 +165,22 @@ useEffect(() => {
             <i className="ti ti-search" aria-hidden="true" />
             <input
               type="text"
-              placeholder="Rechercher un équipement..."
+              placeholder={t('equipements.search')}
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
             />
           </div>
           <select value={filterBatiment} onChange={e => handleBatimentFilterChange(e.target.value)}>
-            <option value="">Tous les bâtiments</option>
+            <option value="">{t('equipements.allBatiments')}</option>
             {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
           </select>
           <select value={filterStatut} onChange={e => { setFilterStatut(e.target.value); setPage(1) }}>
-            <option value="">Tous les statuts</option>
-            {STATUTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            <option value="">{t('equipements.allStatuts')}</option>
+            {STATUTS.map(s => (
+              <option key={s.value} value={s.value}>{t(`equipements.statuts.${s.value}`)}</option>
+            ))}
           </select>
         </div>
-        {/* Bouton création uniquement pour admin */}
         {user.role === 'admin' && (
           <button className="btn-primary" onClick={() => {
             setEditEquipement(null)
@@ -210,69 +188,70 @@ useEffect(() => {
             setShowModal(true)
           }}>
             <i className="ti ti-plus" aria-hidden="true" />
-            Nouvel équipement
+            {t('equipements.new')}
           </button>
         )}
-      </div>  
+      </div>
 
       {/* Grille */}
       {paginated.length === 0 ? (
         <div className="equipements-empty">
           <i className="ti ti-tool-off" aria-hidden="true" />
-          <p>Aucun équipement trouvé</p>
+          <p>{t('equipements.empty')}</p>
         </div>
       ) : (
         <div className="equipements-grid">
-          {paginated.map(eq => {
-            const statutInfo = getStatutInfo(eq.statut)
-            return (
-              <div key={eq.id} className="equipement-card">
-                <div className="equipement-card-top">
-                  <div className="equipement-icon">
-                    <i className="ti ti-settings" aria-hidden="true" />
-                  </div>
-                  <div className="equipement-actions">
-                    {user.role === 'admin' && (
-                      <>
-                        <button onClick={() => handleEdit(eq)} title="Modifier">
-                          <i className="ti ti-edit" aria-hidden="true" />
-                        </button>
-                        <button onClick={() => handleDelete(eq.id)} title="Supprimer" className="btn-danger">
-                          <i className="ti ti-trash" aria-hidden="true" />
-                        </button>
-                      </>
-                    )}
-                  </div>
+          {paginated.map(eq => (
+            <div key={eq.id} className="equipement-card">
+              <div className="equipement-card-top">
+                <div className="equipement-icon">
+                  <i className="ti ti-settings" aria-hidden="true" />
                 </div>
-
-                <div className="equipement-info">
-                  <p className="equipement-nom">{eq.nom}</p>
-                  <p className="equipement-reference">Réf. {eq.reference}</p>
-                  <span className={`statut-badge ${statutInfo.className}`}>{statutInfo.label}</span>
+                <div className="equipement-actions">
+                  {user.role === 'admin' && (
+                    <>
+                      <button onClick={() => handleEdit(eq)} title={t('common.edit')}>
+                        <i className="ti ti-edit" aria-hidden="true" />
+                      </button>
+                      <button onClick={() => handleDelete(eq.id)} title={t('common.delete')} className="btn-danger">
+                        <i className="ti ti-trash" aria-hidden="true" />
+                      </button>
+                    </>
+                  )}
                 </div>
-
-                <div className="equipement-meta">
-                  <span><i className="ti ti-building" aria-hidden="true" /> {getBatimentNom(eq.batiment_id)}</span>
-                  <span>{eq.marque} {eq.modele}</span>
-                </div>
-
-                <button
-                  className="btn-outline"
-                  onClick={() => navigate(`/equipements/${eq.id}`)}
-                >
-                  <i className="ti ti-eye" aria-hidden="true" />
-                  Voir la fiche
-                </button>
               </div>
-            )
-          })}
+
+              <div className="equipement-info">
+                <p className="equipement-nom">{eq.nom}</p>
+                <p className="equipement-reference">{t('equipements.ref')} {eq.reference}</p>
+                <span className={`statut-badge ${getStatutClassName(eq.statut)}`}>
+                  {t(`equipements.statuts.${eq.statut}`)}
+                </span>
+              </div>
+
+              <div className="equipement-meta">
+                <span><i className="ti ti-building" aria-hidden="true" /> {getBatimentNom(eq.batiment_id)}</span>
+                <span>{eq.marque} {eq.modele}</span>
+              </div>
+
+              <button
+                className="btn-outline"
+                onClick={() => navigate(`/equipements/${eq.id}`)}
+              >
+                <i className="ti ti-eye" aria-hidden="true" />
+                {t('equipements.viewFiche')}
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="equipements-pagination">
-          <p>Affichage {(page - 1) * ITEMS_PER_PAGE + 1}-{Math.min(page * ITEMS_PER_PAGE, filtered.length)} sur {filtered.length} équipements</p>
+          <p>
+            {t('pagination.showing')} {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} {t('pagination.of')} {filtered.length} {t('pagination.equipments')}
+          </p>
           <div className="pagination-btns">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
               <i className="ti ti-chevron-left" aria-hidden="true" />
@@ -298,7 +277,7 @@ useEffect(() => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editEquipement ? "Modifier l'équipement" : 'Nouvel équipement'}</h2>
+              <h2>{editEquipement ? t('equipements.edit') : t('equipements.new')}</h2>
               <button onClick={() => setShowModal(false)}>
                 <i className="ti ti-x" aria-hidden="true" />
               </button>
@@ -306,20 +285,20 @@ useEffect(() => {
             <form onSubmit={handleSubmit} className="modal-form">
               <div className="form-row">
                 <div className="form-group">
-                  <label>Nom</label>
+                  <label>{t('equipements.name')}</label>
                   <input
                     type="text"
-                    placeholder="Ex: Climatiseur Hall A"
+                    placeholder={t('equipements.namePlaceholder')}
                     value={form.nom}
                     onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label>Référence</label>
+                  <label>{t('equipements.reference')}</label>
                   <input
                     type="text"
-                    placeholder="Ex: CLIM-001"
+                    placeholder={t('equipements.referencePlaceholder')}
                     value={form.reference}
                     onChange={e => setForm(f => ({ ...f, reference: e.target.value }))}
                     required
@@ -329,22 +308,22 @@ useEffect(() => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Type</label>
+                  <label>{t('equipements.type')}</label>
                   <input
                     type="text"
-                    placeholder="Ex: Climatisation"
+                    placeholder={t('equipements.typePlaceholder')}
                     value={form.type}
                     onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Bâtiment</label>
+                  <label>{t('batiments.name')}</label>
                   <select
                     value={form.batiment_id}
                     onChange={e => setForm(f => ({ ...f, batiment_id: e.target.value }))}
                     required
                   >
-                    <option value="">Sélectionner un bâtiment</option>
+                    <option value="">{t('equipements.selectBatiment')}</option>
                     {batiments.map(b => (
                       <option key={b.id} value={b.id}>{b.nom}</option>
                     ))}
@@ -354,19 +333,19 @@ useEffect(() => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Marque</label>
+                  <label>{t('equipements.brand')}</label>
                   <input
                     type="text"
-                    placeholder="Ex: Daikin"
+                    placeholder={t('equipements.brandPlaceholder')}
                     value={form.marque}
                     onChange={e => setForm(f => ({ ...f, marque: e.target.value }))}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Modèle</label>
+                  <label>{t('equipements.model')}</label>
                   <input
                     type="text"
-                    placeholder="Ex: FTXM50"
+                    placeholder={t('equipements.modelPlaceholder')}
                     value={form.modele}
                     onChange={e => setForm(f => ({ ...f, modele: e.target.value }))}
                   />
@@ -375,16 +354,16 @@ useEffect(() => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Numéro de série</label>
+                  <label>{t('equipements.serialNumber')}</label>
                   <input
                     type="text"
-                    placeholder="Ex: SN-2024-001"
+                    placeholder={t('equipements.serialPlaceholder')}
                     value={form.numero_serie}
                     onChange={e => setForm(f => ({ ...f, numero_serie: e.target.value }))}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Date d'installation</label>
+                  <label>{t('equipements.installDate')}</label>
                   <input
                     type="date"
                     value={form.date_installation}
@@ -395,22 +374,22 @@ useEffect(() => {
               </div>
 
               <div className="form-group">
-                <label>Statut</label>
+                <label>{t('equipements.status')}</label>
                 <select
                   value={form.statut}
                   onChange={e => setForm(f => ({ ...f, statut: e.target.value }))}
                   required
                 >
                   {STATUTS.map(s => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
+                    <option key={s.value} value={s.value}>{t(`equipements.statuts.${s.value}`)}</option>
                   ))}
                 </select>
               </div>
 
               <div className="form-group">
-                <label>Description (optionnel)</label>
+                <label>{t('equipements.description')} <span style={{ color: '#94a3b8', fontSize: '12px' }}>({t('common.optional')})</span></label>
                 <textarea
-                  placeholder="Notes ou précisions sur l'équipement"
+                  placeholder={t('equipements.descriptionPlaceholder')}
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={3}
@@ -419,10 +398,10 @@ useEffect(() => {
 
               <div className="modal-footer">
                 <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="btn-primary">
-                  {editEquipement ? 'Enregistrer' : 'Créer'}
+                  {editEquipement ? t('common.save') : t('common.create')}
                 </button>
               </div>
             </form>

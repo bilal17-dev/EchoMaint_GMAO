@@ -37,17 +37,11 @@ const NAV_BY_ROLE = {
   client:     NAV_ITEMS_CLIENT,
 }
 
-const ROLE_LABELS = {
-  admin:      'Administrateur',
-  technicien: 'Technicien',
-  client:     'Client',
-}
-
 function getInitiales(nom = '', prenom = '') {
   return `${(prenom[0] || '').toUpperCase()}${(nom[0] || '').toUpperCase()}` || 'U'
 }
 
-export default function Sidebar({ collapsed}) {
+export default function Sidebar({ collapsed, mobileOpen, onMobileClose }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const user = getUser()
@@ -60,20 +54,16 @@ export default function Sidebar({ collapsed}) {
   }
 
   const initiales = getInitiales(user?.nom, user?.prenom)
-  const roleLabel = ROLE_LABELS[user?.role] || user?.role || ''
+  const roleLabel = t(`nav.roleLabels.${user?.role}`) || user?.role || ''
 
   return (
-    <div className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
+    <div className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'sidebar-mobile-open' : ''}`}>
 
       {/* Logo */}
       <div className="sidebar-logo">
         <img src={logo} alt="EchoMaint" className="sidebar-logo-img" />
       </div>
 
-      {/* Bouton collapse */}
-      
-
-      {/* Navigation */}
       <nav className="sidebar-nav">
         {navItems.map(item => (
           <NavLink
@@ -83,6 +73,7 @@ export default function Sidebar({ collapsed}) {
               `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
             }
             title={collapsed ? t(item.key) : ''}
+            onClick={onMobileClose}
           >
             <div className="sidebar-link-icon">
               <i className={`ti ${item.icon}`} aria-hidden="true" />
@@ -97,10 +88,6 @@ export default function Sidebar({ collapsed}) {
       {/* Footer */}
       <div className="sidebar-footer">
 
-       
-        
-
-        {/* User */}
         <div className="sidebar-user">
           <div className="sidebar-avatar">{initiales}</div>
           {!collapsed && (
@@ -113,7 +100,6 @@ export default function Sidebar({ collapsed}) {
           )}
         </div>
 
-        {/* Déconnexion */}
         <button
           className="sidebar-link sidebar-logout"
           onClick={handleLogout}
