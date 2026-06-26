@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -141,11 +141,21 @@ function DashboardAdmin() {
   const [loading,        setLoading]        = useState(true)
   const [refreshing,     setRefreshing]     = useState(false)
   const [erreur,         setErreur]         = useState('')
+  const [showImprimer,   setShowImprimer]   = useState(false)
+  const imprimerRef = useRef(null)
 
   useEffect(() => {
     getBatiments()
       .then(res => setBatiments(res.data ?? []))
       .catch(err => console.error('Bâtiments:', err))
+  }, [])
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (imprimerRef.current && !imprimerRef.current.contains(e.target)) setShowImprimer(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
   }, [])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -229,37 +239,63 @@ function DashboardAdmin() {
   return (
     <div className="dashboard">
 
-      <div className="dashboard-filters">
-        <div className="dashboard-filters-left">
+      {/* En-tête de page */}
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">{t('dashboard.title')}</h1>
+          <p className="page-subtitle">{t('dashboard.subtitle')}</p>
+        </div>
+        <div className="dashboard-header-actions">
+          <button
+            className="btn-refresh-icon"
+            onClick={() => charger(true)}
+            disabled={refreshing}
+            title={refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}
+          >
+            <i className={`ti ${refreshing ? 'ti-loader-2 spin' : 'ti-refresh'}`} />
+          </button>
+          <div className="imprimer-wrap" ref={imprimerRef}>
+            <button className="btn-imprimer" onClick={() => setShowImprimer(v => !v)}>
+              <i className="ti ti-printer" />
+              Imprimer
+            </button>
+            {showImprimer && (
+              <div className="imprimer-dropdown">
+                <button className="imprimer-item" onClick={() => {
+                  exportKpiCSV(kpi, periode, batimentNom)
+                  setShowImprimer(false)
+                }}>
+                  <i className="ti ti-file-type-csv" />{t('dashboard.exportCsv')}
+                </button>
+                <button className="imprimer-item" onClick={() => {
+                  const url = `${import.meta.env.VITE_API_URL}/exports/kpi?format=pdf&periode=${periode}${filterBatiment ? `&batiment_id=${filterBatiment}` : ''}`
+                  exportAvecToken(url, `echomaint_kpi_${new Date().toISOString().split('T')[0]}.pdf`, t('common.error'))
+                  setShowImprimer(false)
+                }}>
+                  <i className="ti ti-file-type-pdf" />{t('dashboard.exportPdf')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Barre de filtres — carte blanche style UpFix */}
+      <div className="dashboard-filter-card">
+        <div className="dashboard-filter-group">
+          <span className="filter-label-sm">Période</span>
           <select value={periode} onChange={e => setPeriode(e.target.value)} className="dashboard-select">
             <option value="7">{t('common.periods.7')}</option>
             <option value="30">{t('common.periods.30')}</option>
             <option value="90">{t('common.periods.90')}</option>
           </select>
+        </div>
+        <div className="dashboard-filter-group">
+          <span className="filter-label-sm">Bâtiment</span>
           <select value={filterBatiment} onChange={e => setFilterBatiment(e.target.value)} className="dashboard-select">
             <option value="">{t('dashboard.filter.allBuildings')}</option>
             {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
           </select>
-        </div>
-        <div className="dashboard-exports">
-          <button
-            className="btn-export btn-actualiser"
-            onClick={() => charger(true)}
-            disabled={refreshing}
-            title={t('dashboard.refresh')}
-          >
-            <i className={`ti ${refreshing ? 'ti-loader-2 spin' : 'ti-refresh'}`} />
-            {refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}
-          </button>
-          <button className="btn-export" onClick={() => exportKpiCSV(kpi, periode, batimentNom)}>
-            <i className="ti ti-file-type-csv" /> {t('dashboard.exportCsv')}
-          </button>
-          <button className="btn-export btn-export-pdf" onClick={() => {
-            const url = `${import.meta.env.VITE_API_URL}/exports/kpi?format=pdf&periode=${periode}${filterBatiment ? `&batiment_id=${filterBatiment}` : ''}`
-            exportAvecToken(url, `echomaint_kpi_${new Date().toISOString().split('T')[0]}.pdf`, t('common.error'))
-          }}>
-            <i className="ti ti-file-type-pdf" /> {t('dashboard.exportPdf')}
-          </button>
         </div>
       </div>
 
@@ -513,6 +549,13 @@ function DashboardClient() {
   return (
     <div className="dashboard">
 
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">{t('dashboard.title')}</h1>
+          <p className="page-subtitle">{t('dashboard.subtitle')}</p>
+        </div>
+      </div>
+
       <div className="dashboard-filters">
         <div className="dashboard-filters-left">
           <select value={periode} onChange={e => setPeriode(e.target.value)} className="dashboard-select">
@@ -752,11 +795,6 @@ function DashboardTechnicien() {
       subtitle: t('common.periods.' + periode),
       icon: 'ti-circle-check', color: '#10b981', bg: '#F0FDF4', bar: '#10b981',
     },
-    {
-      label:    t('dashboard.tech.myMttr'), value: data.mttr_formate,
-      subtitle: t('dashboard.tech.myMttrSub', { n: periode }),
-      icon: 'ti-stopwatch', color: '#f59e0b', bg: '#FFFBEB', bar: '#f59e0b',
-    },
   ]
 
   const tauxColor = data.taux_cloture >= 80 ? '#10b981' : data.taux_cloture >= 50 ? '#f59e0b' : '#ef4444'
@@ -764,6 +802,13 @@ function DashboardTechnicien() {
 
   return (
     <div className="dashboard">
+
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">{t('dashboard.title')}</h1>
+          <p className="page-subtitle">{t('dashboard.subtitle')}</p>
+        </div>
+      </div>
 
       <div className="dashboard-filters">
         <div className="dashboard-filters-left">
@@ -775,7 +820,7 @@ function DashboardTechnicien() {
         </div>
       </div>
 
-      <div className="dashboard-kpi dashboard-kpi--7col">
+      <div className="dashboard-kpi dashboard-kpi--5col">
 
         {kpi4.map((c, i) => (
           <div key={i} className="kpi-card">
@@ -827,21 +872,6 @@ function DashboardTechnicien() {
           <div className="kpi-bar" style={{ background: data.nb_ot_en_retard > 0 ? '#ef4444' : '#10b981' }} />
         </div>
 
-        <div className="kpi-card">
-          <div className="kpi-card-top">
-            <div className="kpi-icon" style={{ background: data.nb_reouvertures > 0 ? '#FEF2F2' : '#F9FAFB' }}>
-              <i className="ti ti-refresh" style={{ color: data.nb_reouvertures > 0 ? '#ef4444' : '#94a3b8' }} />
-            </div>
-            <div className="kpi-info">
-              <p className="kpi-label">{t('dashboard.tech.reouvertures')}</p>
-              <p className="kpi-value" style={{ color: data.nb_reouvertures > 0 ? '#ef4444' : '#94a3b8' }}>
-                {data.nb_reouvertures}
-              </p>
-              <p className="kpi-subtitle">{t('dashboard.tech.reouverturesSub', { n: periode })}</p>
-            </div>
-          </div>
-          <div className="kpi-bar" style={{ background: data.nb_reouvertures > 0 ? '#ef4444' : '#E2E8F0' }} />
-        </div>
 
       </div>
 
@@ -885,9 +915,6 @@ function DashboardTechnicien() {
                     <span className="badge-priorite" style={{ color: pc.color, background: pc.bg }}>
                       {ot.priorite || 'normale'}
                     </span>
-                    <button className="list-card-voir-tout" onClick={e => { e.stopPropagation(); navigate(`/interventions/${ot.id}`) }}>
-                      → {t('common.seeAll')}
-                    </button>
                   </div>
                 )
               })}

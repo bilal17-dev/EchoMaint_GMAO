@@ -172,6 +172,13 @@ export default function Utilisateurs() {
   return (
     <div className="utilisateurs">
 
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">{t('layout.utilisateurs.title')}</h1>
+          <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.utilisateurs.subtitle')}</p>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="utilisateurs-header">
         <div className="utilisateurs-filters">

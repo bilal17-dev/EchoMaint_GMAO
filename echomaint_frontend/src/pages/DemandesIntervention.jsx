@@ -17,10 +17,13 @@ const STATUTS_CLASS = {
   rejetee: 'statut-rejetee',
 }
 
-function formatDateTime(dateStr) {
-  return new Date(dateStr).toLocaleString(undefined, {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-  })
+function formatDate(dateStr) {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+function formatTime(dateStr) {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
 function getUserConnecte() {
@@ -31,6 +34,7 @@ function getUserConnecte() {
 }
 
 const emptyForm = { equipement_id: '', titre: '', description: '', priorite: 'normale' }
+const PER_PAGE = 5
 
 export default function DemandesIntervention() {
   const { t } = useTranslation()
@@ -43,6 +47,7 @@ export default function DemandesIntervention() {
   const [erreur, setErreur]             = useState('')
   const [search, setSearch]             = useState('')
   const [filterStatut, setFilterStatut] = useState('')
+  const [page, setPage]                 = useState(1)
 
   const [modalCreer, setModalCreer]     = useState(false)
   const [form, setForm]                 = useState(emptyForm)
@@ -83,12 +88,19 @@ export default function DemandesIntervention() {
 
   const filtered = demandes.filter(d => {
     const matchSearch =
-      d.titre.toLowerCase().includes(search.toLowerCase()) ||
+      (d.titre || '').toLowerCase().includes(search.toLowerCase()) ||
       (d.equipement_nom || '').toLowerCase().includes(search.toLowerCase()) ||
       (d.client_nom || '').toLowerCase().includes(search.toLowerCase())
     const matchStatut = filterStatut ? d.statut === filterStatut : true
     return matchSearch && matchStatut
   })
+
+  // Reset page quand le filtre change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(1) }, [search, filterStatut])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
+  const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const handleSoumettre = async () => {
     const errs = []
@@ -156,6 +168,13 @@ export default function DemandesIntervention() {
   return (
     <div className="demandes">
 
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">{t('layout.demandes.title')}</h1>
+          <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.demandes.subtitle')}</p>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="demandes-header">
         <div className="demandes-filters">
@@ -183,66 +202,136 @@ export default function DemandesIntervention() {
         )}
       </div>
 
-      {/* Liste */}
+      {/* Tableau professionnel */}
       {filtered.length === 0 ? (
         <div className="demandes-empty">
           <i className="ti ti-clipboard-off" />
           <p>{t('di.empty')}</p>
         </div>
       ) : (
-        <div className="demandes-list">
-          {filtered.map(d => (
-            <div key={d.id} className="demande-card">
-              <div className="demande-card-top">
-                <div className="demande-card-titles">
-                  <p className="demande-titre">{d.titre}</p>
-                  <p className="demande-meta">
-                    <i className="ti ti-settings" /> {d.equipement_nom}
+        <>
+          <div className="di-table-wrap">
+            <table className="di-table">
+              <thead>
+                <tr>
+                  <th className="di-th">Titre</th>
+                  {role === 'admin' && <th className="di-th">Demandeur</th>}
+                  <th className="di-th">Équipement</th>
+                  <th className="di-th">Date</th>
+                  <th className="di-th">Heure</th>
+                  <th className="di-th">Priorité</th>
+                  <th className="di-th">Statut</th>
+                  <th className="di-th di-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map(d => (
+                  <tr key={d.id} className="di-row" data-prio={d.priorite}>
+                    <td className="di-td di-td-titre">
+                      <span className="di-titre">{d.titre}</span>
+                      {d.description && (
+                        <span className="di-desc-truncate">{d.description}</span>
+                      )}
+                    </td>
                     {role === 'admin' && (
-                      <> · <i className="ti ti-building" /> {d.client_nom}</>
+                      <td className="di-td di-td-demandeur">{d.client_nom || '—'}</td>
                     )}
-                  </p>
-                </div>
-                <div className="demande-badges">
-                  <span className={`prio-badge ${PRIORITES_CLASS[d.priorite] || ''}`}>
-                    {t(`interventions.priorites.${d.priorite}`)}
-                  </span>
-                  <span className={`statut-badge-di ${STATUTS_CLASS[d.statut] || ''}`}>
-                    {t(`di.statuts.${d.statut}`)}
-                  </span>
-                </div>
-              </div>
+                    <td className="di-td di-td-equip">
+                      <span className="di-equip-name">
+                        <i className="ti ti-cpu" /> {d.equipement_nom || '—'}
+                      </span>
+                    </td>
+                    <td className="di-td di-td-date">{formatDate(d.created_at)}</td>
+                    <td className="di-td di-td-time">{formatTime(d.created_at)}</td>
+                    <td className="di-td">
+                      <span className={`prio-badge ${PRIORITES_CLASS[d.priorite] || ''}`}>
+                        {t(`interventions.priorites.${d.priorite}`)}
+                      </span>
+                    </td>
+                    <td className="di-td">
+                      <span className={`statut-badge-di ${STATUTS_CLASS[d.statut] || ''}`}>
+                        {t(`di.statuts.${d.statut}`)}
+                      </span>
+                    </td>
+                    <td className="di-td di-td-actions">
+                      {role === 'admin' && d.statut === 'ouverte' && (
+                        <div className="di-row-actions">
+                          <button
+                            className="di-action-btn di-action-btn--danger"
+                            onClick={() => ouvrirModalRejet(d.id)}
+                            title={t('di.reject')}
+                          >
+                            <i className="ti ti-x" />
+                          </button>
+                          <button
+                            className="di-action-btn di-action-btn--primary"
+                            onClick={() => handleConvertir(d.id)}
+                            title={t('di.convert')}
+                          >
+                            <i className="ti ti-transform" />
+                          </button>
+                        </div>
+                      )}
+                      {role === 'client' && d.statut === 'traitee' && (
+                        <span className="di-status-badge di-status-badge--ok">
+                          <i className="ti ti-check" /> {t('di.takenCare')}
+                        </span>
+                      )}
+                      {role === 'client' && d.statut === 'rejetee' && (
+                        <span className="di-status-badge di-status-badge--ko">
+                          <i className="ti ti-x" /> Rejetée
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-              <p className="demande-description">{d.description}</p>
-
-              <div className="demande-footer">
-                <span className="demande-date">{formatDateTime(d.created_at)}</span>
-
-                {role === 'admin' && d.statut === 'ouverte' && (
-                  <div className="demande-actions">
-                    <button className="btn-cancel" onClick={() => ouvrirModalRejet(d.id)}>
-                      <i className="ti ti-x" /> {t('di.reject')}
-                    </button>
-                    <button className="btn-primary" onClick={() => handleConvertir(d.id)}>
-                      <i className="ti ti-transform" /> {t('di.convert')}
-                    </button>
-                  </div>
-                )}
-
-                {role === 'client' && d.statut === 'traitee' && (
-                  <span className="demande-ot-link">
-                    <i className="ti ti-check" /> {t('di.takenCare')}
-                  </span>
-                )}
-                {role === 'client' && d.statut === 'rejetee' && (
-                  <span className="demande-ot-link" style={{ color: '#ef4444' }}>
-                    <i className="ti ti-x" /> {t('di.reject')}
-                  </span>
-                )}
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="di-pagination">
+              <span className="di-pagination-info">
+                {Math.min((page - 1) * PER_PAGE + 1, filtered.length)}–{Math.min(page * PER_PAGE, filtered.length)} sur {filtered.length} demandes
+              </span>
+              <div className="di-pagination-controls">
+                <button
+                  className="di-page-btn"
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page === 1}
+                >
+                  <i className="ti ti-chevron-left" />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                  .reduce((acc, p, idx, arr) => {
+                    if (idx > 0 && arr[idx - 1] !== p - 1) acc.push('…')
+                    acc.push(p)
+                    return acc
+                  }, [])
+                  .map((item, idx) =>
+                    item === '…'
+                      ? <span key={`ellipsis-${idx}`} className="di-page-ellipsis">…</span>
+                      : <button
+                          key={item}
+                          className={`di-page-btn${item === page ? ' active' : ''}`}
+                          onClick={() => setPage(item)}
+                        >
+                          {item}
+                        </button>
+                  )}
+                <button
+                  className="di-page-btn"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page === totalPages}
+                >
+                  <i className="ti ti-chevron-right" />
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Modal création DI — CLIENT */}

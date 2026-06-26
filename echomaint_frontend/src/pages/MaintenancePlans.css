@@ -1,273 +1,247 @@
-/* MaintenancePlans.css */
+/* ── Page wrapper ────────────────────────────────────────────────────────── */
 .mplans { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; }
 
-.mplans-msg { text-align: center; padding: 3rem; color: #64748B; }
-.mplans-msg--error { color: #ef4444; }
+.mplans-msg { text-align: center; padding: 3rem; color: var(--text-secondary); }
+.mplans-msg--error { color: var(--error); }
 
 .mplans-header {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 1rem;
 }
-.mplans-title { font-size: 18px; font-weight: 700; color: #1E293B; margin: 0 0 4px; }
-.mplans-sub   { font-size: 13px; color: #64748B; margin: 0; }
+.mplans-title { font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
+.mplans-sub   { font-size: 13px; color: var(--text-secondary); margin: 0; }
 
-/* Table */
+/* ── Table ───────────────────────────────────────────────────────────────── */
 .mplans-table-wrap {
-  background: #fff; border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(15,23,42,0.06); overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  overflow: hidden;
 }
+
 .mplans-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
 .mplans-table th {
-  text-align: left; padding: 14px 16px; font-size: 11px; font-weight: 600;
-  color: #94a3b8; text-transform: uppercase; letter-spacing: .04em;
-  border-bottom: 1px solid #F1F5F9;
+  text-align: left; padding: 12px 16px;
+  font-size: 10.5px; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
 }
+
 .mplans-table td {
-  padding: 14px 16px; color: #1E293B; border-bottom: 1px solid #F8FAFC;
-  vertical-align: middle;
+  padding: 14px 16px; color: var(--text-primary);
+  border-bottom: 1px solid #F8FAFC; vertical-align: middle;
 }
 .mplans-table tbody tr:last-child td { border-bottom: none; }
-.mplans-table tbody tr:hover td { background: #F8FAFC; }
+.mplans-table tbody tr:hover td { background: var(--surface-2); }
 
-.mplans-label  { font-weight: 600; }
+.mplans-label { font-weight: 600; }
 
 .mplans-periode {
   display: inline-flex; align-items: center; gap: 5px;
-  background: #E0F2FE; color: #0369a1;
-  padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: var(--info-light); color: #1D4ED8;
+  padding: 3px 10px; border-radius: var(--r-full);
+  font-size: 12px; font-weight: 600;
+  border: 1px solid var(--info-border);
 }
 
 .mplans-taches-count {
-  background: #F1F5F9; color: #475569;
-  padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;
+  background: var(--surface-3); color: #475569;
+  padding: 3px 10px; border-radius: var(--r-full);
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border);
 }
 
-.mplans-date  { color: #64748B; font-size: 12px; }
-.mplans-never { color: #CBD5E1; font-style: italic; }
+.mplans-date  { color: var(--text-secondary); font-size: 12px; }
+.mplans-never { color: var(--text-muted); font-style: italic; }
 
 .mplans-badge {
-  display: inline-flex; align-items: center; padding: 3px 10px;
-  border-radius: 999px; font-size: 11px; font-weight: 600;
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: var(--r-full);
+  font-size: 11px; font-weight: 600; border: 1px solid transparent;
 }
-.mplans-badge--actif   { background: #E0F2FE; color: #0369a1; }
-.mplans-badge--inactif { background: #F1F5F9; color: #94a3b8; }
+.mplans-badge--actif   { background: var(--info-light); color: #1D4ED8; border-color: var(--info-border); }
+.mplans-badge--inactif { background: var(--surface-3);  color: var(--text-muted); border-color: var(--border); }
 
-/* Toggle actif/inactif */
+/* ── Toggle buttons ──────────────────────────────────────────────────────── */
 .btn-toggle-plan {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 500;
+  padding: 5px 12px; border-radius: var(--r); font-size: 12px; font-weight: 500;
   cursor: pointer; border: none; font-family: 'Inter', sans-serif;
-  transition: background 0.15s;
+  transition: background var(--t), transform var(--t);
 }
-.btn-toggle-plan.btn-desactiver { background: #FEF2F2; color: #ef4444; }
+.btn-toggle-plan:hover { transform: scale(1.03); }
+.btn-toggle-plan.btn-desactiver { background: var(--error-light); color: var(--error); }
 .btn-toggle-plan.btn-desactiver:hover { background: #FEE2E2; }
-.btn-toggle-plan.btn-activer    { background: #F0FDF4; color: #22C55E; }
-.btn-toggle-plan.btn-activer:hover  { background: #DCFCE7; }
+.btn-toggle-plan.btn-activer    { background: var(--success-light); color: var(--success); }
+.btn-toggle-plan.btn-activer:hover  { background: #D1FAE5; }
 
-/* Empty */
-.mplans-empty {
-  display: flex; flex-direction: column; align-items: center; gap: 1rem;
-  padding: 4rem; background: #fff; border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
-  color: #94a3b8; font-size: 14px; text-align: center;
+/* ── Actions column ──────────────────────────────────────────────────────── */
+.mplans-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.btn-edit-plan {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: var(--r); font-size: 12px; font-weight: 500;
+  cursor: pointer; border: none; font-family: 'Inter', sans-serif;
+  background: var(--info-light); color: var(--brand);
+  transition: background var(--t), transform var(--t);
 }
-.mplans-empty .ti { font-size: 3rem; color: #CBD5E1; }
+.btn-edit-plan:hover { background: #DBEAFE; transform: scale(1.03); }
 
-/* Pagination */
+.btn-delete-plan {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: var(--r); font-size: 12px; font-weight: 500;
+  cursor: pointer; border: none; font-family: 'Inter', sans-serif;
+  background: var(--error-light); color: var(--error);
+  transition: background var(--t), transform var(--t);
+}
+.btn-delete-plan:hover { background: #FEE2E2; transform: scale(1.03); }
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
 .mplans-pagination {
   display: flex; align-items: center; justify-content: space-between;
-  font-size: 13px; color: #64748B;
+  font-size: 13px; color: var(--text-secondary);
 }
 
-/* Modal grande */
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.mplans-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+  padding: 4rem; background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 14px; text-align: center;
+}
+.mplans-empty .ti { font-size: 3rem; opacity: 0.25; }
+
+/* ── Modal grande ────────────────────────────────────────────────────────── */
 .modal--large { max-width: 640px !important; }
 
-/* Périodicité */
-.mplans-periodo-grid {
-  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;
-}
+/* ── Périodicité pills ───────────────────────────────────────────────────── */
+.mplans-periodo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+
 .mplans-periodo-btn {
-  padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 500;
-  border: 1px solid #E2E8F0; background: #fff; color: #64748B;
-  cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif;
+  padding: 7px 14px; border-radius: var(--r-md);
+  font-size: 12px; font-weight: 500;
+  border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--text-secondary);
+  cursor: pointer; transition: all var(--t); font-family: 'Inter', sans-serif;
 }
 .mplans-periodo-btn.active {
-  background: #E0F2FE; border-color: #0369a1; color: #0369a1;
+  background: var(--info-light);
+  border-color: var(--info-border);
+  color: #1D4ED8;
+  font-weight: 600;
 }
 
-/* Tâches */
+/* ── Tâches ──────────────────────────────────────────────────────────────── */
 .mplans-taches { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
 
 .mplans-tache-row {
   display: flex; align-items: center; gap: 8px;
-  background: #F8FAFC; padding: 8px 10px; border-radius: 10px;
+  background: var(--surface-2); padding: 8px 10px;
+  border-radius: var(--r-md); border: 1px solid var(--border);
 }
+
 .mplans-tache-ordre {
-  width: 22px; height: 22px; background: #E0F2FE; color: #0369a1;
+  width: 22px; height: 22px;
+  background: var(--info-light); color: #1D4ED8;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700; flex-shrink: 0;
 }
+
 .mplans-tache-row input[type="text"] {
-  flex: 1; border: 1px solid #E2E8F0; border-radius: 8px;
-  padding: 6px 10px; font-size: 13px; outline: none;
+  flex: 1; border: 1.5px solid var(--border);
+  border-radius: var(--r); padding: 6px 10px;
+  font-size: 13px; outline: none; font-family: 'Inter', sans-serif;
+  color: var(--text-primary); background: var(--surface);
+  transition: border-color var(--t), box-shadow var(--t);
 }
+.mplans-tache-row input[type="text"]:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+}
+
 .mplans-tache-oblig {
-  display: flex; align-items: center; gap: 5px; font-size: 12px;
-  color: #64748B; white-space: nowrap; cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--text-secondary);
+  white-space: nowrap; cursor: pointer;
 }
+
 .mplans-tache-del {
-  background: none; border: none; color: #ef4444; cursor: pointer;
-  padding: 4px; display: flex; align-items: center;
+  background: none; border: none; color: var(--error);
+  cursor: pointer; padding: 4px;
+  display: flex; align-items: center;
+  border-radius: var(--r-sm);
+  transition: background var(--t);
 }
+.mplans-tache-del:hover { background: var(--error-light); }
+
 .mplans-add-tache {
   display: inline-flex; align-items: center; gap: 5px;
-  background: none; border: 1px dashed #CBD5E1; border-radius: 10px;
-  padding: 8px 14px; font-size: 12px; color: #64748B; cursor: pointer;
-  font-family: 'Inter', sans-serif; transition: border-color 0.15s, color 0.15s;
+  background: none; border: 1.5px dashed var(--border-2);
+  border-radius: var(--r-md);
+  padding: 8px 14px; font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: border-color var(--t), color var(--t), background var(--t);
 }
-.mplans-add-tache:hover { border-color: #0369a1; color: #0369a1; }
+.mplans-add-tache:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-light);
+}
 
-.erreur { color: #ef4444; font-size: 12px; margin-top: 4px; }
-.required { color: #ef4444; }
+/* ── Confirmation dialog ─────────────────────────────────────────────────── */
+.confirm-dialog {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  padding: 2rem; max-width: 420px; width: 90%;
+  box-shadow: var(--shadow-xl);
+  text-align: center;
+  animation: scaleIn 0.18s var(--t-spring) both;
+  border: 1px solid var(--border);
+}
+.confirm-dialog__icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--error-light);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 22px; color: var(--error);
+}
+.confirm-dialog__title {
+  font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0 0 0.5rem;
+}
+.confirm-dialog__body {
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.6; margin: 0 0 1.5rem;
+}
+.confirm-dialog__actions {
+  display: flex; gap: 10px; justify-content: center;
+}
 
+/* ── Misc ────────────────────────────────────────────────────────────────── */
+.erreur   { color: var(--error); font-size: 12px; margin-top: 4px; }
+.required { color: var(--error); }
+
+.mplans-mock-banner {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--warning-light);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--r-md);
+  padding: 10px 16px; font-size: 13px; color: #92400E;
+}
+
+.mplans-mock-tag {
+  display: inline-block; margin-left: 8px;
+  background: #FEF3C7; color: #92400E;
+  font-size: 10px; font-weight: 600;
+  padding: 1px 7px; border-radius: var(--r-full); vertical-align: middle;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .mplans-table-wrap { overflow-x: auto; }
   .mplans-header { flex-direction: column; }
-}
-
-/* Bandeau mock */
-.mplans-mock-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #FFFBEB;
-  border: 1px solid #FDE68A;
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-size: 13px;
-  color: #92400E;
-}
-
-/* Tag aperçu sur les lignes mock */
-.mplans-mock-tag {
-  display: inline-block;
-  margin-left: 8px;
-  background: #FEF3C7;
-  color: #92400E;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 7px;
-  border-radius: 999px;
-  vertical-align: middle;
-}
-
-/* ── Groupe de boutons dans la colonne Actions ──────────────────────────────── */
-.mplans-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-/* Bouton Modifier — bleu indigo */
-.btn-edit-plan {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  font-family: 'Inter', sans-serif;
-  transition: background 0.15s;
-  background: #EFF6FF;
-  color: #2563EB;
-}
-.btn-edit-plan:hover { background: #DBEAFE; }
-
-/* Bouton Supprimer — rouge discret */
-.btn-delete-plan {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  font-family: 'Inter', sans-serif;
-  transition: background 0.15s;
-  background: #FEF2F2;
-  color: #EF4444;
-}
-.btn-delete-plan:hover { background: #FEE2E2; }
-
-/* ── Dialog de confirmation de suppression ──────────────────────────────────── */
-.confirm-dialog {
-  background: #fff;
-  border-radius: 20px;
-  padding: 2rem;
-  max-width: 420px;
-  width: 90%;
-  box-shadow: 0 20px 60px rgba(15,23,42,0.18);
-  text-align: center;
-  animation: fadeInScale 0.15s ease;
-}
-
-.confirm-dialog__icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: #FEF2F2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem;
-  font-size: 22px;
-  color: #EF4444;
-}
-
-.confirm-dialog__title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1E293B;
-  margin: 0 0 0.5rem;
-}
-
-.confirm-dialog__body {
-  font-size: 13px;
-  color: #64748B;
-  line-height: 1.6;
-  margin: 0 0 1.5rem;
-}
-
-.confirm-dialog__actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
-/* Bouton danger (rouge plein) utilisé dans la confirmation */
-.btn-danger {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  font-family: 'Inter', sans-serif;
-  background: #EF4444;
-  color: #fff;
-  transition: background 0.15s;
-}
-.btn-danger:hover { background: #DC2626; }
-
-@keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
 }

@@ -8,45 +8,44 @@ import {
 } from '../api/interventions.api'
 import { getTechniciens } from '../api/utilisateurs.api'
 
-const STATUT_STYLES = {
-  planifiee: { label: 'Planifiée',  className: 'ot-badge-planifiee' },
-  assignee:  { label: 'Assignée',   className: 'ot-badge-assignee' },
-  en_cours:  { label: 'En cours',   className: 'ot-badge-en-cours' },
-  terminee:  { label: 'Terminée',   className: 'ot-badge-terminee' },
-  annulee:   { label: 'Annulée',    className: 'ot-badge-annulee' },
+const STATUT_META = {
+  planifiee: { label: 'Planifiée',  bg: 'linear-gradient(135deg,#1E293B 0%,#334155 100%)' },
+  assignee:  { label: 'Assignée',   bg: 'linear-gradient(135deg,#431407 0%,#78350F 100%)' },
+  en_cours:  { label: 'En cours',   bg: 'linear-gradient(135deg,#1E3A5F 0%,#1E40AF 100%)' },
+  terminee:  { label: 'Terminée',   bg: 'linear-gradient(135deg,#052E16 0%,#065F46 100%)' },
+  annulee:   { label: 'Annulée',    bg: 'linear-gradient(135deg,#450A0A 0%,#7F1D1D 100%)' },
 }
-const TYPE_STYLES = {
-  preventif: { label: 'Préventif', className: 'type-badge-preventif' },
-  curatif:   { label: 'Curatif',   className: 'type-badge-curatif' },
+const TYPE_META = {
+  preventif: { label: 'Préventif', icon: 'ti-tool',           cls: 'detiv-chip--prev' },
+  curatif:   { label: 'Curatif',   icon: 'ti-alert-triangle', cls: 'detiv-chip--cur'  },
 }
-const PRIO_STYLES = {
-  basse:   { label: 'Basse',   className: 'prio-basse' },
-  normale: { label: 'Normale', className: 'prio-normale' },
-  haute:   { label: 'Haute',   className: 'prio-haute' },
-  urgente: { label: 'Urgente', className: 'prio-urgente' },
+const PRIO_META = {
+  basse:   { label: 'Basse',   cls: 'detiv-chip--prio-basse'   },
+  normale: { label: 'Normale', cls: 'detiv-chip--prio-normale' },
+  haute:   { label: 'Haute',   cls: 'detiv-chip--prio-haute'   },
+  urgente: { label: 'Urgente', cls: 'detiv-chip--prio-urgente' },
 }
 
-function formatDate(d) {
+function fmtDate(d) {
   if (!d) return '—'
   return new Date(d).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
-function formatDateTime(d) {
+function fmtDateTime(d) {
   if (!d) return '—'
   return new Date(d).toLocaleString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-// Les photos sont servies par Express via /storage (pas via /api/v1)
 const STORAGE_URL = 'http://localhost:5000/storage'
-
 function getPhotoUrl(chemin) {
   if (!chemin) return ''
-  // Normalise les backslashes Windows et extrait le chemin relatif depuis storage/
   const normalise = chemin.replace(/\\/g, '/')
   const idx = normalise.indexOf('storage/')
-  if (idx !== -1) {
-    return `http://localhost:5000/${normalise.slice(idx)}`
-  }
+  if (idx !== -1) return `http://localhost:5000/${normalise.slice(idx)}`
   return `${STORAGE_URL}/${normalise}`
+}
+
+function initials(prenom, nom) {
+  return `${prenom?.[0] ?? ''}${nom?.[0] ?? ''}`.toUpperCase() || '?'
 }
 
 function CommentaireForm({ interventionId, onAjout }) {
@@ -69,7 +68,7 @@ function CommentaireForm({ interventionId, onAjout }) {
   }
 
   return (
-    <div className="comment-form">
+    <div className="detiv-comment-form">
       <textarea
         placeholder="Ajouter un commentaire..."
         value={contenu}
@@ -99,13 +98,11 @@ export default function DetailIntervention() {
   const [errModal,       setErrModal]       = useState('')
   const [submitting,     setSubmitting]     = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(null)
-  const [photoZoom,      setPhotoZoom]      = useState(null) // URL photo à zoomer
+  const [photoZoom,      setPhotoZoom]      = useState(null)
 
   const [assignForm,   setAssignForm]   = useState({ technicien_id: '' })
   const [cloturerForm, setCloturerForm] = useState({ commentaire_cloture: '', duree_reelle_minutes: '' })
   const [rouvrirForm,  setRouvrirForm]  = useState({ motif: '' })
-
-  
 
   const chargerOT = async () => {
     setLoading(true); setErreur('')
@@ -126,13 +123,13 @@ export default function DetailIntervention() {
       setTechniciens(Array.isArray(res) ? res : (res?.data ?? []))
     } catch { /* non bloquant */ }
   }
-  useEffect(() => {
-      chargerOT()
-      if (isAdmin) chargerTechniciens()
-  }, [id])
-  const fermerModal = () => { setModal(null); setErrModal(''); setSubmitting(false) }
 
-  // ── Actions ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    chargerOT()
+    if (isAdmin) chargerTechniciens()
+  }, [id])
+
+  const fermerModal = () => { setModal(null); setErrModal(''); setSubmitting(false) }
 
   const handleAssigner = async () => {
     if (!assignForm.technicien_id) { setErrModal('Sélectionnez un technicien.'); return }
@@ -142,7 +139,8 @@ export default function DetailIntervention() {
       const tech = techniciens.find(t => t.id === assignForm.technicien_id)
       setOt(prev => ({
         ...prev, ...(res?.data ?? res),
-        technicien_nom: tech ? `${tech.prenom} ${tech.nom}` : prev.technicien_nom,
+        technicien_nom:    tech ? tech.nom    : prev.technicien_nom,
+        technicien_prenom: tech ? tech.prenom : prev.technicien_prenom,
         technicien_id: assignForm.technicien_id
       }))
       fermerModal(); setAssignForm({ technicien_id: '' })
@@ -167,7 +165,6 @@ export default function DetailIntervention() {
     if (!cloturerForm.duree_reelle_minutes || parseInt(cloturerForm.duree_reelle_minutes) <= 0) {
       setErrModal('La durée doit être un entier supérieur à 0.'); return
     }
-    // Avertissement si aucune photo uploadée (non bloquant selon roadmap)
     const photos = ot.photos ?? []
     if (photos.length === 0) {
       const ok = window.confirm('Aucune photo n\'a été uploadée. Voulez-vous quand même clôturer ?')
@@ -176,13 +173,12 @@ export default function DetailIntervention() {
     setSubmitting(true)
     try {
       const res = await cloturer(id, {
-        commentaire_cloture: cloturerForm.commentaire_cloture,
+        commentaire_cloture:  cloturerForm.commentaire_cloture,
         duree_reelle_minutes: parseInt(cloturerForm.duree_reelle_minutes),
         resolu: true
       })
       setOt(prev => ({ ...prev, ...(res?.data ?? res) }))
       fermerModal(); setCloturerForm({ commentaire_cloture: '', duree_reelle_minutes: '' })
-      // Recharger pour avoir rapport_pdf_chemin à jour
       await chargerOT()
     } catch (err) {
       setErrModal(err.response?.data?.message || 'Erreur lors de la clôture.')
@@ -220,8 +216,7 @@ export default function DetailIntervention() {
     setUploadingPhoto(type_photo)
     try {
       const res = await uploadPhoto(id, file, type_photo)
-      const nouvPhotos = res?.data ?? []
-      setOt(prev => ({ ...prev, photos: nouvPhotos }))
+      setOt(prev => ({ ...prev, photos: res?.data ?? [] }))
     } catch (err) {
       window.alert(err.response?.data?.message || 'Erreur lors de l\'upload.')
     } finally {
@@ -243,27 +238,29 @@ export default function DetailIntervention() {
     }
   }
 
-  // ── Chargement ────────────────────────────────────────────────────────────
-
+  /* ── États de chargement ─────────────────────────────────────────────── */
   if (loading) return (
-    <div className="detail-intervention">
-      <div className="detail-empty"><p>Chargement de l'intervention...</p></div>
-    </div>
-  )
-
-  if (erreur || !ot) return (
-    <div className="detail-intervention">
-      <div className="detail-empty">
-        <i className="ti ti-alert-circle" />
-        <p>{erreur || 'Intervention introuvable.'}</p>
-        <button className="btn-outline" onClick={() => navigate('/interventions')}>Retour</button>
+    <div className="detiv-empty-state">
+      <div className="detiv-empty-inner">
+        <i className="ti ti-loader-2 spin" style={{ fontSize: 32, color: 'var(--brand)' }} />
+        <p>Chargement de l'intervention...</p>
       </div>
     </div>
   )
 
-  const statutInfo           = STATUT_STYLES[ot.statut]  || STATUT_STYLES.planifiee
-  const typeInfo             = TYPE_STYLES[ot.type]       || TYPE_STYLES.preventif
-  const prioInfo             = PRIO_STYLES[ot.priorite]   || PRIO_STYLES.normale
+  if (erreur || !ot) return (
+    <div className="detiv-empty-state">
+      <div className="detiv-empty-inner">
+        <i className="ti ti-alert-circle" style={{ fontSize: 40, color: '#ef4444' }} />
+        <p>{erreur || 'Intervention introuvable.'}</p>
+        <button className="btn-outline" onClick={() => navigate('/interventions')}>Retour à la liste</button>
+      </div>
+    </div>
+  )
+
+  const statutMeta          = STATUT_META[ot.statut]  || STATUT_META.planifiee
+  const typeMeta            = TYPE_META[ot.type]       || TYPE_META.preventif
+  const prioMeta            = PRIO_META[ot.priorite]   || PRIO_META.normale
   const isTechAssigne        = isTech && ot.technicien_id === user.id
   const isAdminOrTechAssigne = isAdmin || isTechAssigne
   const peutUploaderPhoto    = isAdminOrTechAssigne && ['assignee', 'en_cours'].includes(ot.statut)
@@ -272,319 +269,404 @@ export default function DetailIntervention() {
   const photosApres          = (ot.photos ?? []).filter(p => p.type_photo === 'apres')
 
   return (
-    <div className="detail-intervention">
+    <div className="detiv">
 
-      {/* Header */}
-      <div className="detail-header">
-        <button className="btn-back" onClick={() => navigate(-1)}>
-          <i className="ti ti-arrow-left" /> Retour
-        </button>
-        <div className="detail-header-title">
-          <h1>{ot.titre}</h1>
-          <div className="detail-header-badges">
-            <span className={`type-badge ${typeInfo.className}`}>{typeInfo.label}</span>
-            <span className={`ot-status-badge ${statutInfo.className}`}>{statutInfo.label}</span>
-            <span className={`prio-badge ${prioInfo.className}`}>{prioInfo.label}</span>
-          </div>
-        </div>
-      </div>
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      <div className="detiv-hero" style={{ background: statutMeta.bg }}>
 
-      {/* Actions machine à états */}
-      {ot.statut !== 'annulee' && (
-        <div className="detail-actions">
-          {isAdmin && ot.statut === 'planifiee' && (
-            <button className="btn-primary" onClick={() => setModal('assigner')}>
-              <i className="ti ti-user-plus" /> Assigner
-            </button>
-          )}
-          {isAdminOrTechAssigne && ot.statut === 'assignee' && (
-            <button className="btn-action-start" onClick={handleDemarrer}>
-              <i className="ti ti-player-play" /> Démarrer
-            </button>
-          )}
-          {isAdminOrTechAssigne && ot.statut === 'en_cours' && (
-            <button className="btn-action-close" onClick={() => setModal('cloturer')}>
-              <i className="ti ti-circle-check" /> Clôturer
-            </button>
-          )}
-          {isAdmin && ot.statut === 'terminee' && (
-            <button className="btn-action-reopen" onClick={() => setModal('rouvrir')}>
-              <i className="ti ti-rotate" /> Rouvrir
-            </button>
-          )}
-          {isAdmin && ['planifiee', 'assignee'].includes(ot.statut) && (
-            <button className="btn-action-cancel" onClick={() => setModal('annuler')}>
-              <i className="ti ti-ban" /> Annuler
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Grille infos */}
-      <div className="detail-grid">
-        <div className="detail-card">
-          <h2>Détails de l'intervention</h2>
-          <div className="detail-rows">
-            <div className="detail-row"><span>Type</span><strong>{typeInfo.label}</strong></div>
-            <div className="detail-row"><span>Priorité</span><strong>{prioInfo.label}</strong></div>
-            <div className="detail-row">
-              <span>Statut</span>
-              <strong><span className={`ot-status-badge ${statutInfo.className}`}>{statutInfo.label}</span></strong>
-            </div>
-            <div className="detail-row"><span>Date planifiée</span><strong>{formatDate(ot.date_planifiee)}</strong></div>
-            <div className="detail-row"><span>Début réel</span><strong>{formatDateTime(ot.date_debut_reelle)}</strong></div>
-            <div className="detail-row"><span>Fin réelle</span><strong>{formatDateTime(ot.date_fin_reelle)}</strong></div>
-            {ot.duree_reelle_minutes && (
-              <div className="detail-row"><span>Durée réelle</span><strong>{ot.duree_reelle_minutes} min</strong></div>
-            )}
-            <div className="detail-row">
-              <span>Technicien</span>
-              <strong>
-                {ot.technicien_nom
-                  ? `${ot.technicien_prenom ?? ''} ${ot.technicien_nom}`.trim()
-                  : <span style={{ color: '#94a3b8' }}>Non assigné</span>
-                }
-              </strong>
-            </div>
-          </div>
-          {ot.commentaire_cloture && (
-            <div className="detail-cloture-comment">
-              <p className="detail-cloture-label">Commentaire de clôture</p>
-              <p>{ot.commentaire_cloture}</p>
-            </div>
-          )}
-          {ot.description && (
-            <div className="detail-description">
-              <p className="detail-description-label">Description</p>
-              <p>{ot.description}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="detail-card">
-          <h2>Équipement & Bâtiment</h2>
-          <div className="detail-rows">
-            <div className="detail-row"><span>Équipement</span><strong>{ot.equipement_nom ?? '—'}</strong></div>
-            <div className="detail-row"><span>Référence</span><strong>{ot.equipement_reference ?? '—'}</strong></div>
-            <div className="detail-row"><span>Bâtiment</span><strong>{ot.batiment_nom ?? '—'}</strong></div>
-          </div>
-        </div>
-      </div>
-
-  
-      {/* Rapport PDF — 3 états distincts selon statut + présence du rapport */}
-      <div className="detail-card">
-        <h2>Rapport d'intervention</h2>
-
-        {ot.statut === 'terminee' && ot.rapport_url ? (
-          // Cas 1 : OT clôturé ET rapport PDF généré → bouton de téléchargement
-          <button
-            className="btn-primary rapport-btn"
-            onClick={async () => {
-              try {
-                const token = localStorage.getItem('echomaint_token')
-                const res = await fetch(
-                  `http://localhost:5000${ot.rapport_url}`,
-                  { headers: { Authorization: `Bearer ${token}` } }
-                )
-                if (!res.ok) {
-                  const err = await res.json().catch(() => ({}))
-                  window.alert(err.message || 'Rapport non disponible.')
-                  return
-                }
-                const blob = await res.blob()
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = `rapport_intervention_${id}.pdf`
-                a.click()
-                URL.revokeObjectURL(url)
-              } catch {
-                window.alert('Erreur lors du téléchargement du rapport.')
-              }
-            }}
-          >
-            <i className="ti ti-file-type-pdf" /> Télécharger le rapport PDF
+        <div className="detiv-hero-top">
+          <button className="detiv-back-btn" onClick={() => navigate(-1)}>
+            <i className="ti ti-arrow-left" /> Retour
           </button>
+          <span className="detiv-ot-id">OT-{String(ot.id).padStart(4, '0')}</span>
+        </div>
 
-        ) : ot.statut === 'en_cours' && !ot.rapport_url ? (
-          // Cas 2 : OT rouvert (rapport_url = null et statut revenu en_cours) → rapport invalidé
-          <p className="rapport-unavailable rapport-invalide">
-            <i className="ti ti-refresh-alert" /> Rapport invalidé — nouvelle clôture requise
-          </p>
+        <div className="detiv-hero-content">
+          <div className={`detiv-type-icon ${ot.type === 'curatif' ? 'detiv-type-icon--cur' : ''}`}>
+            <i className={`ti ${typeMeta.icon}`} />
+          </div>
+          <div className="detiv-hero-text">
+            <h1 className="detiv-hero-title">{ot.titre}</h1>
+            <div className="detiv-hero-chips">
+              <span className="detiv-chip detiv-chip--statut">{statutMeta.label}</span>
+              <span className={`detiv-chip ${prioMeta.cls}`}>{prioMeta.label}</span>
+              <span className={`detiv-chip ${typeMeta.cls}`}>{typeMeta.label}</span>
+            </div>
+            {ot.description && (
+              <p className="detiv-hero-desc">{ot.description}</p>
+            )}
+          </div>
+        </div>
 
-        ) : ot.statut === 'terminee' ? (
-          // Cas 3 : OT clôturé mais PDF non généré (erreur serveur ou rapport absent)
-          <p className="rapport-unavailable">
-            <i className="ti ti-file-off" /> Rapport non disponible — veuillez contacter l&apos;administrateur.
-          </p>
-
-        ) : (
-          // Cas 4 : OT pas encore clôturé (planifiee / assignee / en_cours première fois)
-          <p className="rapport-unavailable">
-            <i className="ti ti-clock" /> Le rapport sera disponible après la clôture de l&apos;intervention.
-          </p>
+        {ot.statut !== 'annulee' && (
+          <div className="detiv-hero-actions">
+            {isAdmin && ot.statut === 'planifiee' && (
+              <button className="detiv-action-btn detiv-action-btn--blue" onClick={() => setModal('assigner')}>
+                <i className="ti ti-user-plus" /> Assigner
+              </button>
+            )}
+            {isAdminOrTechAssigne && ot.statut === 'assignee' && (
+              <button className="detiv-action-btn detiv-action-btn--violet" onClick={handleDemarrer}>
+                <i className="ti ti-player-play" /> Démarrer
+              </button>
+            )}
+            {isAdminOrTechAssigne && ot.statut === 'en_cours' && (
+              <button className="detiv-action-btn detiv-action-btn--green" onClick={() => setModal('cloturer')}>
+                <i className="ti ti-circle-check" /> Clôturer
+              </button>
+            )}
+            {isAdmin && ot.statut === 'terminee' && (
+              <button className="detiv-action-btn detiv-action-btn--amber" onClick={() => setModal('rouvrir')}>
+                <i className="ti ti-rotate" /> Rouvrir
+              </button>
+            )}
+            {isAdmin && ['planifiee', 'assignee'].includes(ot.statut) && (
+              <button className="detiv-action-btn detiv-action-btn--ghost" onClick={() => setModal('annuler')}>
+                <i className="ti ti-ban" /> Annuler
+              </button>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Photos */}
-      <div className="detail-card">
-        <h2>Photos d'intervention</h2>
-        <div className="photos-grid-section">
+      {/* ── BODY ─────────────────────────────────────────────────────────── */}
+      <div className="detiv-body">
 
-          {/* Avant */}
-          <div>
-            <p className="photos-section-label">
-              <i className="ti ti-camera" style={{ marginRight: 4 }} />
-              Avant ({photosAvant.length})
-            </p>
-            {photosAvant.length === 0
-              ? <p className="photos-empty">Aucune photo avant</p>
-              : (
-                <div className="photos-grid">
-                  {photosAvant.map(p => (
-                    <div key={p.id} className="photo-thumb">
-                      <img
-                        src={getPhotoUrl(p.chemin_fichier)}
-                        alt="avant"
-                        onClick={() => setPhotoZoom(getPhotoUrl(p.chemin_fichier))}
-                        style={{ cursor: 'zoom-in' }}
-                        onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
-                      />
-                      {peutSupprimerPhoto && (
-                        <button
-                          className="photo-delete-btn"
-                          onClick={() => handleSupprimerPhoto(p.id)}
-                          title="Supprimer"
-                        >
-                          <i className="ti ti-x" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+        {/* Grille 2 colonnes : Info + Équipement */}
+        <div className="detiv-grid-2">
+
+          {/* Card : Informations */}
+          <div className="detiv-card">
+            <div className="detiv-card-head">
+              <div className="detiv-card-icon" style={{ background: '#EFF6FF' }}>
+                <i className="ti ti-info-circle" style={{ color: '#2563EB' }} />
+              </div>
+              <h2 className="detiv-card-title">Informations</h2>
+            </div>
+
+            {/* Technicien */}
+            <div className="detiv-tech-card">
+              <div className="detiv-tech-avatar">
+                {ot.technicien_nom
+                  ? initials(ot.technicien_prenom, ot.technicien_nom)
+                  : <i className="ti ti-user-off" />
+                }
+              </div>
+              <div className="detiv-tech-info">
+                <p className="detiv-tech-name">
+                  {ot.technicien_nom
+                    ? `${ot.technicien_prenom ?? ''} ${ot.technicien_nom}`.trim()
+                    : 'Non assigné'
+                  }
+                </p>
+                <p className="detiv-tech-role">Technicien assigné</p>
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="detiv-dates-grid">
+              <div className="detiv-date-item">
+                <span className="detiv-date-label"><i className="ti ti-calendar" /> Planifiée</span>
+                <span className="detiv-date-val">{fmtDate(ot.date_planifiee)}</span>
+              </div>
+              <div className="detiv-date-item" data-done={!!ot.date_debut_reelle || undefined}>
+                <span className="detiv-date-label"><i className="ti ti-player-play" /> Démarrée</span>
+                <span className="detiv-date-val">{fmtDateTime(ot.date_debut_reelle)}</span>
+              </div>
+              <div className="detiv-date-item" data-done={!!ot.date_fin_reelle || undefined}>
+                <span className="detiv-date-label"><i className="ti ti-circle-check" /> Clôturée</span>
+                <span className="detiv-date-val">{fmtDateTime(ot.date_fin_reelle)}</span>
+              </div>
+              {ot.duree_reelle_minutes && (
+                <div className="detiv-date-item detiv-date-item--accent">
+                  <span className="detiv-date-label"><i className="ti ti-clock" /> Durée réelle</span>
+                  <span className="detiv-date-val">{ot.duree_reelle_minutes} min</span>
                 </div>
-              )
-            }
-            {peutUploaderPhoto && (
-              <label className="btn-upload-photo">
-                <i className="ti ti-upload" />
-                {uploadingPhoto === 'avant' ? 'Upload en cours...' : 'Ajouter une photo avant'}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  style={{ display: 'none' }}
-                  onChange={e => handleUploadPhoto(e, 'avant')}
-                  disabled={uploadingPhoto !== null}
-                />
-              </label>
+              )}
+            </div>
+
+            {ot.commentaire_cloture && (
+              <div className="detiv-cloture-box">
+                <p className="detiv-cloture-label">
+                  <i className="ti ti-clipboard-check" /> Commentaire de clôture
+                </p>
+                <p className="detiv-cloture-text">{ot.commentaire_cloture}</p>
+              </div>
             )}
           </div>
 
-          {/* Après */}
-          <div>
-            <p className="photos-section-label">
-              <i className="ti ti-camera-check" style={{ marginRight: 4 }} />
-              Après ({photosApres.length})
-            </p>
-            {photosApres.length === 0
-              ? <p className="photos-empty">Aucune photo après</p>
-              : (
-                <div className="photos-grid">
-                  {photosApres.map(p => (
-                    <div key={p.id} className="photo-thumb">
-                      <img
-                        src={getPhotoUrl(p.chemin_fichier)}
-                        alt="après"
-                        onClick={() => setPhotoZoom(getPhotoUrl(p.chemin_fichier))}
-                        style={{ cursor: 'zoom-in' }}
-                        onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
-                      />
-                      {peutSupprimerPhoto && (
-                        <button
-                          className="photo-delete-btn"
-                          onClick={() => handleSupprimerPhoto(p.id)}
-                          title="Supprimer"
-                        >
-                          <i className="ti ti-x" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )
-            }
-            {peutUploaderPhoto && (
-              <label className="btn-upload-photo">
-                <i className="ti ti-upload" />
-                {uploadingPhoto === 'apres' ? 'Upload en cours...' : 'Ajouter une photo après'}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  style={{ display: 'none' }}
-                  onChange={e => handleUploadPhoto(e, 'apres')}
-                  disabled={uploadingPhoto !== null}
-                />
-              </label>
+          {/* Card : Équipement & Bâtiment */}
+          <div className="detiv-card">
+            <div className="detiv-card-head">
+              <div className="detiv-card-icon" style={{ background: '#F0FDF4' }}>
+                <i className="ti ti-cpu" style={{ color: '#059669' }} />
+              </div>
+              <h2 className="detiv-card-title">Équipement & Bâtiment</h2>
+            </div>
+
+            <div className="detiv-equip-hero">
+              <div className="detiv-equip-icon">
+                <i className="ti ti-settings" />
+              </div>
+              <div>
+                <p className="detiv-equip-name">{ot.equipement_nom || '—'}</p>
+                {ot.equipement_reference && (
+                  <p className="detiv-equip-ref">Réf. {ot.equipement_reference}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="detiv-meta-row">
+              <div className="detiv-meta-icon">
+                <i className="ti ti-building" />
+              </div>
+              <div>
+                <p className="detiv-meta-label">Bâtiment</p>
+                <p className="detiv-meta-val">{ot.batiment_nom || '—'}</p>
+              </div>
+            </div>
+
+            {ot.description && (
+              <div className="detiv-desc-box">
+                <p className="detiv-desc-label">Description</p>
+                <p className="detiv-desc-text">{ot.description}</p>
+              </div>
             )}
           </div>
-
         </div>
-      </div>
 
-      {/* Commentaires */}
-      <div className="detail-card">
-        <h2>Commentaires</h2>
-        {(ot.commentaires ?? []).length === 0
-          ? <p className="detail-empty-text">Aucun commentaire.</p>
-          : (
-            <div className="comments-list">
-              {ot.commentaires.map(c => (
-                <div key={c.id} className="comment-item">
-                  <div className="comment-header">
-                    <strong>{c.prenom ? `${c.prenom} ${c.nom}` : (c.user?.nom ?? '—')}</strong>
-                    <span>{formatDateTime(c.created_at)}</span>
+        {/* Card : Rapport PDF */}
+        <div className="detiv-card">
+          <div className="detiv-card-head">
+            <div className="detiv-card-icon" style={{ background: '#FEF2F2' }}>
+              <i className="ti ti-file-type-pdf" style={{ color: '#EF4444' }} />
+            </div>
+            <h2 className="detiv-card-title">Rapport d'intervention</h2>
+          </div>
+
+          {ot.statut === 'terminee' && ot.rapport_url ? (
+            <button
+              className="detiv-rapport-btn"
+              onClick={async () => {
+                try {
+                  const token = localStorage.getItem('echomaint_token')
+                  const res = await fetch(
+                    `http://localhost:5000${ot.rapport_url}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                  )
+                  if (!res.ok) {
+                    const err = await res.json().catch(() => ({}))
+                    window.alert(err.message || 'Rapport non disponible.')
+                    return
+                  }
+                  const blob = await res.blob()
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `rapport_intervention_${id}.pdf`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                } catch {
+                  window.alert('Erreur lors du téléchargement du rapport.')
+                }
+              }}
+            >
+              <i className="ti ti-download" /> Télécharger le rapport PDF
+            </button>
+          ) : ot.statut === 'en_cours' && !ot.rapport_url ? (
+            <div className="detiv-info-msg detiv-info-msg--warning">
+              <i className="ti ti-refresh-alert" />
+              <span>Rapport invalidé — nouvelle clôture requise</span>
+            </div>
+          ) : ot.statut === 'terminee' ? (
+            <div className="detiv-info-msg detiv-info-msg--error">
+              <i className="ti ti-file-off" />
+              <span>Rapport non disponible — veuillez contacter l'administrateur.</span>
+            </div>
+          ) : (
+            <div className="detiv-info-msg">
+              <i className="ti ti-clock" />
+              <span>Le rapport sera disponible après la clôture de l'intervention.</span>
+            </div>
+          )}
+        </div>
+
+        {/* Card : Photos */}
+        <div className="detiv-card">
+          <div className="detiv-card-head">
+            <div className="detiv-card-icon" style={{ background: '#F5F3FF' }}>
+              <i className="ti ti-camera" style={{ color: '#8B5CF6' }} />
+            </div>
+            <h2 className="detiv-card-title">Photos d'intervention</h2>
+          </div>
+
+          <div className="detiv-photos-cols">
+            {/* Avant */}
+            <div className="detiv-photos-section">
+              <p className="detiv-photos-label">
+                <i className="ti ti-camera" />
+                Avant
+                <span className="detiv-photos-count">{photosAvant.length}</span>
+              </p>
+              {photosAvant.length === 0
+                ? <p className="detiv-photos-empty">Aucune photo avant</p>
+                : (
+                  <div className="detiv-photos-grid">
+                    {photosAvant.map(p => (
+                      <div key={p.id} className="detiv-photo-thumb">
+                        <img
+                          src={getPhotoUrl(p.chemin_fichier)}
+                          alt="avant"
+                          onClick={() => setPhotoZoom(getPhotoUrl(p.chemin_fichier))}
+                          onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
+                        />
+                        {peutSupprimerPhoto && (
+                          <button className="detiv-photo-del" onClick={() => handleSupprimerPhoto(p.id)} title="Supprimer">
+                            <i className="ti ti-x" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <p>{c.contenu}</p>
+                )
+              }
+              {peutUploaderPhoto && (
+                <label className="detiv-upload-btn">
+                  <i className="ti ti-upload" />
+                  {uploadingPhoto === 'avant' ? 'Upload en cours...' : 'Ajouter une photo avant'}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    style={{ display: 'none' }}
+                    onChange={e => handleUploadPhoto(e, 'avant')}
+                    disabled={uploadingPhoto !== null}
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* Après */}
+            <div className="detiv-photos-section">
+              <p className="detiv-photos-label">
+                <i className="ti ti-camera-check" />
+                Après
+                <span className="detiv-photos-count">{photosApres.length}</span>
+              </p>
+              {photosApres.length === 0
+                ? <p className="detiv-photos-empty">Aucune photo après</p>
+                : (
+                  <div className="detiv-photos-grid">
+                    {photosApres.map(p => (
+                      <div key={p.id} className="detiv-photo-thumb">
+                        <img
+                          src={getPhotoUrl(p.chemin_fichier)}
+                          alt="après"
+                          onClick={() => setPhotoZoom(getPhotoUrl(p.chemin_fichier))}
+                          onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
+                        />
+                        {peutSupprimerPhoto && (
+                          <button className="detiv-photo-del" onClick={() => handleSupprimerPhoto(p.id)} title="Supprimer">
+                            <i className="ti ti-x" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )
+              }
+              {peutUploaderPhoto && (
+                <label className="detiv-upload-btn">
+                  <i className="ti ti-upload" />
+                  {uploadingPhoto === 'apres' ? 'Upload en cours...' : 'Ajouter une photo après'}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    style={{ display: 'none' }}
+                    onChange={e => handleUploadPhoto(e, 'apres')}
+                    disabled={uploadingPhoto !== null}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Card : Commentaires */}
+        <div className="detiv-card">
+          <div className="detiv-card-head">
+            <div className="detiv-card-icon" style={{ background: '#F0FDF4' }}>
+              <i className="ti ti-message-circle" style={{ color: '#059669' }} />
+            </div>
+            <h2 className="detiv-card-title">
+              Commentaires
+              {(ot.commentaires ?? []).length > 0 && (
+                <span className="detiv-count-chip">{ot.commentaires.length}</span>
+              )}
+            </h2>
+          </div>
+
+          {(ot.commentaires ?? []).length === 0
+            ? <p className="detiv-empty-text">Aucun commentaire pour cette intervention.</p>
+            : (
+              <div className="detiv-comments-list">
+                {ot.commentaires.map(c => (
+                  <div key={c.id} className="detiv-comment">
+                    <div className="detiv-comment-avatar">
+                      {`${c.prenom?.[0] ?? ''}${c.nom?.[0] ?? c.user?.nom?.[0] ?? '?'}`.toUpperCase()}
+                    </div>
+                    <div className="detiv-comment-body">
+                      <div className="detiv-comment-header">
+                        <strong>{c.prenom ? `${c.prenom} ${c.nom}` : (c.user?.nom ?? '—')}</strong>
+                        <span>{fmtDateTime(c.created_at)}</span>
+                      </div>
+                      <p className="detiv-comment-text">{c.contenu}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          }
+
+          {ot.statut !== 'annulee' && (
+            <CommentaireForm
+              interventionId={id}
+              onAjout={nouveauxCommentaires => setOt(prev => ({ ...prev, commentaires: nouveauxCommentaires }))}
+            />
+          )}
+        </div>
+
+        {/* Card : Réouvertures */}
+        {(ot.reouvertures ?? []).length > 0 && (
+          <div className="detiv-card">
+            <div className="detiv-card-head">
+              <div className="detiv-card-icon" style={{ background: '#FFFBEB' }}>
+                <i className="ti ti-refresh-alert" style={{ color: '#D97706' }} />
+              </div>
+              <h2 className="detiv-card-title">
+                Historique des réouvertures
+                <span className="detiv-count-chip detiv-count-chip--warn">{ot.reouvertures.length}</span>
+              </h2>
+            </div>
+            <div className="detiv-reouv-list">
+              {ot.reouvertures.map(r => (
+                <div key={r.id} className="detiv-reouv-item">
+                  <div className="detiv-reouv-header">
+                    <strong>{r.user?.nom ?? r.auteur ?? '—'}</strong>
+                    <span>{fmtDateTime(r.created_at)}</span>
+                  </div>
+                  <p className="detiv-reouv-motif">{r.motif}</p>
+                  <span className="detiv-reouv-statut">Statut précédent : {r.statut_precedent}</span>
                 </div>
               ))}
             </div>
-          )
-        }
-
-        {/* Formulaire ajout commentaire */}
-        {ot.statut !== 'annulee' && (
-          <CommentaireForm interventionId={id} onAjout={(nouveauxCommentaires) =>
-            setOt(prev => ({ ...prev, commentaires: nouveauxCommentaires }))
-          } />
+          </div>
         )}
+
       </div>
 
-      {/* Réouvertures */}
-      {(ot.reouvertures ?? []).length > 0 && (
-        <div className="detail-card">
-          <h2>Historique des réouvertures</h2>
-          <div className="reouvertures-list">
-            {ot.reouvertures.map(r => (
-              <div key={r.id} className="reouverture-item">
-                <div className="reouverture-header">
-                  <strong>{r.user?.nom ?? r.auteur ?? '—'}</strong>
-                  <span>{formatDateTime(r.created_at)}</span>
-                </div>
-                <p className="reouverture-motif">{r.motif}</p>
-                <span className="reouverture-statut">Statut précédent : {r.statut_precedent}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Zoom photo ────────────────────────────────────────────────────── */}
+      {/* ── Zoom photo ─────────────────────────────────────────────────────── */}
       {photoZoom && (
-        <div
-          className="modal-overlay"
-          onClick={() => setPhotoZoom(null)}
-          style={{ zIndex: 200 }}
-        >
+        <div className="modal-overlay" onClick={() => setPhotoZoom(null)} style={{ zIndex: 900 }}>
           <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
             <img
               src={photoZoom}
@@ -607,7 +689,7 @@ export default function DetailIntervention() {
         </div>
       )}
 
-      {/* ── Modals ────────────────────────────────────────────────────────── */}
+      {/* ── Modals ─────────────────────────────────────────────────────────── */}
       {modal && (
         <div className="modal-overlay" onClick={fermerModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -622,10 +704,7 @@ export default function DetailIntervention() {
                 <div className="modal-form">
                   <div className="form-group">
                     <label>Technicien</label>
-                    <select
-                      value={assignForm.technicien_id}
-                      onChange={e => setAssignForm({ technicien_id: e.target.value })}
-                    >
+                    <select value={assignForm.technicien_id} onChange={e => setAssignForm({ technicien_id: e.target.value })}>
                       <option value="">Sélectionner un technicien</option>
                       {techniciens.map(t => (
                         <option key={t.id} value={t.id}>{t.prenom} {t.nom}</option>
@@ -651,7 +730,6 @@ export default function DetailIntervention() {
                   <button onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-form">
-                  {/* Résumé photos */}
                   <div style={{
                     background: (ot.photos ?? []).length === 0 ? '#FFF7ED' : '#F0FDF4',
                     border: `1px solid ${(ot.photos ?? []).length === 0 ? '#FDE68A' : '#BBF7D0'}`,
@@ -667,9 +745,8 @@ export default function DetailIntervention() {
                       }
                     </span>
                   </div>
-
                   <div className="form-group">
-                    <label>Commentaire de clôture <span className="required">*</span></label>
+                    <label>Commentaire de clôture <span style={{ color: '#b91c1c' }}>*</span></label>
                     <textarea
                       placeholder="Décrivez les travaux effectués (min. 10 caractères)..."
                       value={cloturerForm.commentaire_cloture}
@@ -680,16 +757,14 @@ export default function DetailIntervention() {
                       {cloturerForm.commentaire_cloture.length} / 10 min
                     </span>
                   </div>
-
                   <div className="form-group">
-                    <label>Durée réelle (minutes) <span className="required">*</span></label>
+                    <label>Durée réelle (minutes) <span style={{ color: '#b91c1c' }}>*</span></label>
                     <input
                       type="number" min={1} placeholder="Ex: 90"
                       value={cloturerForm.duree_reelle_minutes}
                       onChange={e => setCloturerForm(f => ({ ...f, duree_reelle_minutes: e.target.value }))}
                     />
                   </div>
-
                   {errModal && <p style={{ color: '#ef4444', fontSize: '13px' }}>{errModal}</p>}
                   <div className="modal-footer">
                     <button className="btn-cancel" onClick={fermerModal}>Annuler</button>
@@ -714,7 +789,7 @@ export default function DetailIntervention() {
                     <p>La réouverture invalidera le rapport PDF et repassera l'intervention en "En cours".</p>
                   </div>
                   <div className="form-group">
-                    <label>Motif de réouverture <span className="required">*</span> (min. 20 caractères)</label>
+                    <label>Motif de réouverture <span style={{ color: '#b91c1c' }}>*</span> (min. 20 caractères)</label>
                     <textarea
                       placeholder="Décrivez la raison de la réouverture..."
                       value={rouvrirForm.motif}
@@ -744,7 +819,7 @@ export default function DetailIntervention() {
                   <button onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-form">
-                  <p className="annuler-warning">
+                  <p style={{ fontSize: 14, color: 'var(--text-primary)', margin: 0, lineHeight: 1.5 }}>
                     Êtes-vous sûr de vouloir annuler <strong>"{ot.titre}"</strong> ? Cette action est irréversible.
                   </p>
                   <div className="modal-footer">

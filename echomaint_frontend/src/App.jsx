@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
 import Dashboard from './pages/Dashboard'
 import Batiments from './pages/Batiments'
 import Equipements from './pages/Equipements'
@@ -19,8 +20,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Route publique */}
+        {/* Routes publiques */}
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Routes protégées */}
         <Route element={<PrivateRoute />}>

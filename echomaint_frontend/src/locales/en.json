@@ -67,7 +67,16 @@
       "admin": "Administrator",
       "technicien": "Technician",
       "client": "Client"
-    }
+    },
+    "group": {
+      "overview":   "Overview",
+      "operations": "Operations",
+      "patrimoine": "Assets",
+      "pilotage":   "Management"
+    },
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "language": "Language"
   },
   "auth": {
     "welcome": "Welcome!",
@@ -103,15 +112,42 @@
     }
   },
   "layout": {
-    "dashboard":       { "title": "Dashboard",               "subtitle": "Overview of your maintenance operations." },
-    "batiments":       { "title": "Buildings",               "subtitle": "Manage your building portfolio." },
-    "equipements":     { "title": "Equipment",               "subtitle": "Track the status of your equipment." },
-    "interventions":   { "title": "Interventions",           "subtitle": "Manage your work orders." },
-    "planning":        { "title": "Planning",                "subtitle": "View scheduled interventions." },
-    "demandes":        { "title": "Intervention requests",   "subtitle": "Process client reports." },
-    "maintenancePlans":{ "title": "Maintenance plans",       "subtitle": "Configure automated preventive maintenance." },
-    "stats":           { "title": "Statistics & Exports",    "subtitle": "Analyse your maintenance data." },
-    "utilisateurs":    { "title": "Users",                   "subtitle": "Manage accounts and access." }
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Overview of your maintenance operations."
+    },
+    "batiments": {
+      "title": "Buildings",
+      "subtitle": "Manage your building portfolio."
+    },
+    "equipements": {
+      "title": "Equipment",
+      "subtitle": "Track the status of your equipment."
+    },
+    "interventions": {
+      "title": "Interventions",
+      "subtitle": "Manage your work orders."
+    },
+    "planning": {
+      "title": "Planning",
+      "subtitle": "View scheduled interventions."
+    },
+    "demandes": {
+      "title": "Intervention requests",
+      "subtitle": "Process client reports."
+    },
+    "maintenancePlans": {
+      "title": "Maintenance plans",
+      "subtitle": "Configure automated preventive maintenance."
+    },
+    "stats": {
+      "title": "Statistics & Exports",
+      "subtitle": "Analyse your maintenance data."
+    },
+    "utilisateurs": {
+      "title": "Users",
+      "subtitle": "Manage accounts and access."
+    }
   },
   "batiments": {
     "title": "Buildings",
@@ -179,7 +215,8 @@
     "showing": "Showing",
     "of": "of",
     "buildings": "buildings",
-    "equipments": "equipment"
+    "equipments": "equipment",
+    "interventions": "interventions"
   },
   "ficheEquipement": {
     "technicalSpecs": "Technical specifications",
@@ -406,6 +443,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "subtitle": "Overview of your maintenance operations and key indicators.",
     "loading": "Loading…",
     "noData": "No data.",
     "mttr": "MTTR",
@@ -728,12 +766,5 @@
       "tachesRequired": "All tasks must have a label.",
       "periodiciteMin": "Frequency must be ≥ 1 day."
     }
-  },
-  "pagination": {
-    "showing": "Showing",
-    "of": "of",
-    "buildings": "buildings",
-    "equipments": "equipment",
-    "interventions": "interventions"
   }
 }

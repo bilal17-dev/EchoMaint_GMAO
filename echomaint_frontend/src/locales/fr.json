@@ -67,7 +67,16 @@
       "admin": "Administrateur",
       "technicien": "Technicien",
       "client": "Client"
-    }
+    },
+    "group": {
+      "overview":   "Vue générale",
+      "operations": "Opérations",
+      "patrimoine": "Patrimoine",
+      "pilotage":   "Pilotage"
+    },
+    "expand": "Développer",
+    "collapse": "Réduire",
+    "language": "Langue"
   },
   "auth": {
     "welcome": "Bienvenue !",
@@ -103,15 +112,42 @@
     }
   },
   "layout": {
-    "dashboard":       { "title": "Tableau de bord",          "subtitle": "Vue d'ensemble de vos opérations de maintenance." },
-    "batiments":       { "title": "Bâtiments",                "subtitle": "Gérez votre référentiel immobilier." },
-    "equipements":     { "title": "Équipements",              "subtitle": "Suivez l'état de votre parc machines." },
-    "interventions":   { "title": "Interventions",            "subtitle": "Pilotez vos ordres de travail." },
-    "planning":        { "title": "Planning",                 "subtitle": "Visualisez les interventions planifiées." },
-    "demandes":        { "title": "Demandes d'intervention",  "subtitle": "Traitez les signalements clients." },
-    "maintenancePlans":{ "title": "Plans de maintenance",     "subtitle": "Configurez la maintenance préventive automatique." },
-    "stats":           { "title": "Statistiques & Exports",   "subtitle": "Analysez vos données de maintenance." },
-    "utilisateurs":    { "title": "Utilisateurs",             "subtitle": "Gérez les comptes et les accès." }
+    "dashboard": {
+      "title": "Tableau de bord",
+      "subtitle": "Vue d'ensemble de vos opérations de maintenance."
+    },
+    "batiments": {
+      "title": "Bâtiments",
+      "subtitle": "Gérez votre référentiel immobilier."
+    },
+    "equipements": {
+      "title": "Équipements",
+      "subtitle": "Suivez l'état de votre parc machines."
+    },
+    "interventions": {
+      "title": "Interventions",
+      "subtitle": "Pilotez vos ordres de travail."
+    },
+    "planning": {
+      "title": "Planning",
+      "subtitle": "Visualisez les interventions planifiées."
+    },
+    "demandes": {
+      "title": "Demandes d'intervention",
+      "subtitle": "Traitez les signalements clients."
+    },
+    "maintenancePlans": {
+      "title": "Plans de maintenance",
+      "subtitle": "Configurez la maintenance préventive automatique."
+    },
+    "stats": {
+      "title": "Statistiques & Exports",
+      "subtitle": "Analysez vos données de maintenance."
+    },
+    "utilisateurs": {
+      "title": "Utilisateurs",
+      "subtitle": "Gérez les comptes et les accès."
+    }
   },
   "batiments": {
     "title": "Bâtiments",
@@ -179,7 +215,8 @@
     "showing": "Affichage",
     "of": "sur",
     "buildings": "bâtiments",
-    "equipments": "équipements"
+    "equipments": "équipements",
+    "interventions": "interventions"
   },
   "ficheEquipement": {
     "technicalSpecs": "Caractéristiques techniques",
@@ -406,6 +443,7 @@
   },
   "dashboard": {
     "title": "Tableau de bord",
+    "subtitle": "Vue d'ensemble de vos opérations et indicateurs de maintenance.",
     "loading": "Chargement…",
     "noData": "Aucune donnée.",
     "mttr": "MTTR",
@@ -728,12 +766,5 @@
       "tachesRequired": "Toutes les tâches doivent avoir un libellé.",
       "periodiciteMin": "La périodicité doit être ≥ 1 jour."
     }
-  },
-  "pagination": {
-    "showing": "Affichage",
-    "of": "sur",
-    "buildings": "bâtiments",
-    "equipments": "équipements",
-    "interventions": "interventions"
   }
 }

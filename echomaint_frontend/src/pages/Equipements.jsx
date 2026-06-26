@@ -12,7 +12,7 @@ const STATUTS = [
   { value: 'hors_service', className: 'badge-hors-service' },
 ]
 
-const ITEMS_PER_PAGE = 6
+const ITEMS_PER_PAGE = 5
 
 const emptyForm = {
   nom: '', reference: '', type: '', marque: '', modele: '',
@@ -158,6 +158,13 @@ export default function Equipements() {
   return (
     <div className="equipements">
 
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">{t('layout.equipements.title')}</h1>
+          <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.equipements.subtitle')}</p>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="equipements-header">
         <div className="equipements-filters">
@@ -202,7 +209,7 @@ export default function Equipements() {
       ) : (
         <div className="equipements-grid">
           {paginated.map(eq => (
-            <div key={eq.id} className="equipement-card">
+            <div key={eq.id} className="equipement-card" data-statut={eq.statut}>
               <div className="equipement-card-top">
                 <div className="equipement-icon">
                   <i className="ti ti-settings" aria-hidden="true" />

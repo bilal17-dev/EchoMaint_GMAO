@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import './Planning.css'
@@ -52,6 +52,9 @@ export default function Planning() {
   const [techniciens, setTechniciens] = useState([])
   const [loading, setLoading] = useState(true)
   const [erreur, setErreur] = useState('')
+
+  const [planPage, setPlanPage] = useState(1)
+  const PLAN_PER_PAGE = 5
 
   const [otReplanifier,      setOtReplanifier]      = useState(null)
   const [nouvelleDate,       setNouvelleDate]       = useState('')
@@ -125,6 +128,12 @@ export default function Planning() {
     [...planningOTs].sort((a, b) => new Date(a.date_planifiee) - new Date(b.date_planifiee))
   , [planningOTs])
 
+  // Pagination de la liste mensuelle
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setPlanPage(1) }, [viewYear, viewMonth])
+  const planTotalPages = Math.max(1, Math.ceil(monthOTs.length / PLAN_PER_PAGE))
+  const planPaginated  = monthOTs.slice((planPage - 1) * PLAN_PER_PAGE, planPage * PLAN_PER_PAGE)
+
   const daysInMonth = getDaysInMonth(viewYear, viewMonth)
   const firstDay = getFirstDayOfMonth(viewYear, viewMonth)
 
@@ -170,6 +179,13 @@ export default function Planning() {
 
   return (
     <div className="planning">
+
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">{t('layout.planning.title')}</h1>
+          <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.planning.subtitle')}</p>
+        </div>
+      </div>
 
       {/* Filtres */}
       <div className="planning-filters">
@@ -287,6 +303,7 @@ export default function Planning() {
                 <div
                   key={ot.id}
                   className="planning-ot-card"
+                  data-type={ot.type}
                   onClick={() => navigate(`/interventions/${ot.id}`)}
                 >
                   <div className="planning-ot-top">
@@ -332,63 +349,116 @@ export default function Planning() {
         </div>
       </div>
 
-      {/* Liste complète du mois */}
+      {/* Liste mensuelle paginée */}
       <div className="planning-month-section">
-        <h3>
-          {t('planning.allInterventionsMonth')} — {MONTHS[viewMonth]} {viewYear}
-          <span className="month-count">{monthOTs.length}</span>
-        </h3>
+        <div className="planning-month-section-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h3 style={{ margin: 0 }}>
+              {t('planning.allInterventionsMonth')} — {MONTHS[viewMonth]} {viewYear}
+            </h3>
+            <span className="month-count">{monthOTs.length}</span>
+          </div>
+          {monthOTs.length > 0 && (
+            <span className="plan-page-info-header">
+              {Math.min((planPage - 1) * PLAN_PER_PAGE + 1, monthOTs.length)}–{Math.min(planPage * PLAN_PER_PAGE, monthOTs.length)} / {monthOTs.length}
+            </span>
+          )}
+        </div>
 
         {monthOTs.length === 0 ? (
           <p className="planning-month-empty">{t('planning.noEventsMonth')}</p>
         ) : (
-          <div className="planning-month-list">
-            {monthOTs.map(ot => (
-              <div
-                key={ot.id}
-                className="planning-list-item"
-                onClick={() => navigate(`/interventions/${ot.id}`)}
-              >
-                <div className="planning-list-date">
-                  <span className="planning-list-day">
-                    {new Date(ot.date_planifiee).getDate()}
-                  </span>
-                  <span className="planning-list-monthname">
-                    {MONTHS[viewMonth].substring(0, 3)}
-                  </span>
-                </div>
+          <>
+            <div className="planning-month-list">
+              {planPaginated.map((ot, idx) => {
+                const prevOt = planPaginated[idx - 1]
+                const currentDay = new Date(ot.date_planifiee).getDate()
+                const prevDay    = prevOt ? new Date(prevOt.date_planifiee).getDate() : null
+                const isFirstOfDay = prevDay !== currentDay
 
-                <div className="planning-list-info">
-                  <p className="planning-list-titre">{ot.titre}</p>
-                  <p className="planning-list-meta">
-                    {ot.equipement_nom} · {ot.batiment_nom}
-                    {ot.technicien_nom
-                      ? ` · ${ot.technicien_prenom || ''} ${ot.technicien_nom}`
-                      : ` · ${t('planning.unassigned')}`}
-                  </p>
-                </div>
-
-                <div className="planning-list-badges">
-                  <span className={`planning-chip-type ${ot.type === 'preventif' ? 'chip-type-prev' : 'chip-type-cur'}`}>
-                    {t(`interventions.types.${ot.type}`)}
-                  </span>
-                  <span className={`planning-chip ${STATUT_CHIP[ot.statut] || ''}`}>
-                    {t(`interventions.statuts.${ot.statut}`)}
-                  </span>
-                  {peutReplanifier(ot) && (
-                    <button
-                      className="btn-replanifier btn-replanifier--sm"
-                      onClick={e => ouvrirModalReplanif(ot, e)}
-                      title={t('planning.reschedule')}
+                return (
+                  <Fragment key={ot.id}>
+                    {isFirstOfDay && (
+                      <div className="plan-day-separator">
+                        <span>{currentDay} {MONTHS[viewMonth]}</span>
+                      </div>
+                    )}
+                    <div
+                      className="planning-list-item"
+                      data-type={ot.type}
+                      onClick={() => navigate(`/interventions/${ot.id}`)}
                     >
-                      <i className="ti ti-calendar-event" aria-hidden="true" />
-                      {t('planning.reschedule')}
-                    </button>
-                  )}
-                </div>
+                      <div className="planning-list-info">
+                        <p className="planning-list-titre">{ot.titre}</p>
+                        <p className="planning-list-meta">
+                          {ot.equipement_nom} · {ot.batiment_nom}
+                          {ot.technicien_nom
+                            ? ` · ${ot.technicien_prenom || ''} ${ot.technicien_nom}`
+                            : ` · ${t('planning.unassigned')}`}
+                        </p>
+                      </div>
+
+                      <div className="planning-list-badges">
+                        <span className={`planning-chip-type ${ot.type === 'preventif' ? 'chip-type-prev' : 'chip-type-cur'}`}>
+                          {t(`interventions.types.${ot.type}`)}
+                        </span>
+                        <span className={`planning-chip ${STATUT_CHIP[ot.statut] || ''}`}>
+                          {t(`interventions.statuts.${ot.statut}`)}
+                        </span>
+                        {peutReplanifier(ot) && (
+                          <button
+                            className="btn-replanifier btn-replanifier--sm"
+                            onClick={e => ouvrirModalReplanif(ot, e)}
+                            title={t('planning.reschedule')}
+                          >
+                            <i className="ti ti-calendar-event" aria-hidden="true" />
+                            {t('planning.reschedule')}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </Fragment>
+                )
+              })}
+            </div>
+
+            {planTotalPages > 1 && (
+              <div className="plan-pagination">
+                <button
+                  className="plan-page-btn"
+                  onClick={() => setPlanPage(p => p - 1)}
+                  disabled={planPage === 1}
+                >
+                  <i className="ti ti-chevron-left" />
+                </button>
+
+                {Array.from({ length: planTotalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === planTotalPages || Math.abs(p - planPage) <= 1)
+                  .map((p, i, arr) => (
+                    <Fragment key={p}>
+                      {i > 0 && arr[i - 1] !== p - 1 && (
+                        <span className="plan-page-ellipsis">…</span>
+                      )}
+                      <button
+                        className={`plan-page-btn${p === planPage ? ' active' : ''}`}
+                        onClick={() => setPlanPage(p)}
+                      >
+                        {p}
+                      </button>
+                    </Fragment>
+                  ))
+                }
+
+                <button
+                  className="plan-page-btn"
+                  onClick={() => setPlanPage(p => p + 1)}
+                  disabled={planPage === planTotalPages}
+                >
+                  <i className="ti ti-chevron-right" />
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
 

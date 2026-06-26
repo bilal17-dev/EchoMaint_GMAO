@@ -120,6 +120,13 @@ export default function Stats() {
   return (
     <div className="stats">
 
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">{t('layout.stats.title')}</h1>
+          <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.stats.subtitle')}</p>
+        </div>
+      </div>
+
       {/* ── Résumé KPI ───────────────────────────────────────────────────────── */}
       <div className="stats-section stats-kpi-resume">
         <div className="stats-kpi-resume-header">

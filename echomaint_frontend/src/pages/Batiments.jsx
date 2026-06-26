@@ -138,6 +138,13 @@ export default function Batiments() {
   return (
     <div className="batiments">
 
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">{t('layout.batiments.title')}</h1>
+          <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.batiments.subtitle')}</p>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="batiments-header">
         <div className="batiments-filters">

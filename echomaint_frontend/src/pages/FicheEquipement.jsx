@@ -104,112 +104,208 @@ export default function FicheEquipement() {
   if (!equipement) return null
 
   const statutInfo = STATUT_LABELS[equipement.statut] || STATUT_LABELS.actif
+  const nbTotal    = historique.length
+  const nbTermines = historique.filter(o => o.statut === 'terminee').length
 
   return (
     <div className="fiche-equipement">
 
-      {/* Header */}
-      <div className="fiche-header">
-        <button className="btn-back" onClick={() => navigate(-1)}>
-          <i className="ti ti-arrow-left" aria-hidden="true" />
-          Retour
-        </button>
-
-        <div className="fiche-header-title">
-          <div className="fiche-icon">
-            <i className="ti ti-settings" aria-hidden="true" />
-          </div>
-          <div>
-            <h1>{equipement.nom}</h1>
-            <p>Réf. {equipement.reference}</p>
-          </div>
+      {/* ── Hero Header ───────────────────────────────────────────────────── */}
+      <div className={`fiche-hero fiche-hero--${equipement.statut || 'actif'}`}>
+        <div className="fiche-hero-top">
+          <button className="btn-back" onClick={() => navigate(-1)}>
+            <i className="ti ti-arrow-left" aria-hidden="true" />
+            Retour
+          </button>
+          <span className={`statut-badge ${statutInfo.className}`}>{statutInfo.label}</span>
         </div>
 
-        <span className={`statut-badge ${statutInfo.className}`}>{statutInfo.label}</span>
+        <div className="fiche-hero-body">
+          <div className="fiche-hero-icon">
+            <i className="ti ti-cpu" aria-hidden="true" />
+          </div>
+          <div className="fiche-hero-info">
+            <h1 className="fiche-hero-name">{equipement.nom}</h1>
+            <div className="fiche-hero-meta">
+              {equipement.reference && (
+                <span className="fiche-meta-chip">
+                  <i className="ti ti-hash" /> Réf. {equipement.reference}
+                </span>
+              )}
+              {equipement.type && (
+                <span className="fiche-meta-chip">
+                  <i className="ti ti-tag" /> {equipement.type}
+                </span>
+              )}
+              {equipement.batiment_nom && (
+                <span className="fiche-meta-chip">
+                  <i className="ti ti-building" /> {equipement.batiment_nom}
+                </span>
+              )}
+              {equipement.client_nom && (
+                <span className="fiche-meta-chip">
+                  <i className="ti ti-user" /> {equipement.client_nom}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats 30 jours */}
-      <div className="fiche-stats">
-        <div className="fiche-stat-card">
-          <div className="fiche-stat-icon" style={{ background: '#EFF6FF' }}>
-            <i className="ti ti-tools" style={{ color: '#2563EB' }} aria-hidden="true" />
+      {/* ── KPI row ───────────────────────────────────────────────────────── */}
+      <div className="fiche-kpi-row">
+        <div className="fiche-kpi-card">
+          <div className="fiche-kpi-icon" style={{ background: '#EFF6FF' }}>
+            <i className="ti ti-tools" style={{ color: '#2563EB' }} />
           </div>
-          <div>
-            <p className="fiche-stat-label">Interventions (30 derniers jours)</p>
-            {/* nb_interventions_30j vient du calcul fait par le backend dans EquipementController.show */}
-            <p className="fiche-stat-value">{equipement.nb_interventions_30j ?? 0}</p>
+          <div className="fiche-kpi-body">
+            <p className="fiche-kpi-label">Interventions — 30 jours</p>
+            <p className="fiche-kpi-value">{equipement.nb_interventions_30j ?? 0}</p>
           </div>
         </div>
-        <div className="fiche-stat-card">
-          <div className="fiche-stat-icon" style={{ background: '#F0FDF4' }}>
-            <i className="ti ti-calendar-check" style={{ color: '#22C55E' }} aria-hidden="true" />
+        <div className="fiche-kpi-card">
+          <div className="fiche-kpi-icon" style={{ background: '#F5F3FF' }}>
+            <i className="ti ti-clipboard-list" style={{ color: '#7C3AED' }} />
           </div>
-          <div>
-            <p className="fiche-stat-label">Dernière intervention</p>
-            <p className="fiche-stat-value">{formatDate(equipement.derniere_intervention_date)}</p>
+          <div className="fiche-kpi-body">
+            <p className="fiche-kpi-label">Total interventions</p>
+            <p className="fiche-kpi-value">{nbTotal}</p>
+          </div>
+        </div>
+        <div className="fiche-kpi-card">
+          <div className="fiche-kpi-icon" style={{ background: '#F0FDF4' }}>
+            <i className="ti ti-circle-check" style={{ color: '#059669' }} />
+          </div>
+          <div className="fiche-kpi-body">
+            <p className="fiche-kpi-label">Interventions terminées</p>
+            <p className="fiche-kpi-value">{nbTermines}</p>
+          </div>
+        </div>
+        <div className="fiche-kpi-card">
+          <div className="fiche-kpi-icon" style={{ background: '#FFF7ED' }}>
+            <i className="ti ti-calendar-event" style={{ color: '#D97706' }} />
+          </div>
+          <div className="fiche-kpi-body">
+            <p className="fiche-kpi-label">Dernière intervention</p>
+            <p className="fiche-kpi-value fiche-kpi-value--sm">{formatDate(equipement.derniere_intervention_date)}</p>
           </div>
         </div>
       </div>
 
-      {/* Caractéristiques + Localisation */}
+      {/* ── Info grid : caractéristiques + localisation ───────────────────── */}
       <div className="fiche-grid">
         <div className="fiche-card">
-          <h2>Caractéristiques techniques</h2>
+          <div className="fiche-card-header">
+            <div className="fiche-card-icon" style={{ background: '#EFF6FF' }}>
+              <i className="ti ti-settings-2" style={{ color: '#2563EB' }} />
+            </div>
+            <h2 className="fiche-card-title">Caractéristiques techniques</h2>
+          </div>
           <div className="fiche-details">
-            <div className="fiche-detail"><span>Type</span><strong>{equipement.type || '—'}</strong></div>
-            <div className="fiche-detail"><span>Marque</span><strong>{equipement.marque || '—'}</strong></div>
-            <div className="fiche-detail"><span>Modèle</span><strong>{equipement.modele || '—'}</strong></div>
-            <div className="fiche-detail"><span>Numéro de série</span><strong>{equipement.numero_serie || '—'}</strong></div>
-            <div className="fiche-detail"><span>Date d'installation</span><strong>{formatDate(equipement.date_installation)}</strong></div>
+            <div className="fiche-detail">
+              <span>Marque</span>
+              <strong>{equipement.marque || '—'}</strong>
+            </div>
+            <div className="fiche-detail">
+              <span>Modèle</span>
+              <strong>{equipement.modele || '—'}</strong>
+            </div>
+            <div className="fiche-detail">
+              <span>Numéro de série</span>
+              <strong>{equipement.numero_serie || '—'}</strong>
+            </div>
+            <div className="fiche-detail">
+              <span>Date d'installation</span>
+              <strong>{formatDate(equipement.date_installation)}</strong>
+            </div>
           </div>
           {equipement.description && (
-            <p className="fiche-description">{equipement.description}</p>
+            <div className="fiche-description">
+              <i className="ti ti-notes" />
+              <p>{equipement.description}</p>
+            </div>
           )}
         </div>
 
         <div className="fiche-card">
-          <h2>Localisation</h2>
+          <div className="fiche-card-header">
+            <div className="fiche-card-icon" style={{ background: '#F0FDF4' }}>
+              <i className="ti ti-map-pin" style={{ color: '#059669' }} />
+            </div>
+            <h2 className="fiche-card-title">Localisation</h2>
+          </div>
           <div className="fiche-details">
-            {/* batiment_nom et client_nom viennent des jointures faites dans Equipement.findById */}
-            <div className="fiche-detail"><span>Bâtiment</span><strong>{equipement.batiment_nom || '—'}</strong></div>
-            <div className="fiche-detail"><span>Client</span><strong>{equipement.client_nom || '—'}</strong></div>
+            <div className="fiche-detail">
+              <span>Bâtiment</span>
+              <strong>{equipement.batiment_nom || '—'}</strong>
+            </div>
+            <div className="fiche-detail">
+              <span>Client / Organisation</span>
+              <strong>{equipement.client_nom || '—'}</strong>
+            </div>
+          </div>
+
+          {/* Indicateur statut visuel */}
+          <div className={`fiche-statut-visual fiche-statut-visual--${equipement.statut || 'actif'}`}>
+            <div className="fiche-statut-dot" />
+            <div className="fiche-statut-text">
+              <strong>{statutInfo.label}</strong>
+              <span>État actuel de l'équipement</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Historique des interventions */}
-      <div className="fiche-card">
-        <h2>Historique des interventions</h2>
-        {historique.length === 0 ? (
-          <p className="fiche-historique-empty">Aucune intervention enregistrée pour cet équipement.</p>
-        ) : (
-          <div className="historique-list">
-            
+      {/* ── Historique — timeline ─────────────────────────────────────────── */}
+      <div className="fiche-card fiche-card--full">
+        <div className="fiche-card-header">
+          <div className="fiche-card-icon" style={{ background: '#FFF7ED' }}>
+            <i className="ti ti-history" style={{ color: '#D97706' }} />
+          </div>
+          <h2 className="fiche-card-title">Historique des interventions</h2>
+          {nbTotal > 0 && (
+            <span className="fiche-historique-count">{nbTotal}</span>
+          )}
+        </div>
 
-            {historique.map(ot => {
+        {historique.length === 0 ? (
+          <div className="fiche-historique-empty">
+            <i className="ti ti-clipboard-off" />
+            <p>Aucune intervention enregistrée pour cet équipement.</p>
+          </div>
+        ) : (
+          <div className="historique-timeline">
+            {historique.map((ot, idx) => {
               const otStatutInfo = OT_STATUT_LABELS[ot.statut] || OT_STATUT_LABELS.terminee
+              const isPreventif  = ot.type === 'preventif'
               return (
                 <div
                   key={ot.id}
-                  className="historique-item historique-item-clickable"
+                  className={`timeline-item${idx === historique.length - 1 ? ' timeline-item--last' : ''}`}
                   onClick={() => navigate(`/interventions/${ot.id}`)}
-                  style={{ cursor: 'pointer' }}
                 >
-                  <div className="historique-item-top">
-                    <div>
-                      <p className="historique-titre">{ot.titre}</p>
-                      <p className="historique-meta">
-                        {ot.type === 'preventif' ? 'Préventif' : 'Curatif'} · {formatDate(ot.date_fin_reelle || ot.updated_at)} · {ot.technicien_nom || 'Non assigné'}
-                      </p>
+                  <div className={`timeline-dot timeline-dot--${isPreventif ? 'prev' : 'cur'}`} />
+                  <div className="timeline-content">
+                    <div className="timeline-header">
+                      <div className="timeline-header-left">
+                        <span className={`timeline-type-chip ${isPreventif ? 'chip-type-prev' : 'chip-type-cur'}`}>
+                          {isPreventif ? 'Préventif' : 'Curatif'}
+                        </span>
+                        <p className="timeline-titre">{ot.titre}</p>
+                      </div>
+                      <div className="timeline-header-right">
+                        <span className={`ot-badge ${otStatutInfo.className}`}>{otStatutInfo.label}</span>
+                        <i className="ti ti-chevron-right timeline-arrow" />
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span className={`ot-badge ${otStatutInfo.className}`}>{otStatutInfo.label}</span>
-                      <i className="ti ti-chevron-right" style={{ color: '#94a3b8', fontSize: '14px' }} />
+                    <div className="timeline-meta">
+                      <span><i className="ti ti-calendar" /> {formatDate(ot.date_fin_reelle || ot.updated_at)}</span>
+                      <span><i className="ti ti-user" /> {ot.technicien_nom || 'Non assigné'}</span>
                     </div>
+                    {ot.commentaire_cloture && (
+                      <p className="timeline-commentaire">{ot.commentaire_cloture}</p>
+                    )}
                   </div>
-                  {ot.commentaire_cloture && (
-                    <p className="historique-commentaire">{ot.commentaire_cloture}</p>
-                  )}
                 </div>
               )
             })}

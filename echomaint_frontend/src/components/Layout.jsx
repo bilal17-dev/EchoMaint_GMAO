@@ -1,63 +1,51 @@
 import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
+import { Outlet } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
-import Navbar from '../components/Navbar'
 import './Layout.css'
 
-const PAGE_KEYS = {
-  '/dashboard':             'layout.dashboard',
-  '/batiments':             'layout.batiments',
-  '/equipements':           'layout.equipements',
-  '/interventions':         'layout.interventions',
-  '/planning':              'layout.planning',
-  '/demandes-intervention': 'layout.demandes',
-  '/maintenance-plans':     'layout.maintenancePlans',
-  '/stats':                 'layout.stats',
-  '/utilisateurs':          'layout.utilisateurs',
-}
-
 export default function Layout() {
-  const { t } = useTranslation()
-  const [collapsed,   setCollapsed]   = useState(true)
-  const [mobileOpen,  setMobileOpen]  = useState(false)
-  const location = useLocation()
-
-  const matchedKey = Object.entries(PAGE_KEYS).find(([path]) =>
-    location.pathname.startsWith(path)
-  )?.[1]
-
-  const title    = matchedKey ? t(`${matchedKey}.title`)    : ''
-  const subtitle = matchedKey ? t(`${matchedKey}.subtitle`) : ''
-
-  const handleMenuToggle = () => {
-    if (window.innerWidth < 768) setMobileOpen(o => !o)
-    else setCollapsed(c => !c)
-  }
-
-  const closeMobileSidebar = () => setMobileOpen(false)
+  const [collapsed,  setCollapsed]  = useState(true)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="layout">
-
-      {mobileOpen && (
-        <div className="sidebar-backdrop" onClick={closeMobileSidebar} />
-      )}
+    <div className={`layout${collapsed ? ' layout-collapsed' : ''}`}>
 
       <Sidebar
         collapsed={collapsed}
         mobileOpen={mobileOpen}
-        onMobileClose={closeMobileSidebar}
+        onMobileClose={() => setMobileOpen(false)}
       />
-      <div className="layout-main">
-        <Navbar
-          title={title}
-          subtitle={subtitle}
-          onMenuToggle={handleMenuToggle}
-        />
-        <div className="layout-content">
-          <Outlet />
+
+      {/* Bouton toggle desktop — aligné sur le bord droit de la sidebar */}
+      <button
+        className="sidebar-toggle-ext"
+        onClick={() => setCollapsed(c => !c)}
+        aria-label={collapsed ? 'Agrandir la sidebar' : 'Réduire la sidebar'}
+        title={collapsed ? 'Agrandir' : 'Réduire'}
+      >
+        <i className={`ti ${collapsed ? 'ti-chevron-right' : 'ti-chevron-left'}`} aria-hidden="true" />
+      </button>
+
+      {mobileOpen && (
+        <div className="sidebar-backdrop" onClick={() => setMobileOpen(false)} />
+      )}
+
+      <div className="main-content">
+
+        {/* Barre mobile uniquement */}
+        <div className="layout-mobile-bar">
+          <button
+            className="layout-hamburger"
+            onClick={() => setMobileOpen(o => !o)}
+            aria-label="Menu"
+          >
+            <i className="ti ti-menu-2" aria-hidden="true" />
+          </button>
+          <span className="layout-mobile-brand">EchoMaint</span>
         </div>
+
+        <Outlet />
+
       </div>
     </div>
   )

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import immeuble from '../assets/immeuble.png'
 import logo from '../assets/logo.png'
@@ -103,24 +103,6 @@ export default function Login() {
         {/* Partie droite */}
         <div className="login-right">
 
-          {/* Sélecteur de langue */}
-          <div className="login-lang">
-            <i className="ti ti-world login-lang-icon" aria-hidden="true" />
-            <button
-              className={`login-lang-btn ${i18n.language === 'fr' ? 'login-lang-btn--active' : ''}`}
-              onClick={() => changeLang('fr')}
-            >
-              FR
-            </button>
-            <span className="login-lang-sep">|</span>
-            <button
-              className={`login-lang-btn ${i18n.language === 'en' ? 'login-lang-btn--active' : ''}`}
-              onClick={() => changeLang('en')}
-            >
-              EN
-            </button>
-          </div>
-
           <div className="login-logo">
             <img src={logo} alt="EchoMaint" className="logo-img" />
           </div>
@@ -167,18 +149,33 @@ export default function Login() {
               </div>
             </div>
 
+            {/* Options — langue + Mot de passe oublié */}
             <div className="form-options">
-              <label className="remember">
-                <input type="checkbox" />
-                {t('auth.rememberMe')}
-              </label>
-              <a href="#" className="forgot">{t('auth.forgotPassword')}</a>
+              <button
+                type="button"
+                className="login-lang-toggle"
+                onClick={() => changeLang(i18n.language?.startsWith('fr') ? 'en' : 'fr')}
+                title={i18n.language?.startsWith('fr') ? 'Switch to English' : 'Passer en français'}
+              >
+                <i className="ti ti-world" aria-hidden="true" />
+                <span className="login-lang-flag">
+                  {i18n.language?.startsWith('fr') ? '🇫🇷' : '🇬🇧'}
+                </span>
+                <span className="login-lang-code">
+                  {i18n.language?.startsWith('fr') ? 'FR' : 'EN'}
+                </span>
+              </button>
+
+              <Link to="/forgot-password" className="forgot">{t('auth.forgotPassword')}</Link>
             </div>
 
             {error && <p className="login-error">{error}</p>}
 
             <button type="submit" className="login-btn" disabled={loading}>
-              {loading ? t('auth.loggingIn') : t('auth.login')}
+              {loading
+                ? <><i className="ti ti-loader-2 login-btn-spinner" /> {t('auth.loggingIn')}</>
+                : t('auth.login')
+              }
             </button>
           </form>
 

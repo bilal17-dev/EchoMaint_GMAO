@@ -240,17 +240,10 @@ export default function MaintenancePlans() {
   return (
     <div className="mplans">
 
-      {!backendDispo && (
-        <div className="mplans-mock-banner">
-          <i className="ti ti-info-circle" />
-          {t('plans.mockBanner')}
-        </div>
-      )}
-
-      <div className="mplans-header">
+      <div className="page-header">
         <div>
-          <h2 className="mplans-title">{t('plans.title')}</h2>
-          <p className="mplans-sub">{t('plans.subtitle')}</p>
+          <h1 className="page-title">{t('layout.maintenancePlans.title')}</h1>
+          <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.maintenancePlans.subtitle')}</p>
         </div>
         {user?.role === 'admin' && (
           <button className="btn-primary" onClick={handleNouveauPlan}>
@@ -258,6 +251,13 @@ export default function MaintenancePlans() {
           </button>
         )}
       </div>
+
+      {!backendDispo && (
+        <div className="mplans-mock-banner">
+          <i className="ti ti-info-circle" />
+          {t('plans.mockBanner')}
+        </div>
+      )}
 
       {plans.length === 0 ? (
         <div className="mplans-empty">

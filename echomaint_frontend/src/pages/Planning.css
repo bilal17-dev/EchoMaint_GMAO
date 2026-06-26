@@ -4,7 +4,7 @@
   gap: 1.5rem;
 }
 
-/* Filtres */
+/* ── Filtres ─────────────────────────────────────────────────────────────────── */
 .planning-filters {
   display: flex;
   align-items: center;
@@ -14,17 +14,22 @@
 
 .planning-filters select {
   padding: 8px 14px;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   font-size: 13px;
-  color: #1E293B;
-  background: #ffffff;
+  color: var(--text-primary);
+  background: var(--surface);
   outline: none;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
+  transition: border-color var(--t), box-shadow var(--t);
+}
+.planning-filters select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
 }
 
-/* Layout calendrier + panel */
+/* ── Layout calendrier + panel ─────────────────────────────────────────────── */
 .planning-layout {
   display: grid;
   grid-template-columns: 380px 1fr;
@@ -32,12 +37,13 @@
   align-items: start;
 }
 
-/* Calendrier */
+/* ── Calendrier ─────────────────────────────────────────────────────────────── */
 .calendar-card {
-  background: #ffffff;
-  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-sm);
 }
 
 .calendar-nav {
@@ -47,30 +53,23 @@
   margin-bottom: 1.25rem;
 }
 
-.calendar-nav h2 {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1E293B;
-  margin: 0;
-}
+.calendar-nav h2 { font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0; }
 
 .cal-nav-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid #E2E8F0;
-  background: #F4F7FC;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  transition: background 0.15s;
-  color: #64748B;
-  font-size: 16px;
+  transition: background var(--t), border-color var(--t), transform var(--t);
+  color: var(--text-secondary);
+  font-size: 15px;
 }
-
 .cal-nav-btn:hover {
-  background: #E2E8F0;
+  background: var(--border);
+  border-color: var(--border-2);
+  transform: scale(1.06);
 }
 
 .calendar-grid {
@@ -81,15 +80,15 @@
 
 .cal-day-header {
   text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: #94a3b8;
-  padding: 6px 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px 2px 8px;
 }
 
-.cal-day-empty {
-  height: 52px;
-}
+.cal-day-empty { height: 52px; }
 
 .cal-day {
   min-height: 52px;
@@ -102,36 +101,31 @@
   transition: background 0.15s;
   gap: 4px;
 }
-
-.cal-day:hover {
-  background: #F4F7FC;
-}
+.cal-day:hover { background: var(--surface-2); border-radius: 8px; }
 
 .cal-day-selected {
-  background: #EFF6FF !important;
-  border: 2px solid #2563EB;
+  background: rgba(37,99,235,0.08) !important;
+  border-radius: 8px;
+  outline: 2px solid var(--brand);
+  outline-offset: -1px;
 }
 
 .cal-day-today .cal-day-num {
-  background: #2563EB;
+  background: var(--brand);
   color: #ffffff;
   border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(37,99,235,0.35);
 }
 
 .cal-day-num {
   font-size: 13px;
   font-weight: 500;
-  color: #1E293B;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--text-primary);
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
 }
 
 .cal-day-dots {
@@ -149,93 +143,88 @@
   flex-shrink: 0;
 }
 
-.dot-preventif { background: #2563EB; }
-.dot-curatif { background: #F59E0B; }
+.dot-preventif { background: #123658; }
+.dot-curatif   { background: #F59E0B; }
 
-.cal-dot-more {
-  font-size: 9px;
-  color: #94a3b8;
-  font-weight: 600;
-}
+.dot-preventif { background: #2563EB; }
+.dot-curatif   { background: #F59E0B; }
+.dot-urgente   { background: #EF4444; }
+
+.cal-dot-more { font-size: 9px; color: var(--text-muted); font-weight: 600; }
 
 .calendar-legend {
   display: flex;
-  gap: 1rem;
+  gap: 14px;
   justify-content: center;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #F1F5F9;
+  border-top: 1px solid var(--surface-3);
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #64748B;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
-/* Panel du jour */
+/* ── Panel du jour ─────────────────────────────────────────────────────────── */
 .planning-day-panel {
-  background: #ffffff;
-  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-sm);
   min-height: 300px;
 }
 
 .day-panel-title {
   font-size: 15px;
   font-weight: 700;
-  color: #1E293B;
+  color: var(--text-primary);
   margin: 0 0 1.25rem;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+.day-panel-title .ti { color: var(--brand); font-size: 18px; }
 
-.day-panel-title .ti {
-  color: #2563EB;
-  font-size: 18px;
-}
+.day-panel-empty { text-align: center; padding: 2rem 1rem; color: var(--text-muted); }
+.day-panel-empty .ti { font-size: 40px; display: block; margin-bottom: 8px; opacity: 0.3; }
+.day-panel-empty p   { font-size: 13px; margin: 0; }
 
-.day-panel-empty {
-  text-align: center;
-  padding: 2rem 1rem;
-  color: #94a3b8;
-}
-
-.day-panel-empty .ti {
-  font-size: 40px;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.day-panel-empty p {
-  font-size: 13px;
-  margin: 0;
-}
-
-.day-panel-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+.day-panel-list { display: flex; flex-direction: column; gap: 10px; }
 
 .planning-ot-card {
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 12px 12px 14px;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background var(--t), box-shadow var(--t), border-color var(--t), transform var(--t);
   display: flex;
   flex-direction: column;
   gap: 6px;
+  position: relative;
+  overflow: hidden;
 }
+/* Accent gauche selon type */
+.planning-ot-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--border-2);
+}
+.planning-ot-card[data-type="preventif"]::before { background: #2563EB; }
+.planning-ot-card[data-type="curatif"]::before   { background: #F59E0B; }
 
 .planning-ot-card:hover {
-  background: #F8FAFC;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  background: var(--surface-2);
+  box-shadow: 0 4px 12px rgba(15,23,42,0.07);
+  border-color: var(--border-2);
+  transform: translateX(2px);
 }
 
 .planning-ot-top {
@@ -245,124 +234,208 @@
   gap: 8px;
 }
 
-.planning-ot-titre {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1E293B;
-  margin: 0;
-}
+.planning-ot-titre { font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin: 0; line-height: 1.3; }
 
 .planning-ot-meta {
   font-size: 12px;
-  color: #64748B;
+  color: var(--text-secondary);
   margin: 0;
   display: flex;
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
 }
-
-.planning-ot-meta .ti { font-size: 12px; }
+.planning-ot-meta .ti { font-size: 12px; opacity: 0.6; }
 
 .planning-ot-tech {
   font-size: 12px;
-  color: #64748B;
+  color: var(--text-secondary);
   margin: 0;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.planning-ot-unassigned {
-  color: #94a3b8;
-  font-style: italic;
-}
+.planning-ot-unassigned { color: var(--text-muted); font-style: italic; }
 
-/* Chips statut */
+/* ── Chips statut ─────────────────────────────────────────────────────────── */
 .planning-chip {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 6px;
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
+  border: 1px solid transparent;
 }
 
-.chip-a-planifier { background: #F4F7FC; color: #64748B; }
-.chip-planifiee   { background: #F4F7FC; color: #64748B; }
-.chip-assignee    { background: #FFFBEB; color: #F59E0B; }
-.chip-en-cours    { background: #F5F3FF; color: #8B5CF6; }
-.chip-terminee    { background: #F0FDF4; color: #22C55E; }
-.chip-annulee     { background: #FEF2F2; color: #ef4444; }
+.chip-a-planifier { background: var(--surface-3); color: var(--text-secondary); border-color: var(--border); }
+.chip-planifiee   { background: var(--info-light); color: #1D4ED8; border-color: var(--info-border); }
+.chip-assignee    { background: var(--warning-light); color: #92400E; border-color: var(--warning-border); }
+.chip-en-cours    { background: #F5F3FF; color: #5B21B6; border-color: #DDD6FE; }
+.chip-terminee    { background: var(--success-light); color: #065F46; border-color: var(--success-border); }
+.chip-annulee     { background: var(--error-light); color: #991B1B; border-color: var(--error-border); }
 
 /* Chips type */
 .planning-chip-type {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 6px;
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
   width: fit-content;
+  border: 1px solid transparent;
 }
 
-.chip-type-prev { background: #EFF6FF; color: #2563EB; }
-.chip-type-cur  { background: #FFFBEB; color: #F59E0B; }
+.chip-type-prev { background: var(--info-light); color: #1D4ED8; border-color: var(--info-border); }
+.chip-type-cur  { background: var(--warning-light); color: #92400E; border-color: var(--warning-border); }
 
-/* Liste mensuelle */
+/* ── Liste mensuelle ────────────────────────────────────────────────────────── */
 .planning-month-section {
-  background: #ffffff;
-  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.planning-month-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--surface-3);
 }
 
 .planning-month-section h3 {
   font-size: 14px;
   font-weight: 700;
-  color: #1E293B;
-  margin: 0 0 1.25rem;
+  color: var(--text-primary);
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+.plan-page-info-header {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Séparateur de jour ──────────────────────────────────────────────────── */
+.plan-day-separator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+.plan-day-separator span {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+.plan-day-separator::before,
+.plan-day-separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--surface-3);
+}
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+.plan-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--surface-3);
+}
+
+.plan-page-btn {
+  min-width: 36px; height: 36px;
+  padding: 0 8px;
+  border-radius: 9px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  font-family: 'Inter', sans-serif;
+}
+.plan-page-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--border-2);
+  color: var(--text-primary);
+}
+.plan-page-btn.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #FFFFFF;
+  font-weight: 700;
+}
+.plan-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.plan-page-btn .ti { font-size: 14px; }
+
+.plan-page-ellipsis {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 36px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .month-count {
-  background: #EFF6FF;
-  color: #2563EB;
+  background: var(--info-light);
+  color: var(--brand);
   font-size: 12px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 8px;
+  border: 1px solid var(--info-border);
 }
 
-.planning-month-empty {
-  font-size: 13px;
-  color: #94a3b8;
-  text-align: center;
-  padding: 1.5rem 0;
-  margin: 0;
-}
+.planning-month-empty { font-size: 13px; color: var(--text-muted); text-align: center; padding: 1.5rem 0; margin: 0; }
 
-.planning-month-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.planning-month-list { display: flex; flex-direction: column; gap: 6px; }
 
 .planning-list-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 12px;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--t), border-color var(--t), transform var(--t);
+  position: relative;
+  overflow: hidden;
 }
-
+.planning-list-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--border-2);
+}
+.planning-list-item[data-type="preventif"]::before { background: #2563EB; }
+.planning-list-item[data-type="curatif"]::before   { background: #F59E0B; }
 .planning-list-item:hover {
-  background: #F8FAFC;
+  background: var(--surface-2);
+  border-color: var(--border-2);
+  transform: translateX(2px);
 }
 
 .planning-list-date {
@@ -370,37 +443,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #EFF6FF;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  width: 48px;
-  height: 48px;
+  width: 46px; height: 46px;
   flex-shrink: 0;
 }
 
-.planning-list-day {
-  font-size: 18px;
-  font-weight: 700;
-  color: #2563EB;
-  line-height: 1;
-}
+.planning-list-day       { font-size: 18px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+.planning-list-monthname { font-size: 9.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
 
-.planning-list-monthname {
-  font-size: 10px;
-  color: #2563EB;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.planning-list-info {
-  flex: 1;
-  min-width: 0;
-}
+.planning-list-info { flex: 1; min-width: 0; }
 
 .planning-list-titre {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
-  color: #1E293B;
-  margin: 0 0 4px;
+  color: var(--text-primary);
+  margin: 0 0 3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -408,7 +467,7 @@
 
 .planning-list-meta {
   font-size: 12px;
-  color: #64748B;
+  color: var(--text-secondary);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -423,88 +482,7 @@
   flex-shrink: 0;
 }
 
-@media (max-width: 900px) {
-  .planning-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Mobile (<768 px) — vue liste uniquement ──────────────────────────────
-   Le calendrier mensuel et le panel du jour sélectionné sont masqués.
-   Seule la section ".planning-month-section" (liste d'OT du mois) reste visible.
-   Pas de changement JS nécessaire — la liste s'adapte naturellement. */
-@media (max-width: 767px) {
-  /* Header filtres + navigation mensuelle : empilés */
-  .planning-header {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: stretch;
-  }
-
-  .planning-filters {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .planning-filters select {
-    flex: 1;
-    min-width: 120px;
-  }
-
-  .planning-nav {
-    justify-content: center;
-  }
-
-  /* Cache le calendrier grille + panel du jour (trop étroit sur mobile) */
-  .planning-layout {
-    display: none;
-  }
-
-  /* La liste mensuelle prend toute la largeur */
-  .planning-month-section {
-    border-radius: 14px;
-  }
-
-  /* Items de liste compacts */
-  .planning-list-item {
-    gap: 0.75rem;
-    padding: 10px;
-  }
-
-  .planning-list-date {
-    width: 40px;
-    height: 40px;
-  }
-
-  .planning-list-day {
-    font-size: 15px;
-  }
-
-  /* Les badges se déroulent sur plusieurs lignes si besoin */
-  .planning-list-badges {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  /* Bouton replanifier compact */
-  .btn-replanifier--sm {
-    font-size: 11px;
-    padding: 3px 7px;
-  }
-
-  /* Modal replanification — slide depuis le bas sur mobile */
-  .modal-overlay {
-    align-items: flex-end;
-  }
-
-  .modal {
-    border-radius: 20px 20px 0 0;
-    max-width: 100%;
-  }
-}
-
-/* ── Footer des cartes OT dans le panel jour ────────────────────────────────
-   Contient le chip de type ET le bouton "Replanifier" côte à côte. */
+/* ── Footer carte OT ─────────────────────────────────────────────────────── */
 .planning-ot-footer {
   display: flex;
   align-items: center;
@@ -513,148 +491,36 @@
   margin-top: 2px;
 }
 
-/* ── Bouton "Replanifier" ────────────────────────────────────────────────────
-   Affiché dans les cartes OT du panel jour et dans la liste mensuelle.
-   Fond indigo clair, texte indigo — cohérent avec le thème du calendrier. */
+/* ── Bouton Replanifier ─────────────────────────────────────────────────── */
 .btn-replanifier {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 5px 10px;
-  background: #EFF6FF;
-  color: #2563EB;
-  border: 1px solid #BFDBFE;
-  border-radius: 8px;
+  background: var(--info-light);
+  color: var(--brand);
+  border: 1px solid var(--info-border);
+  border-radius: 7px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background var(--t), border-color var(--t), transform var(--t);
   white-space: nowrap;
 }
-
 .btn-replanifier:hover {
   background: #DBEAFE;
   border-color: #93C5FD;
+  transform: scale(1.03);
 }
+.btn-replanifier .ti  { font-size: 13px; }
 
-.btn-replanifier .ti { font-size: 13px; }
+.btn-replanifier--sm { padding: 4px 8px; font-size: 11px; }
 
-/* Variante compacte pour la liste mensuelle (texte masqué sur petits écrans) */
-.btn-replanifier--sm {
-  padding: 4px 8px;
-  font-size: 11px;
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   Modal de replanification
-   Classes partagées avec les autres modals de l'app (Interventions, etc.)
-   mais copiées ici car Planning.css est le seul CSS importé par Planning.jsx.
-   ══════════════════════════════════════════════════════════════════════════ */
-
-/* Fond semi-transparent qui couvre tout l'écran */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  backdrop-filter: blur(4px);
-}
-
-/* Boîte blanche du modal */
-.modal {
-  background: #ffffff;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
-  overflow: hidden;
-}
-
-/* En-tête : titre + bouton fermeture */
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #E2E8F0;
-}
-
-.modal-header h2 {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1E293B;
-  margin: 0;
-}
-
-/* Bouton croix de fermeture */
-.modal-header button {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: 1px solid #E2E8F0;
-  background: #F4F7FC;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.modal-header button .ti { font-size: 15px; color: #64748B; }
-
-/* Corps du modal */
-.modal-body {
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-/* Pied : boutons Annuler / Confirmer */
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #E2E8F0;
-}
-
-/* ── Champ de formulaire (label + input) ─────────────────────────────────── */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
-  font-size: 13px;
-  font-weight: 500;
-  color: #1E293B;
-}
-
-.form-group input[type="date"] {
-  padding: 9px 12px;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  font-size: 13px;
-  color: #1E293B;
-  outline: none;
-  font-family: 'Inter', sans-serif;
-  transition: border-color 0.2s;
-  background: #fff;
-}
-
-.form-group input[type="date"]:focus {
-  border-color: #2563EB;
-}
-
-/* ── Bloc informatif sur l'OT en cours de replanification ───────────────── */
+/* ── Récapitulatif OT dans le modal de replanification ─────────────────── */
 .replanif-info {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
   display: flex;
@@ -662,36 +528,22 @@
   gap: 4px;
 }
 
-/* Titre de l'OT dans le récapitulatif */
-.replanif-titre {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1E293B;
-  margin: 0;
-}
+.replanif-titre { font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0; }
 
-/* Ligne équipement · bâtiment */
 .replanif-meta {
   font-size: 12px;
-  color: #64748B;
+  color: var(--text-secondary);
   margin: 0;
   display: flex;
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
 }
-
 .replanif-meta .ti { font-size: 12px; }
 
-/* Date actuelle affichée en dessous — rappel de ce qu'on va remplacer */
-.replanif-date-actuelle {
-  font-size: 12px;
-  color: #64748B;
-  margin: 0;
-  margin-top: 4px;
-}
+.replanif-date-actuelle { font-size: 12px; color: var(--text-secondary); margin: 0; margin-top: 4px; }
 
-/* ── Message d'erreur ────────────────────────────────────────────────────── */
+/* ── Messages d'erreur (spécifique à cette page) ─────────────────────────── */
 .erreur {
   font-size: 13px;
   color: #EF4444;
@@ -702,41 +554,21 @@
   margin: 0;
 }
 
-/* ── Bouton "Annuler" ────────────────────────────────────────────────────── */
-.btn-cancel {
-  padding: 9px 18px;
-  border-radius: 10px;
-  border: 1px solid #E2E8F0;
-  background: #F4F7FC;
-  font-size: 13px;
-  color: #64748B;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  transition: background 0.15s;
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .planning-layout { grid-template-columns: 1fr; }
 }
 
-.btn-cancel:hover { background: #E2E8F0; }
-
-/* ── Bouton "Confirmer" / action principale ──────────────────────────────── */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #2563EB;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  padding: 9px 18px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover:not(:disabled) { background: #1D4ED8; }
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+@media (max-width: 767px) {
+  .planning-header { flex-direction: column; gap: 0.75rem; align-items: stretch; }
+  .planning-filters { flex-wrap: wrap; gap: 6px; }
+  .planning-filters select { flex: 1; min-width: 120px; }
+  .planning-nav { justify-content: center; }
+  .planning-layout { display: none; }
+  .planning-month-section { border-radius: 14px; }
+  .planning-list-item { gap: 0.75rem; padding: 10px; }
+  .planning-list-date { width: 40px; height: 40px; }
+  .planning-list-day  { font-size: 15px; }
+  .planning-list-badges { align-items: flex-start; flex-wrap: wrap; }
+  .btn-replanifier--sm  { font-size: 11px; padding: 3px 7px; }
 }
