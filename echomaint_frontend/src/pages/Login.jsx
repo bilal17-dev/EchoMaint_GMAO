@@ -49,11 +49,12 @@ export default function Login() {
       saveSession(data)
       navigate('/dashboard')
     } catch (err) {
-      console.error("Erreur d'authentification :", err)
-      const messageServeur = err.response?.data?.error
-        || err.response?.data?.message
-        || t('auth.serverError')
-      setError(messageServeur)
+      // 401 = identifiants incorrects, sinon erreur serveur générique
+      if (err.response?.status === 401) {
+        setError(t('auth.invalidCredentials'))
+      } else {
+        setError(t('auth.serverError'))
+      }
     } finally {
       setLoading(false)
     }
@@ -119,7 +120,7 @@ export default function Login() {
                   type="email"
                   placeholder={t('auth.emailPlaceholder')}
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={e => { setEmail(e.target.value); setError('') }}
                   required
                 />
               </div>
@@ -133,7 +134,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder={t('auth.passwordPlaceholder')}
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={e => { setPassword(e.target.value); setError('') }}
                   required
                 />
                 <button
@@ -169,7 +170,19 @@ export default function Login() {
               <Link to="/forgot-password" className="forgot">{t('auth.forgotPassword')}</Link>
             </div>
 
-            {error && <p className="login-error">{error}</p>}
+            {error && (
+              <div style={{
+                background: '#FEF2F2',
+                border: '1px solid #FECACA',
+                borderRadius: '8px',
+                padding: '10px 14px',
+                color: '#DC2626',
+                fontSize: '13px',
+                marginBottom: '12px'
+              }}>
+                {error}
+              </div>
+            )}
 
             <button type="submit" className="login-btn" disabled={loading}>
               {loading

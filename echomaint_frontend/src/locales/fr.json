@@ -28,6 +28,9 @@
     "seeAll": "Voir tout",
     "status": "Statut",
     "saveChanges": "Enregistrer les modifications",
+    "print": "Imprimer",
+    "period": "Période",
+    "actions": "Actions",
     "periods": {
       "7": "7 derniers jours",
       "30": "30 derniers jours",
@@ -89,8 +92,8 @@
     "forgotPassword": "Mot de passe oublié ?",
     "login": "Se connecter",
     "loggingIn": "Connexion...",
-    "invalidCredentials": "Identifiants incorrects.",
-    "serverError": "Impossible de se connecter au serveur.",
+    "invalidCredentials": "Email ou mot de passe incorrect.",
+    "serverError": "Une erreur est survenue. Réessayez.",
     "footer": "© 2026 EchoMaint. Tous droits réservés.",
     "slides": {
       "0": {
@@ -216,7 +219,8 @@
     "of": "sur",
     "buildings": "bâtiments",
     "equipments": "équipements",
-    "interventions": "interventions"
+    "interventions": "interventions",
+    "results": "résultats"
   },
   "ficheEquipement": {
     "technicalSpecs": "Caractéristiques techniques",
@@ -257,6 +261,13 @@
     "allBatimentsFilter": "Tous les bâtiments",
     "newOT": "Nouvel ordre de travail",
     "createOT": "Créer l'OT",
+    "count": "{{count}} intervention",
+    "count_plural": "{{count}} interventions",
+    "emptyTitle": "Aucune intervention",
+    "sectionDates": "Dates",
+    "rapportCloture": "Rapport de clôture",
+    "sectionReouvertures": "Réouvertures",
+    "voirFicheComplete": "Voir la fiche complète",
     "statuts": {
       "a_planifier": "À planifier",
       "planifiee": "Planifiée",
@@ -325,6 +336,7 @@
       "info": "Informations",
       "equipBatiment": "Équipement & Bâtiment",
       "reference": "Référence",
+      "planned": "Planifiée",
       "startReal": "Début réel",
       "endReal": "Fin réelle",
       "realDuration": "Durée réelle",
@@ -361,6 +373,9 @@
     "rapport": "Rapport d'intervention",
     "downloadRapport": "Télécharger le rapport PDF",
     "rapportUnavailable": "Le rapport sera disponible après clôture.",
+    "rapportNonDispo": "Rapport non disponible.",
+    "erreurTelechargement": "Erreur lors du téléchargement du rapport.",
+    "technicien": "Technicien",
     "photos": "Photos d'intervention",
     "photosAvant": "Photos avant",
     "photosApres": "Photos après",
@@ -559,7 +574,17 @@
       "seeMyPlanning": "Voir mon planning",
       "activityTitle": "Mon activité sur 30 jours",
       "activitySub": "OT terminés par semaine",
-      "otTermines": "OT terminés"
+      "otTermines": "OT terminés",
+      "myInterventionsYear": "Mes interventions — {{year}}",
+      "otVsClosedByMonth": "OT disponibles vs clôturés par mois",
+      "noInterventionsYear": "Aucune intervention assignée cette année",
+      "otAvailableMonth": "OT disponibles ce mois",
+      "tooltipAvailable": "{{count}} disponible",
+      "tooltipAvailable_plural": "{{count}} disponibles",
+      "tooltipClosed": "{{count}} clôturé",
+      "tooltipClosed_plural": "{{count}} clôturés",
+      "tooltipPostponed": "{{count}} reporté en {{mois}}",
+      "tooltipPostponed_plural": "{{count}} reportés en {{mois}}"
     }
   },
   "di": {
@@ -602,6 +627,17 @@
       "traiteePlural": "Traitées",
       "rejeteePlural": "Rejetées"
     },
+    "table": {
+      "titre": "Titre",
+      "demandeur": "Demandeur",
+      "equipement": "Équipement",
+      "date": "Date",
+      "heure": "Heure",
+      "priorite": "Priorité",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "rejetErreur": "Erreur lors du rejet. Veuillez réessayer.",
     "errors": {
       "equipement": "Veuillez sélectionner un équipement.",
       "titre": "Le titre est obligatoire.",
@@ -739,6 +775,7 @@
     "equipement": "Équipement ciblé",
     "selectEquipement": "Sélectionner un équipement",
     "label": "Libellé du plan",
+    "labelPlaceholder": "Ex : Entretien trimestriel des ascenseurs",
     "periodiciteLabel": "Périodicité",
     "periodicites": {
       "monthly": "Tous les mois",

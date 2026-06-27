@@ -74,7 +74,8 @@ export default function Batiments() {
 
     try {
       await deleteBatiment(id)
-      setBatiments(prev => prev.filter(b => b.id !== id))
+      await chargerDonnees()
+      setPage(1)
     } catch (error) {
       const message = error.response?.data?.message || t('batiments.deleteBlocked')
       window.alert(message)
@@ -98,17 +99,15 @@ export default function Batiments() {
 
     try {
       if (editBatiment) {
-        const res = await updateBatiment(editBatiment.id, form)
-        setBatiments(prev => prev.map(b =>
-          b.id === editBatiment.id ? res.data : b
-        ))
+        await updateBatiment(editBatiment.id, form)
       } else {
-        const res = await createBatiment(form)
-        setBatiments(prev => [...prev, res.data])
+        await createBatiment(form)
       }
       setShowModal(false)
       setEditBatiment(null)
       setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
+      await chargerDonnees()
+      setPage(1)
     } catch (error) {
       const message = error.response?.data?.message || t('common.error')
       window.alert(message)

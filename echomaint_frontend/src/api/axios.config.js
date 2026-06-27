@@ -23,6 +23,12 @@ api.interceptors.response.use(
     const originalRequest = error.config
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Sur la route de login, un 401 = mauvais identifiants — ne pas intercepter,
+      // laisser le catch de handleSubmit afficher le message d'erreur.
+      if (originalRequest.url?.includes('/auth/login')) {
+        return Promise.reject(error)
+      }
+
       originalRequest._retry = true
       const refreshToken = getRefreshToken()
 

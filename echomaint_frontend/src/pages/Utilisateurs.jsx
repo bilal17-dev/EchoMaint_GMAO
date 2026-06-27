@@ -70,9 +70,8 @@ export default function Utilisateurs() {
 
   const handleToggleActif = async (id, actifActuel) => {
     try {
-      const res = await updateStatutUtilisateur(id, !actifActuel)
-      const updated = res?.data ?? res
-      setUtilisateurs(prev => prev.map(u => u.id === id ? updated : u))
+      await updateStatutUtilisateur(id, !actifActuel)
+      await chargerUtilisateurs()
     } catch (error) {
       window.alert(error.response?.data?.message || t('common.error'))
     }
@@ -108,10 +107,11 @@ export default function Utilisateurs() {
         password: form.password, role: form.role, id_client,
       }
 
-      const resUser = await createUtilisateur(payload)
-      setUtilisateurs(prev => [resUser?.data ?? resUser, ...prev])
+      await createUtilisateur(payload)
       setModal(null)
       setForm(emptyForm)
+      await chargerUtilisateurs()
+      setPage(1)
     } catch (error) {
       setErreurs([error.response?.data?.message || t('common.error')])
     } finally {
@@ -155,13 +155,13 @@ export default function Utilisateurs() {
     setErreurEdit('')
 
     try {
-      const res = await updateUtilisateur(userEnEdition.id, {
+      await updateUtilisateur(userEnEdition.id, {
         nom: editForm.nom, prenom: editForm.prenom, email: editForm.email,
         role: editForm.role, actif: editForm.actif,
       })
-      const updated = res?.data ?? res
-      setUtilisateurs(prev => prev.map(u => u.id === userEnEdition.id ? updated : u))
       fermerModifier()
+      await chargerUtilisateurs()
+      setPage(1)
     } catch (error) {
       setErreurEdit(error.response?.data?.message || t('common.error'))
     } finally {

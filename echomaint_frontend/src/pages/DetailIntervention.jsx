@@ -462,7 +462,7 @@ export default function DetailIntervention() {
                   )
                   if (!res.ok) {
                     const err = await res.json().catch(() => ({}))
-                    window.alert(err.message || 'Rapport non disponible.')
+                    window.alert(err.message || t('detail.rapportNonDispo'))
                     return
                   }
                   const blob = await res.blob()
@@ -473,7 +473,7 @@ export default function DetailIntervention() {
                   a.click()
                   URL.revokeObjectURL(url)
                 } catch {
-                  window.alert('Erreur lors du téléchargement du rapport.')
+                  window.alert(t('detail.erreurTelechargement'))
                 }
               }}
             >
@@ -527,7 +527,7 @@ export default function DetailIntervention() {
                           onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
                         />
                         {peutSupprimerPhoto && (
-                          <button className="detiv-photo-del" onClick={() => handleSupprimerPhoto(p.id)} title="Supprimer">
+                          <button className="detiv-photo-del" onClick={() => handleSupprimerPhoto(p.id)} title={t('common.delete')}>
                             <i className="ti ti-x" />
                           </button>
                         )}
@@ -571,7 +571,7 @@ export default function DetailIntervention() {
                           onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
                         />
                         {peutSupprimerPhoto && (
-                          <button className="detiv-photo-del" onClick={() => handleSupprimerPhoto(p.id)} title="Supprimer">
+                          <button className="detiv-photo-del" onClick={() => handleSupprimerPhoto(p.id)} title={t('common.delete')}>
                             <i className="ti ti-x" />
                           </button>
                         )}

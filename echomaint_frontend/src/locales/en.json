@@ -28,6 +28,9 @@
     "seeAll": "See all",
     "status": "Status",
     "saveChanges": "Save changes",
+    "print": "Print",
+    "period": "Period",
+    "actions": "Actions",
     "periods": {
       "7": "Last 7 days",
       "30": "Last 30 days",
@@ -89,8 +92,8 @@
     "forgotPassword": "Forgot password?",
     "login": "Sign in",
     "loggingIn": "Signing in...",
-    "invalidCredentials": "Invalid credentials.",
-    "serverError": "Unable to connect to the server.",
+    "invalidCredentials": "Incorrect email or password.",
+    "serverError": "An error occurred. Please try again.",
     "footer": "© 2026 EchoMaint. All rights reserved.",
     "slides": {
       "0": {
@@ -216,7 +219,8 @@
     "of": "of",
     "buildings": "buildings",
     "equipments": "equipment",
-    "interventions": "interventions"
+    "interventions": "interventions",
+    "results": "results"
   },
   "ficheEquipement": {
     "technicalSpecs": "Technical specifications",
@@ -257,6 +261,13 @@
     "allBatimentsFilter": "All buildings",
     "newOT": "New work order",
     "createOT": "Create WO",
+    "count": "{{count}} intervention",
+    "count_plural": "{{count}} interventions",
+    "emptyTitle": "No intervention",
+    "sectionDates": "Dates",
+    "rapportCloture": "Closure report",
+    "sectionReouvertures": "Reopenings",
+    "voirFicheComplete": "View full record",
     "statuts": {
       "a_planifier": "To plan",
       "planifiee": "Planned",
@@ -325,6 +336,7 @@
       "info": "Information",
       "equipBatiment": "Equipment & Building",
       "reference": "Reference",
+      "planned": "Planned",
       "startReal": "Actual start",
       "endReal": "Actual end",
       "realDuration": "Actual duration",
@@ -361,6 +373,9 @@
     "rapport": "Intervention report",
     "downloadRapport": "Download PDF report",
     "rapportUnavailable": "The report will be available after closing.",
+    "rapportNonDispo": "Report unavailable.",
+    "erreurTelechargement": "Error downloading the report.",
+    "technicien": "Technician",
     "photos": "Intervention photos",
     "photosAvant": "Before photos",
     "photosApres": "After photos",
@@ -559,7 +574,17 @@
       "seeMyPlanning": "View my planning",
       "activityTitle": "My activity over 30 days",
       "activitySub": "Completed WOs per week",
-      "otTermines": "Completed WOs"
+      "otTermines": "Completed WOs",
+      "myInterventionsYear": "My interventions — {{year}}",
+      "otVsClosedByMonth": "Available vs closed WOs by month",
+      "noInterventionsYear": "No intervention assigned this year",
+      "otAvailableMonth": "Available WOs this month",
+      "tooltipAvailable": "{{count}} available",
+      "tooltipAvailable_plural": "{{count}} available",
+      "tooltipClosed": "{{count}} closed",
+      "tooltipClosed_plural": "{{count}} closed",
+      "tooltipPostponed": "{{count}} postponed to {{mois}}",
+      "tooltipPostponed_plural": "{{count}} postponed to {{mois}}"
     }
   },
   "di": {
@@ -602,6 +627,17 @@
       "traiteePlural": "Processed",
       "rejeteePlural": "Rejected"
     },
+    "table": {
+      "titre": "Title",
+      "demandeur": "Requester",
+      "equipement": "Equipment",
+      "date": "Date",
+      "heure": "Time",
+      "priorite": "Priority",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "rejetErreur": "Error rejecting the request. Please try again.",
     "errors": {
       "equipement": "Please select a piece of equipment.",
       "titre": "Title is required.",
@@ -739,6 +775,7 @@
     "equipement": "Target equipment",
     "selectEquipement": "Select equipment",
     "label": "Plan label",
+    "labelPlaceholder": "E.g. Quarterly elevator maintenance",
     "periodiciteLabel": "Frequency",
     "periodicites": {
       "monthly": "Every month",

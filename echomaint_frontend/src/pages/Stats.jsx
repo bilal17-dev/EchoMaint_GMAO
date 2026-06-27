@@ -266,7 +266,7 @@ export default function Stats() {
                         {t(`interventions.statuts.${ot.statut}`)}
                       </span>
                     </td>
-                    <td>{ot.priorite}</td>
+                    <td>{ot.priorite ? t(`interventions.priorites.${ot.priorite}`) : '—'}</td>
                     <td>{ot.equipement_nom || '—'}</td>
                     <td>{ot.batiment_nom   || '—'}</td>
                     <td>

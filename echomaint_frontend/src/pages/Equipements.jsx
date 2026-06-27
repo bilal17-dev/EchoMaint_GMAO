@@ -96,7 +96,8 @@ export default function Equipements() {
 
     try {
       await deleteEquipement(id)
-      setEquipements(prev => prev.filter(eq => eq.id !== id))
+      await chargerDonnees()
+      setPage(1)
     } catch (error) {
       const message = error.response?.data?.message || t('common.error')
       window.alert(message)
@@ -119,17 +120,15 @@ export default function Equipements() {
 
     try {
       if (editEquipement) {
-        const res = await updateEquipement(editEquipement.id, form)
-        setEquipements(prev => prev.map(eq =>
-          eq.id === editEquipement.id ? res.data : eq
-        ))
+        await updateEquipement(editEquipement.id, form)
       } else {
-        const res = await createEquipement(form)
-        setEquipements(prev => [...prev, res.data])
+        await createEquipement(form)
       }
       setShowModal(false)
       setEditEquipement(null)
       setForm(emptyForm)
+      await chargerDonnees()
+      setPage(1)
     } catch (error) {
       const message = error.response?.data?.message || t('common.error')
       window.alert(message)

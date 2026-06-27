@@ -115,10 +115,11 @@ export default function DemandesIntervention() {
     setSubmitting(true)
     setFormErreurs([])
     try {
-      const res = await creerDemande(form)
-      setDemandes(prev => [res.data, ...prev])
+      await creerDemande(form)
       setModalCreer(false)
       setForm(emptyForm)
+      await chargerDemandes()
+      setPage(1)
     } catch (error) {
       setFormErreurs([error.response?.data?.message || t('common.error')])
     } finally {
@@ -130,7 +131,8 @@ export default function DemandesIntervention() {
     if (!window.confirm(t('di.takenCare'))) return
     try {
       await convertirDemande(id)
-      setDemandes(prev => prev.map(d => d.id === id ? { ...d, statut: 'traitee' } : d))
+      await chargerDemandes()
+      setPage(1)
     } catch (error) {
       window.alert(error.response?.data?.message || t('common.error'))
     }
@@ -149,11 +151,11 @@ export default function DemandesIntervention() {
     }
     try {
       await rejeterDemande(modalRejet, motifRejet.trim())
-      setDemandes(prev => prev.map(d => d.id === modalRejet ? { ...d, statut: 'rejetee', motif_rejet: motifRejet.trim() } : d))
       setModalRejet(null)
+      await chargerDemandes()
+      setPage(1)
     } catch (error) {
-      // Affiche le message précis renvoyé par le backend (ex. colonne manquante, statut invalide)
-      setRejetErreur(error.response?.data?.message || 'Erreur lors du rejet. Veuillez réessayer.')
+      setRejetErreur(error.response?.data?.message || t('di.rejetErreur'))
     }
   }
 
@@ -218,14 +220,14 @@ export default function DemandesIntervention() {
             <table className="di-table">
               <thead>
                 <tr>
-                  <th className="di-th">Titre</th>
-                  {role === 'admin' && <th className="di-th">Demandeur</th>}
-                  <th className="di-th">Équipement</th>
-                  <th className="di-th">Date</th>
-                  <th className="di-th">Heure</th>
-                  <th className="di-th">Priorité</th>
-                  <th className="di-th">Statut</th>
-                  <th className="di-th di-th-actions">Actions</th>
+                  <th className="di-th">{t('di.table.titre')}</th>
+                  {role === 'admin' && <th className="di-th">{t('di.table.demandeur')}</th>}
+                  <th className="di-th">{t('di.table.equipement')}</th>
+                  <th className="di-th">{t('di.table.date')}</th>
+                  <th className="di-th">{t('di.table.heure')}</th>
+                  <th className="di-th">{t('di.table.priorite')}</th>
+                  <th className="di-th">{t('di.table.statut')}</th>
+                  <th className="di-th di-th-actions">{t('di.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>

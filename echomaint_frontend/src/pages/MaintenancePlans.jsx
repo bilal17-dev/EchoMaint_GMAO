@@ -204,7 +204,7 @@ export default function MaintenancePlans() {
     }
     try {
       await updatePlan(plan.id, { actif: !plan.actif })
-      setPlans(prev => prev.map(p => p.id === plan.id ? { ...p, actif: !p.actif } : p))
+      await charger()
     } catch (err) {
       window.alert(err.response?.data?.message || t('common.error'))
     }
@@ -378,7 +378,7 @@ export default function MaintenancePlans() {
                 <label>{t('plans.label')} <span className="required">*</span></label>
                 <input
                   type="text"
-                  placeholder="Ex : Entretien trimestriel des ascenseurs"
+                  placeholder={t('plans.labelPlaceholder')}
                   value={form.label}
                   onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
                 />

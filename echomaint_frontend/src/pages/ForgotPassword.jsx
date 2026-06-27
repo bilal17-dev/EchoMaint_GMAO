@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import immeuble from '../assets/immeuble.png'
 import logo from '../assets/logo.png'
+import { forgotPassword } from '../api/auth.api'
 import './Login.css'
 import './ForgotPassword.css'
 
@@ -24,9 +25,8 @@ export default function ForgotPassword() {
     setLoading(true)
     setError('')
     try {
-      // Appel API réel à brancher ici
-      // await requestPasswordReset(email)
-      await new Promise(r => setTimeout(r, 800))
+      // Appel API réel — le backend envoie l'email si le compte existe
+      await forgotPassword(email)
       setSent(true)
     } catch {
       setError('Une erreur est survenue. Veuillez réessayer.')

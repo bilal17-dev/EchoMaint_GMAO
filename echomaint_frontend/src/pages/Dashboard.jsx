@@ -257,7 +257,7 @@ function DashboardAdmin() {
           <div className="imprimer-wrap" ref={imprimerRef}>
             <button className="btn-imprimer" onClick={() => setShowImprimer(v => !v)}>
               <i className="ti ti-printer" />
-              Imprimer
+              {t('common.print')}
             </button>
             {showImprimer && (
               <div className="imprimer-dropdown">
@@ -283,7 +283,7 @@ function DashboardAdmin() {
       {/* Barre de filtres — carte blanche style UpFix */}
       <div className="dashboard-filter-card">
         <div className="dashboard-filter-group">
-          <span className="filter-label-sm">Période</span>
+          <span className="filter-label-sm">{t('common.period')}</span>
           <select value={periode} onChange={e => setPeriode(e.target.value)} className="dashboard-select">
             <option value="7">{t('common.periods.7')}</option>
             <option value="30">{t('common.periods.30')}</option>
@@ -291,7 +291,7 @@ function DashboardAdmin() {
           </select>
         </div>
         <div className="dashboard-filter-group">
-          <span className="filter-label-sm">Bâtiment</span>
+          <span className="filter-label-sm">{t('interventions.batiment')}</span>
           <select value={filterBatiment} onChange={e => setFilterBatiment(e.target.value)} className="dashboard-select">
             <option value="">{t('dashboard.filter.allBuildings')}</option>
             {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
@@ -755,6 +755,7 @@ function DashboardClient() {
 const MOIS_LABELS_TECH = ['Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
 
 function TooltipAnnuelTech({ active, payload, label }) {
+  const { t } = useTranslation()
   if (!active || !payload?.length) return null
   const disponibles = payload.find(p => p.dataKey === 'disponibles')?.value ?? 0
   const clotures    = payload.find(p => p.dataKey === 'clotures')?.value ?? 0
@@ -764,10 +765,10 @@ function TooltipAnnuelTech({ active, payload, label }) {
   return (
     <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: '10px 14px', fontSize: 13, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', minWidth: 180 }}>
       <p style={{ fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>{label}</p>
-      <p style={{ color: '#123658', margin: '2px 0' }}>● {disponibles} disponible{disponibles !== 1 ? 's' : ''}</p>
-      <p style={{ color: '#359349', margin: '2px 0' }}>● {clotures} clôturé{clotures !== 1 ? 's' : ''}</p>
+      <p style={{ color: '#123658', margin: '2px 0' }}>● {t('dashboard.tech.tooltipAvailable', { count: disponibles })}</p>
+      <p style={{ color: '#359349', margin: '2px 0' }}>● {t('dashboard.tech.tooltipClosed', { count: clotures })}</p>
       {moisSuivant && reportes > 0 && (
-        <p style={{ color: '#94a3b8', marginTop: 6, fontSize: 12 }}>{reportes} reporté{reportes !== 1 ? 's' : ''} en {moisSuivant}</p>
+        <p style={{ color: '#94a3b8', marginTop: 6, fontSize: 12 }}>{t('dashboard.tech.tooltipPostponed', { count: reportes, mois: moisSuivant })}</p>
       )}
     </div>
   )
@@ -931,7 +932,7 @@ function DashboardTechnicien() {
                       <p className="ot-item-meta">{ot.equipement_nom} · {ot.batiment_nom}</p>
                     </div>
                     <span className="badge-priorite" style={{ color: pc.color, background: pc.bg }}>
-                      {ot.priorite || 'normale'}
+                      {t(`interventions.priorites.${ot.priorite || 'normale'}`)}
                     </span>
                   </div>
                 )
@@ -980,7 +981,7 @@ function DashboardTechnicien() {
                         <td data-label={t('dashboard.table.equipment')}>{ot.equipement_nom}</td>
                         <td data-label={t('dashboard.table.type')} style={{ textTransform: 'capitalize' }}>{ot.type}</td>
                         <td data-label={t('dashboard.table.priorite')}>
-                          <span className="badge-priorite" style={{ color: pc.color, background: pc.bg }}>{ot.priorite || '—'}</span>
+                          <span className="badge-priorite" style={{ color: pc.color, background: pc.bg }}>{ot.priorite ? t(`interventions.priorites.${ot.priorite}`) : '—'}</span>
                         </td>
                       </tr>
                     )
@@ -1002,15 +1003,15 @@ function DashboardTechnicien() {
               <i className="ti ti-chart-bar" style={{ color: '#123658' }} />
             </div>
             <div>
-              <p className="chart-title">Mes interventions — {new Date().getFullYear()}</p>
-              <p className="chart-subtitle">OT disponibles vs clôturés par mois</p>
+              <p className="chart-title">{t('dashboard.tech.myInterventionsYear', { year: new Date().getFullYear() })}</p>
+              <p className="chart-subtitle">{t('dashboard.tech.otVsClosedByMonth')}</p>
             </div>
           </div>
         </div>
         {data.activite_annuelle.every(m => m.disponibles === 0 && m.clotures === 0) ? (
           <div className="chart-empty">
             <i className="ti ti-calendar-off" style={{ fontSize: '2rem', color: '#CBD5E1' }} />
-            <p>Aucune intervention assignée cette année</p>
+            <p>{t('dashboard.tech.noInterventionsYear')}</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={280}>
@@ -1029,12 +1030,12 @@ function DashboardTechnicien() {
                 iconSize={10}
                 formatter={v => <span style={{ color: '#64748B', fontSize: '12px' }}>{v}</span>}
               />
-              <Bar dataKey="disponibles" name="OT disponibles ce mois" fill="#123658" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="disponibles" name={t('dashboard.tech.otAvailableMonth')} fill="#123658" radius={[4, 4, 0, 0]}>
                 {data.activite_annuelle.map((_, idx) => (
                   <Cell key={idx} fill="#123658" opacity={idx + 1 > moisActuel ? 0.2 : 1} />
                 ))}
               </Bar>
-              <Bar dataKey="clotures" name="OT clôturés" fill="#359349" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="clotures" name={t('dashboard.tech.otTermines')} fill="#359349" radius={[4, 4, 0, 0]}>
                 {data.activite_annuelle.map((_, idx) => (
                   <Cell key={idx} fill="#359349" opacity={idx + 1 > moisActuel ? 0.2 : 1} />
                 ))}

@@ -15,7 +15,7 @@ import Pagination from '../components/Pagination'
 const ITEMS_PER_PAGE = 8
 
 export default function Interventions() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const user    = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
   const isAdmin = user.role === 'admin'
@@ -53,7 +53,9 @@ export default function Interventions() {
       const results = await Promise.all(promises)
       const [resI, resB, resE, resT] = results
       const norm = r => Array.isArray(r) ? r : (r?.data ?? [])
-      setInterventions(norm(resI))
+      const fresh = norm(resI)
+      setInterventions(fresh)
+      setSelected(prev => prev ? (fresh.find(i => i.id === prev.id) ?? null) : null)
       if (isAdmin && resT) setTechniciens(norm(resT))
       setEquipements(norm(resE))
     } catch { setErreurChargement(t('interventions.errors.loadError')) }
@@ -75,28 +77,23 @@ export default function Interventions() {
   const paginated     = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
   const batimentsNoms = [...new Set(interventions.map(i => i.batiment_nom).filter(Boolean))]
 
-  const maj = (id, data) => {
-    setInterventions(prev => prev.map(i => i.id === id ? { ...i, ...data } : i))
-    if (selected?.id === id) setSelected(prev => ({ ...prev, ...data }))
-  }
   const fermerModal = () => { setModal(null); setErreurs([]) }
 
   const handleAssigner = async () => {
     if (!formAssigner.technicien_id) { setErreurs([t('interventions.errors.selectTech')]); return }
     try {
-      const res = await assigner(selected.id, formAssigner.technicien_id)
-      const data = res?.data ?? res
-      maj(selected.id, data)
-      const tech = techniciens.find(tc => tc.id === formAssigner.technicien_id)
-      if (tech) maj(selected.id, { ...data, technicien_nom: `${tech.prenom} ${tech.nom}`, technicien_id: tech.id })
-      fermerModal(); setFormAssigner({ technicien_id: '' })
+      await assigner(selected.id, formAssigner.technicien_id)
+      fermerModal()
+      setFormAssigner({ technicien_id: '' })
+      await chargerDonnees()
+      setPage(1)
     } catch (e) { setErreurs([e.response?.data?.message || t('interventions.errors.assignError')]) }
   }
 
   const handleDemarrer = async id => {
     try {
-      const res = await demarrer(id)
-      maj(id, res?.data ?? res)
+      await demarrer(id)
+      await chargerDonnees()
     } catch (e) { window.alert(e.response?.data?.message || t('interventions.errors.startError')) }
   }
 
@@ -108,30 +105,35 @@ export default function Interventions() {
       errs.push(t('interventions.errors.durationPositive'))
     if (errs.length) { setErreurs(errs); return }
     try {
-      const res = await cloturer(selected.id, {
+      await cloturer(selected.id, {
         commentaire_cloture: formCloturer.commentaire_cloture,
         duree_reelle_minutes: parseInt(formCloturer.duree_reelle_minutes),
         resolu: true
       })
-      maj(selected.id, res?.data ?? res)
-      fermerModal(); setFormCloturer({ commentaire_cloture: '', duree_reelle_minutes: '' })
+      fermerModal()
+      setFormCloturer({ commentaire_cloture: '', duree_reelle_minutes: '' })
+      await chargerDonnees()
+      setPage(1)
     } catch (e) { setErreurs([e.response?.data?.message || t('interventions.errors.closeError')]) }
   }
 
   const handleRouvrir = async () => {
     if (!formRouvrir.motif || formRouvrir.motif.length < 20) { setErreurs([t('interventions.errors.reasonMin')]); return }
     try {
-      const res = await rouvrir(selected.id, formRouvrir.motif)
-      maj(selected.id, res?.data ?? res)
-      fermerModal(); setFormRouvrir({ motif: '' })
+      await rouvrir(selected.id, formRouvrir.motif)
+      fermerModal()
+      setFormRouvrir({ motif: '' })
+      await chargerDonnees()
+      setPage(1)
     } catch (e) { setErreurs([e.response?.data?.message || t('interventions.errors.reopenError')]) }
   }
 
   const handleAnnuler = async () => {
     try {
-      const res = await annuler(selected.id)
-      maj(selected.id, res?.data ?? res)
+      await annuler(selected.id)
       fermerModal()
+      await chargerDonnees()
+      setPage(1)
     } catch (e) { window.alert(e.response?.data?.message || t('interventions.errors.cancelError')) }
   }
 
@@ -142,17 +144,17 @@ export default function Interventions() {
     if (!formCreer.equipement_id)  errs.push(t('interventions.errors.equipRequired'))
     if (errs.length) { setErreurs(errs); return }
     try {
-      const _res = await createIntervention(formCreer)
-      const nouvelle = _res?.data ?? _res
-      setInterventions(prev => [nouvelle, ...prev])
+      await createIntervention(formCreer)
       fermerModal()
       setFormCreer({ titre: '', type: 'preventif', priorite: 'normale', description: '', date_planifiee: '', technicien_id: '', equipement_id: '' })
+      await chargerDonnees()
+      setPage(1)
     } catch (e) { setErreurs([e.response?.data?.message || t('interventions.errors.createError')]) }
   }
 
-  const fmtDate = v => v ? new Date(v).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
-  const fmtDT   = v => v ? new Date(v).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
-  const fmtShort= v => v ? new Date(v).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '—'
+  const fmtDate = v => v ? new Date(v).toLocaleDateString(i18n.language, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
+  const fmtDT   = v => v ? new Date(v).toLocaleString(i18n.language, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+  const fmtShort= v => v ? new Date(v).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short' }) : '—'
 
   const renderPanelActions = ot => {
     const isAssignedTech = user.id === ot.technicien_id
@@ -234,7 +236,7 @@ export default function Interventions() {
           </select>
         </div>
         <p className="iv-count">
-          <strong>{filtered.length}</strong> intervention{filtered.length !== 1 ? 's' : ''}
+          {t('interventions.count', { count: filtered.length })}
         </p>
       </div>
 
@@ -246,7 +248,7 @@ export default function Interventions() {
           {paginated.length === 0 ? (
             <div className="page-empty">
               <i className="ti ti-clipboard-off" />
-              <h3>Aucune intervention</h3>
+              <h3>{t('interventions.emptyTitle')}</h3>
               <p>{t('interventions.empty')}</p>
             </div>
           ) : paginated.map((ot, idx) => (
@@ -341,7 +343,7 @@ export default function Interventions() {
                     </div>
                     <div className="iv-tech-info">
                       <p className="iv-tech-name">{selected.technicien_nom}</p>
-                      <p className="iv-tech-role">Technicien</p>
+                      <p className="iv-tech-role">{t('detail.technicien')}</p>
                     </div>
                   </div>
                 ) : (
@@ -351,24 +353,24 @@ export default function Interventions() {
 
               {/* Dates */}
               <div className="iv-detail-section">
-                <p className="iv-section-label"><i className="ti ti-calendar" /> Dates</p>
+                <p className="iv-section-label"><i className="ti ti-calendar" /> {t('interventions.sectionDates')}</p>
                 <div className="iv-dates-grid">
                   <div className="iv-date-item">
-                    <span className="iv-date-label">Planifiée</span>
+                    <span className="iv-date-label">{t('interventions.detail.planned')}</span>
                     <span className="iv-date-val">{fmtDate(selected.date_planifiee)}</span>
                   </div>
                   <div className="iv-date-item">
-                    <span className="iv-date-label">Début réel</span>
+                    <span className="iv-date-label">{t('interventions.detail.startReal')}</span>
                     <span className="iv-date-val">{fmtDT(selected.date_debut_reelle)}</span>
                   </div>
                   <div className="iv-date-item">
-                    <span className="iv-date-label">Fin réelle</span>
+                    <span className="iv-date-label">{t('interventions.detail.endReal')}</span>
                     <span className="iv-date-val">{fmtDT(selected.date_fin_reelle)}</span>
                   </div>
                   {selected.duree_reelle_minutes && (
                     <div className="iv-date-item">
-                      <span className="iv-date-label">Durée réelle</span>
-                      <span className="iv-date-val">{selected.duree_reelle_minutes} min</span>
+                      <span className="iv-date-label">{t('interventions.detail.realDuration')}</span>
+                      <span className="iv-date-val">{selected.duree_reelle_minutes} {t('detail.min')}</span>
                     </div>
                   )}
                 </div>
@@ -385,7 +387,7 @@ export default function Interventions() {
               {/* Rapport de clôture */}
               {selected.commentaire_cloture && (
                 <div className="iv-detail-section">
-                  <p className="iv-section-label"><i className="ti ti-check-circle" /> Rapport de clôture</p>
+                  <p className="iv-section-label"><i className="ti ti-check-circle" /> {t('interventions.rapportCloture')}</p>
                   <div className="iv-cloture-box">
                     <p>{selected.commentaire_cloture}</p>
                   </div>
@@ -396,7 +398,7 @@ export default function Interventions() {
               {selected.reouvertures?.length > 0 && (
                 <div className="iv-detail-section">
                   <p className="iv-section-label">
-                    <i className="ti ti-history" /> Réouvertures ({selected.reouvertures.length})
+                    <i className="ti ti-history" /> {t('interventions.sectionReouvertures')} ({selected.reouvertures.length})
                   </p>
                   <div className="iv-reouv-list">
                     {selected.reouvertures.map(r => (
@@ -414,7 +416,7 @@ export default function Interventions() {
                 {renderPanelActions(selected)}
                 <div className="iv-detail-links">
                   <button className="iv-link-btn" onClick={() => navigate(`/interventions/${selected.id}`)}>
-                    <i className="ti ti-external-link" /> Voir la fiche complète
+                    <i className="ti ti-external-link" /> {t('interventions.voirFicheComplete')}
                   </button>
                   {selected.statut === 'terminee' && selected.rapport_pdf_chemin && (
                     <button
