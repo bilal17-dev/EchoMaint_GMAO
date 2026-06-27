@@ -402,7 +402,8 @@
     "deleteConfirm": "Delete this photo?",
     "errorFormat": "Unsupported format. Use JPEG or PNG.",
     "errorSize": "File too large (max 5 MB).",
-    "blockedStatus": "Photo upload is only possible on an assigned or in-progress WO."
+    "blockedStatus": "Photo upload is only possible on an assigned or in-progress WO.",
+    "countUploaded": "photo(s) uploaded"
   },
   "planning": {
     "title": "Planning",

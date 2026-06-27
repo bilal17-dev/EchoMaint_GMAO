@@ -10,11 +10,13 @@ const DemandeIntervention = {
     const query = db('demandes_intervention')
       .join('clients', 'demandes_intervention.client_id', '=', 'clients.id')
       .join('equipements', 'demandes_intervention.equipement_id', '=', 'equipements.id')
+      .leftJoin('batiments', 'equipements.batiment_id', '=', 'batiments.id')
       .select(
         'demandes_intervention.*',
-        'clients.nom as client_nom', 
+        'clients.nom as client_nom',
         'equipements.nom as equipement_nom',
-        'equipements.reference as equipement_reference'
+        'equipements.reference as equipement_reference',
+        'batiments.nom as batiment_nom'
       )
       .orderBy('demandes_intervention.created_at', 'desc');
 
@@ -28,11 +30,13 @@ const DemandeIntervention = {
     return db('demandes_intervention')
       .join('clients', 'demandes_intervention.client_id', '=', 'clients.id')
       .join('equipements', 'demandes_intervention.equipement_id', '=', 'equipements.id')
+      .leftJoin('batiments', 'equipements.batiment_id', '=', 'batiments.id')
       .select(
         'demandes_intervention.*',
         'clients.nom as client_nom',
         'equipements.nom as equipement_nom',
-        'equipements.reference as equipement_reference'
+        'equipements.reference as equipement_reference',
+        'batiments.nom as batiment_nom'
       )
       .where('demandes_intervention.id', id)
       .first();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import './DetailIntervention.css'
 
 import {
@@ -9,21 +10,21 @@ import {
 import { getTechniciens } from '../api/utilisateurs.api'
 
 const STATUT_META = {
-  planifiee: { label: 'Planifiée',  bg: 'linear-gradient(135deg,#1E293B 0%,#334155 100%)' },
-  assignee:  { label: 'Assignée',   bg: 'linear-gradient(135deg,#431407 0%,#78350F 100%)' },
-  en_cours:  { label: 'En cours',   bg: 'linear-gradient(135deg,#1E3A5F 0%,#1E40AF 100%)' },
-  terminee:  { label: 'Terminée',   bg: 'linear-gradient(135deg,#052E16 0%,#065F46 100%)' },
-  annulee:   { label: 'Annulée',    bg: 'linear-gradient(135deg,#450A0A 0%,#7F1D1D 100%)' },
+  planifiee: { key: 'planifiee', bg: 'linear-gradient(135deg,#1E293B 0%,#334155 100%)' },
+  assignee:  { key: 'assignee',  bg: 'linear-gradient(135deg,#431407 0%,#78350F 100%)' },
+  en_cours:  { key: 'en_cours',  bg: 'linear-gradient(135deg,#1E3A5F 0%,#1E40AF 100%)' },
+  terminee:  { key: 'terminee',  bg: 'linear-gradient(135deg,#052E16 0%,#065F46 100%)' },
+  annulee:   { key: 'annulee',   bg: 'linear-gradient(135deg,#450A0A 0%,#7F1D1D 100%)' },
 }
 const TYPE_META = {
-  preventif: { label: 'Préventif', icon: 'ti-tool',           cls: 'detiv-chip--prev' },
-  curatif:   { label: 'Curatif',   icon: 'ti-alert-triangle', cls: 'detiv-chip--cur'  },
+  preventif: { key: 'preventif', icon: 'ti-tool',           cls: 'detiv-chip--prev' },
+  curatif:   { key: 'curatif',   icon: 'ti-alert-triangle', cls: 'detiv-chip--cur'  },
 }
 const PRIO_META = {
-  basse:   { label: 'Basse',   cls: 'detiv-chip--prio-basse'   },
-  normale: { label: 'Normale', cls: 'detiv-chip--prio-normale' },
-  haute:   { label: 'Haute',   cls: 'detiv-chip--prio-haute'   },
-  urgente: { label: 'Urgente', cls: 'detiv-chip--prio-urgente' },
+  basse:   { key: 'basse',   cls: 'detiv-chip--prio-basse'   },
+  normale: { key: 'normale', cls: 'detiv-chip--prio-normale' },
+  haute:   { key: 'haute',   cls: 'detiv-chip--prio-haute'   },
+  urgente: { key: 'urgente', cls: 'detiv-chip--prio-urgente' },
 }
 
 function fmtDate(d) {
@@ -49,6 +50,7 @@ function initials(prenom, nom) {
 }
 
 function CommentaireForm({ interventionId, onAjout }) {
+  const { t } = useTranslation()
   const [contenu, setContenu] = useState('')
   const [sending, setSending]  = useState(false)
 
@@ -61,7 +63,7 @@ function CommentaireForm({ interventionId, onAjout }) {
       onAjout(res?.data ?? [])
       setContenu('')
     } catch (err) {
-      window.alert(err.response?.data?.message || 'Erreur lors de l\'envoi.')
+      window.alert(err.response?.data?.message || t('common.error'))
     } finally {
       setSending(false)
     }
@@ -70,19 +72,20 @@ function CommentaireForm({ interventionId, onAjout }) {
   return (
     <div className="detiv-comment-form">
       <textarea
-        placeholder="Ajouter un commentaire..."
+        placeholder={t('detail.commentPlaceholder')}
         value={contenu}
         onChange={e => setContenu(e.target.value)}
         rows={3}
       />
       <button className="btn-primary" onClick={handleEnvoyer} disabled={sending || contenu.trim().length === 0}>
-        {sending ? 'Envoi...' : <><i className="ti ti-send" /> Envoyer</>}
+        {sending ? t('common.submitting') : <><i className="ti ti-send" /> {t('common.send')}</>}
       </button>
     </div>
   )
 }
 
 export default function DetailIntervention() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -111,7 +114,7 @@ export default function DetailIntervention() {
       setOt(res?.data ?? res)
     } catch (err) {
       console.error('Erreur chargement OT:', err)
-      setErreur('Intervention introuvable ou erreur serveur.')
+      setErreur(t('interventions.errors.loadError'))
     } finally {
       setLoading(false)
     }
@@ -132,11 +135,11 @@ export default function DetailIntervention() {
   const fermerModal = () => { setModal(null); setErrModal(''); setSubmitting(false) }
 
   const handleAssigner = async () => {
-    if (!assignForm.technicien_id) { setErrModal('Sélectionnez un technicien.'); return }
+    if (!assignForm.technicien_id) { setErrModal(t('interventions.errors.selectTech')); return }
     setSubmitting(true)
     try {
       const res = await assigner(id, assignForm.technicien_id)
-      const tech = techniciens.find(t => t.id === assignForm.technicien_id)
+      const tech = techniciens.find(tc => tc.id === assignForm.technicien_id)
       setOt(prev => ({
         ...prev, ...(res?.data ?? res),
         technicien_nom:    tech ? tech.nom    : prev.technicien_nom,
@@ -145,7 +148,7 @@ export default function DetailIntervention() {
       }))
       fermerModal(); setAssignForm({ technicien_id: '' })
     } catch (err) {
-      setErrModal(err.response?.data?.message || 'Erreur lors de l\'assignation.')
+      setErrModal(err.response?.data?.message || t('interventions.errors.assignError'))
     } finally { setSubmitting(false) }
   }
 
@@ -154,20 +157,20 @@ export default function DetailIntervention() {
       const res = await demarrer(id)
       setOt(prev => ({ ...prev, ...(res?.data ?? res) }))
     } catch (err) {
-      window.alert(err.response?.data?.message || 'Erreur lors du démarrage.')
+      window.alert(err.response?.data?.message || t('interventions.errors.startError'))
     }
   }
 
   const handleCloturer = async () => {
     if (cloturerForm.commentaire_cloture.trim().length < 10) {
-      setErrModal('Le commentaire doit faire au moins 10 caractères.'); return
+      setErrModal(t('interventions.errors.commentMin')); return
     }
     if (!cloturerForm.duree_reelle_minutes || parseInt(cloturerForm.duree_reelle_minutes) <= 0) {
-      setErrModal('La durée doit être un entier supérieur à 0.'); return
+      setErrModal(t('interventions.errors.durationPositive')); return
     }
     const photos = ot.photos ?? []
     if (photos.length === 0) {
-      const ok = window.confirm('Aucune photo n\'a été uploadée. Voulez-vous quand même clôturer ?')
+      const ok = window.confirm(t('photos.blockedStatus'))
       if (!ok) return
     }
     setSubmitting(true)
@@ -181,13 +184,13 @@ export default function DetailIntervention() {
       fermerModal(); setCloturerForm({ commentaire_cloture: '', duree_reelle_minutes: '' })
       await chargerOT()
     } catch (err) {
-      setErrModal(err.response?.data?.message || 'Erreur lors de la clôture.')
+      setErrModal(err.response?.data?.message || t('interventions.errors.closeError'))
     } finally { setSubmitting(false) }
   }
 
   const handleRouvrir = async () => {
     if (rouvrirForm.motif.trim().length < 20) {
-      setErrModal('Le motif doit faire au moins 20 caractères.'); return
+      setErrModal(t('interventions.errors.reasonMin')); return
     }
     setSubmitting(true)
     try {
@@ -195,7 +198,7 @@ export default function DetailIntervention() {
       setOt(prev => ({ ...prev, ...(res?.data ?? res) }))
       fermerModal(); setRouvrirForm({ motif: '' })
     } catch (err) {
-      setErrModal(err.response?.data?.message || 'Erreur lors de la réouverture.')
+      setErrModal(err.response?.data?.message || t('interventions.errors.reopenError'))
     } finally { setSubmitting(false) }
   }
 
@@ -206,7 +209,7 @@ export default function DetailIntervention() {
       setOt(prev => ({ ...prev, ...(res?.data ?? res) }))
       fermerModal()
     } catch (err) {
-      window.alert(err.response?.data?.message || 'Erreur lors de l\'annulation.')
+      window.alert(err.response?.data?.message || t('interventions.errors.cancelError'))
     } finally { setSubmitting(false) }
   }
 
@@ -218,7 +221,7 @@ export default function DetailIntervention() {
       const res = await uploadPhoto(id, file, type_photo)
       setOt(prev => ({ ...prev, photos: res?.data ?? [] }))
     } catch (err) {
-      window.alert(err.response?.data?.message || 'Erreur lors de l\'upload.')
+      window.alert(err.response?.data?.message || t('common.error'))
     } finally {
       setUploadingPhoto(null)
       e.target.value = ''
@@ -226,7 +229,7 @@ export default function DetailIntervention() {
   }
 
   const handleSupprimerPhoto = async (photoId) => {
-    if (!window.confirm('Supprimer cette photo ?')) return
+    if (!window.confirm(t('photos.deleteConfirm'))) return
     try {
       await fetch(`http://localhost:5000/api/v1/interventions/photos/${photoId}`, {
         method: 'DELETE',
@@ -234,7 +237,7 @@ export default function DetailIntervention() {
       })
       setOt(prev => ({ ...prev, photos: (prev.photos ?? []).filter(p => p.id !== photoId) }))
     } catch {
-      window.alert('Erreur lors de la suppression.')
+      window.alert(t('common.error'))
     }
   }
 
@@ -243,7 +246,7 @@ export default function DetailIntervention() {
     <div className="detiv-empty-state">
       <div className="detiv-empty-inner">
         <i className="ti ti-loader-2 spin" style={{ fontSize: 32, color: 'var(--brand)' }} />
-        <p>Chargement de l'intervention...</p>
+        <p>{t('common.loading')}</p>
       </div>
     </div>
   )
@@ -252,8 +255,8 @@ export default function DetailIntervention() {
     <div className="detiv-empty-state">
       <div className="detiv-empty-inner">
         <i className="ti ti-alert-circle" style={{ fontSize: 40, color: '#ef4444' }} />
-        <p>{erreur || 'Intervention introuvable.'}</p>
-        <button className="btn-outline" onClick={() => navigate('/interventions')}>Retour à la liste</button>
+        <p>{erreur || t('interventions.errors.loadError')}</p>
+        <button className="btn-outline" onClick={() => navigate('/interventions')}>{t('common.back')}</button>
       </div>
     </div>
   )
@@ -261,6 +264,9 @@ export default function DetailIntervention() {
   const statutMeta          = STATUT_META[ot.statut]  || STATUT_META.planifiee
   const typeMeta            = TYPE_META[ot.type]       || TYPE_META.preventif
   const prioMeta            = PRIO_META[ot.priorite]   || PRIO_META.normale
+  const statutLabel         = t(`interventions.statuts.${statutMeta.key}`)
+  const typeLabel           = t(`interventions.types.${typeMeta.key}`)
+  const prioLabel           = t(`interventions.priorites.${prioMeta.key}`)
   const isTechAssigne        = isTech && ot.technicien_id === user.id
   const isAdminOrTechAssigne = isAdmin || isTechAssigne
   const peutUploaderPhoto    = isAdminOrTechAssigne && ['assignee', 'en_cours'].includes(ot.statut)
@@ -276,7 +282,7 @@ export default function DetailIntervention() {
 
         <div className="detiv-hero-top">
           <button className="detiv-back-btn" onClick={() => navigate(-1)}>
-            <i className="ti ti-arrow-left" /> Retour
+            <i className="ti ti-arrow-left" /> {t('common.back')}
           </button>
           <span className="detiv-ot-id">OT-{String(ot.id).padStart(4, '0')}</span>
         </div>
@@ -288,9 +294,9 @@ export default function DetailIntervention() {
           <div className="detiv-hero-text">
             <h1 className="detiv-hero-title">{ot.titre}</h1>
             <div className="detiv-hero-chips">
-              <span className="detiv-chip detiv-chip--statut">{statutMeta.label}</span>
-              <span className={`detiv-chip ${prioMeta.cls}`}>{prioMeta.label}</span>
-              <span className={`detiv-chip ${typeMeta.cls}`}>{typeMeta.label}</span>
+              <span className="detiv-chip detiv-chip--statut">{statutLabel}</span>
+              <span className={`detiv-chip ${prioMeta.cls}`}>{prioLabel}</span>
+              <span className={`detiv-chip ${typeMeta.cls}`}>{typeLabel}</span>
             </div>
             {ot.description && (
               <p className="detiv-hero-desc">{ot.description}</p>
@@ -302,27 +308,27 @@ export default function DetailIntervention() {
           <div className="detiv-hero-actions">
             {isAdmin && ot.statut === 'planifiee' && (
               <button className="detiv-action-btn detiv-action-btn--blue" onClick={() => setModal('assigner')}>
-                <i className="ti ti-user-plus" /> Assigner
+                <i className="ti ti-user-plus" /> {t('interventions.actions.assign')}
               </button>
             )}
             {isAdminOrTechAssigne && ot.statut === 'assignee' && (
               <button className="detiv-action-btn detiv-action-btn--violet" onClick={handleDemarrer}>
-                <i className="ti ti-player-play" /> Démarrer
+                <i className="ti ti-player-play" /> {t('interventions.actions.start')}
               </button>
             )}
             {isAdminOrTechAssigne && ot.statut === 'en_cours' && (
               <button className="detiv-action-btn detiv-action-btn--green" onClick={() => setModal('cloturer')}>
-                <i className="ti ti-circle-check" /> Clôturer
+                <i className="ti ti-circle-check" /> {t('interventions.actions.close')}
               </button>
             )}
             {isAdmin && ot.statut === 'terminee' && (
               <button className="detiv-action-btn detiv-action-btn--amber" onClick={() => setModal('rouvrir')}>
-                <i className="ti ti-rotate" /> Rouvrir
+                <i className="ti ti-rotate" /> {t('interventions.actions.reopen')}
               </button>
             )}
             {isAdmin && ['planifiee', 'assignee'].includes(ot.statut) && (
               <button className="detiv-action-btn detiv-action-btn--ghost" onClick={() => setModal('annuler')}>
-                <i className="ti ti-ban" /> Annuler
+                <i className="ti ti-ban" /> {t('interventions.actions.cancel')}
               </button>
             )}
           </div>
@@ -341,7 +347,7 @@ export default function DetailIntervention() {
               <div className="detiv-card-icon" style={{ background: '#EFF6FF' }}>
                 <i className="ti ti-info-circle" style={{ color: '#2563EB' }} />
               </div>
-              <h2 className="detiv-card-title">Informations</h2>
+              <h2 className="detiv-card-title">{t('interventions.detail.info')}</h2>
             </div>
 
             {/* Technicien */}
@@ -356,31 +362,31 @@ export default function DetailIntervention() {
                 <p className="detiv-tech-name">
                   {ot.technicien_nom
                     ? `${ot.technicien_prenom ?? ''} ${ot.technicien_nom}`.trim()
-                    : 'Non assigné'
+                    : t('interventions.unassigned')
                   }
                 </p>
-                <p className="detiv-tech-role">Technicien assigné</p>
+                <p className="detiv-tech-role">{t('detail.technicien')}</p>
               </div>
             </div>
 
             {/* Dates */}
             <div className="detiv-dates-grid">
               <div className="detiv-date-item">
-                <span className="detiv-date-label"><i className="ti ti-calendar" /> Planifiée</span>
+                <span className="detiv-date-label"><i className="ti ti-calendar" /> {t('interventions.datePlanifiee')}</span>
                 <span className="detiv-date-val">{fmtDate(ot.date_planifiee)}</span>
               </div>
               <div className="detiv-date-item" data-done={!!ot.date_debut_reelle || undefined}>
-                <span className="detiv-date-label"><i className="ti ti-player-play" /> Démarrée</span>
+                <span className="detiv-date-label"><i className="ti ti-player-play" /> {t('interventions.detail.startReal')}</span>
                 <span className="detiv-date-val">{fmtDateTime(ot.date_debut_reelle)}</span>
               </div>
               <div className="detiv-date-item" data-done={!!ot.date_fin_reelle || undefined}>
-                <span className="detiv-date-label"><i className="ti ti-circle-check" /> Clôturée</span>
+                <span className="detiv-date-label"><i className="ti ti-circle-check" /> {t('interventions.detail.endReal')}</span>
                 <span className="detiv-date-val">{fmtDateTime(ot.date_fin_reelle)}</span>
               </div>
               {ot.duree_reelle_minutes && (
                 <div className="detiv-date-item detiv-date-item--accent">
-                  <span className="detiv-date-label"><i className="ti ti-clock" /> Durée réelle</span>
-                  <span className="detiv-date-val">{ot.duree_reelle_minutes} min</span>
+                  <span className="detiv-date-label"><i className="ti ti-clock" /> {t('interventions.detail.realDuration')}</span>
+                  <span className="detiv-date-val">{ot.duree_reelle_minutes} {t('detail.min')}</span>
                 </div>
               )}
             </div>
@@ -388,7 +394,7 @@ export default function DetailIntervention() {
             {ot.commentaire_cloture && (
               <div className="detiv-cloture-box">
                 <p className="detiv-cloture-label">
-                  <i className="ti ti-clipboard-check" /> Commentaire de clôture
+                  <i className="ti ti-clipboard-check" /> {t('interventions.detail.closureComment')}
                 </p>
                 <p className="detiv-cloture-text">{ot.commentaire_cloture}</p>
               </div>
@@ -401,7 +407,7 @@ export default function DetailIntervention() {
               <div className="detiv-card-icon" style={{ background: '#F0FDF4' }}>
                 <i className="ti ti-cpu" style={{ color: '#059669' }} />
               </div>
-              <h2 className="detiv-card-title">Équipement & Bâtiment</h2>
+              <h2 className="detiv-card-title">{t('interventions.detail.equipBatiment')}</h2>
             </div>
 
             <div className="detiv-equip-hero">
@@ -411,7 +417,7 @@ export default function DetailIntervention() {
               <div>
                 <p className="detiv-equip-name">{ot.equipement_nom || '—'}</p>
                 {ot.equipement_reference && (
-                  <p className="detiv-equip-ref">Réf. {ot.equipement_reference}</p>
+                  <p className="detiv-equip-ref">{t('equipements.ref')} {ot.equipement_reference}</p>
                 )}
               </div>
             </div>
@@ -421,14 +427,14 @@ export default function DetailIntervention() {
                 <i className="ti ti-building" />
               </div>
               <div>
-                <p className="detiv-meta-label">Bâtiment</p>
+                <p className="detiv-meta-label">{t('detail.building')}</p>
                 <p className="detiv-meta-val">{ot.batiment_nom || '—'}</p>
               </div>
             </div>
 
             {ot.description && (
               <div className="detiv-desc-box">
-                <p className="detiv-desc-label">Description</p>
+                <p className="detiv-desc-label">{t('detail.description')}</p>
                 <p className="detiv-desc-text">{ot.description}</p>
               </div>
             )}
@@ -441,7 +447,7 @@ export default function DetailIntervention() {
             <div className="detiv-card-icon" style={{ background: '#FEF2F2' }}>
               <i className="ti ti-file-type-pdf" style={{ color: '#EF4444' }} />
             </div>
-            <h2 className="detiv-card-title">Rapport d'intervention</h2>
+            <h2 className="detiv-card-title">{t('detail.rapport')}</h2>
           </div>
 
           {ot.statut === 'terminee' && ot.rapport_url ? (
@@ -471,22 +477,22 @@ export default function DetailIntervention() {
                 }
               }}
             >
-              <i className="ti ti-download" /> Télécharger le rapport PDF
+              <i className="ti ti-download" /> {t('interventions.detail.downloadPdf')}
             </button>
           ) : ot.statut === 'en_cours' && !ot.rapport_url ? (
             <div className="detiv-info-msg detiv-info-msg--warning">
               <i className="ti ti-refresh-alert" />
-              <span>Rapport invalidé — nouvelle clôture requise</span>
+              <span>{t('detail.rapportUnavailable')}</span>
             </div>
           ) : ot.statut === 'terminee' ? (
             <div className="detiv-info-msg detiv-info-msg--error">
               <i className="ti ti-file-off" />
-              <span>Rapport non disponible — veuillez contacter l'administrateur.</span>
+              <span>{t('interventions.errors.reportError')}</span>
             </div>
           ) : (
             <div className="detiv-info-msg">
               <i className="ti ti-clock" />
-              <span>Le rapport sera disponible après la clôture de l'intervention.</span>
+              <span>{t('detail.rapportUnavailable')}</span>
             </div>
           )}
         </div>
@@ -497,7 +503,7 @@ export default function DetailIntervention() {
             <div className="detiv-card-icon" style={{ background: '#F5F3FF' }}>
               <i className="ti ti-camera" style={{ color: '#8B5CF6' }} />
             </div>
-            <h2 className="detiv-card-title">Photos d'intervention</h2>
+            <h2 className="detiv-card-title">{t('detail.photos')}</h2>
           </div>
 
           <div className="detiv-photos-cols">
@@ -505,11 +511,11 @@ export default function DetailIntervention() {
             <div className="detiv-photos-section">
               <p className="detiv-photos-label">
                 <i className="ti ti-camera" />
-                Avant
+                {t('photos.typeAvant')}
                 <span className="detiv-photos-count">{photosAvant.length}</span>
               </p>
               {photosAvant.length === 0
-                ? <p className="detiv-photos-empty">Aucune photo avant</p>
+                ? <p className="detiv-photos-empty">{t('detail.noPhotos')}</p>
                 : (
                   <div className="detiv-photos-grid">
                     {photosAvant.map(p => (
@@ -533,7 +539,7 @@ export default function DetailIntervention() {
               {peutUploaderPhoto && (
                 <label className="detiv-upload-btn">
                   <i className="ti ti-upload" />
-                  {uploadingPhoto === 'avant' ? 'Upload en cours...' : 'Ajouter une photo avant'}
+                  {uploadingPhoto === 'avant' ? t('photos.uploading') : t('photos.uploadAvant')}
                   <input
                     type="file"
                     accept="image/jpeg,image/png"
@@ -549,11 +555,11 @@ export default function DetailIntervention() {
             <div className="detiv-photos-section">
               <p className="detiv-photos-label">
                 <i className="ti ti-camera-check" />
-                Après
+                {t('photos.typeApres')}
                 <span className="detiv-photos-count">{photosApres.length}</span>
               </p>
               {photosApres.length === 0
-                ? <p className="detiv-photos-empty">Aucune photo après</p>
+                ? <p className="detiv-photos-empty">{t('detail.noPhotos')}</p>
                 : (
                   <div className="detiv-photos-grid">
                     {photosApres.map(p => (
@@ -577,7 +583,7 @@ export default function DetailIntervention() {
               {peutUploaderPhoto && (
                 <label className="detiv-upload-btn">
                   <i className="ti ti-upload" />
-                  {uploadingPhoto === 'apres' ? 'Upload en cours...' : 'Ajouter une photo après'}
+                  {uploadingPhoto === 'apres' ? t('photos.uploading') : t('photos.uploadApres')}
                   <input
                     type="file"
                     accept="image/jpeg,image/png"
@@ -598,7 +604,7 @@ export default function DetailIntervention() {
               <i className="ti ti-message-circle" style={{ color: '#059669' }} />
             </div>
             <h2 className="detiv-card-title">
-              Commentaires
+              {t('detail.comments')}
               {(ot.commentaires ?? []).length > 0 && (
                 <span className="detiv-count-chip">{ot.commentaires.length}</span>
               )}
@@ -606,7 +612,7 @@ export default function DetailIntervention() {
           </div>
 
           {(ot.commentaires ?? []).length === 0
-            ? <p className="detiv-empty-text">Aucun commentaire pour cette intervention.</p>
+            ? <p className="detiv-empty-text">{t('detail.noComments')}</p>
             : (
               <div className="detiv-comments-list">
                 {ot.commentaires.map(c => (
@@ -643,7 +649,7 @@ export default function DetailIntervention() {
                 <i className="ti ti-refresh-alert" style={{ color: '#D97706' }} />
               </div>
               <h2 className="detiv-card-title">
-                Historique des réouvertures
+                {t('detail.reopenings')}
                 <span className="detiv-count-chip detiv-count-chip--warn">{ot.reouvertures.length}</span>
               </h2>
             </div>
@@ -655,7 +661,7 @@ export default function DetailIntervention() {
                     <span>{fmtDateTime(r.created_at)}</span>
                   </div>
                   <p className="detiv-reouv-motif">{r.motif}</p>
-                  <span className="detiv-reouv-statut">Statut précédent : {r.statut_precedent}</span>
+                  <span className="detiv-reouv-statut">{t('interventions.detail.prevStatus')} : {r.statut_precedent}</span>
                 </div>
               ))}
             </div>
@@ -698,24 +704,24 @@ export default function DetailIntervention() {
             {modal === 'assigner' && (
               <>
                 <div className="modal-header">
-                  <h2>Assigner un technicien</h2>
-                  <button onClick={fermerModal}><i className="ti ti-x" /></button>
+                  <h2>{t('interventions.modal.assignTitle')}</h2>
+                  <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-form">
                   <div className="form-group">
-                    <label>Technicien</label>
+                    <label>{t('interventions.technicien')}</label>
                     <select value={assignForm.technicien_id} onChange={e => setAssignForm({ technicien_id: e.target.value })}>
-                      <option value="">Sélectionner un technicien</option>
-                      {techniciens.map(t => (
-                        <option key={t.id} value={t.id}>{t.prenom} {t.nom}</option>
+                      <option value="">{t('interventions.modal.selectTech')}</option>
+                      {techniciens.map(tc => (
+                        <option key={tc.id} value={tc.id}>{tc.prenom} {tc.nom}</option>
                       ))}
                     </select>
                   </div>
                   {errModal && <p style={{ color: '#ef4444', fontSize: '13px' }}>{errModal}</p>}
                   <div className="modal-footer">
-                    <button className="btn-cancel" onClick={fermerModal}>Annuler</button>
+                    <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                     <button className="btn-primary" onClick={handleAssigner} disabled={submitting}>
-                      {submitting ? 'Assignation...' : 'Assigner'}
+                      {submitting ? t('common.saving') : t('interventions.actions.assign')}
                     </button>
                   </div>
                 </div>
@@ -726,8 +732,8 @@ export default function DetailIntervention() {
             {modal === 'cloturer' && (
               <>
                 <div className="modal-header">
-                  <h2>Clôturer l'intervention</h2>
-                  <button onClick={fermerModal}><i className="ti ti-x" /></button>
+                  <h2>{t('interventions.modal.closeTitle')}</h2>
+                  <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-form">
                   <div style={{
@@ -740,15 +746,15 @@ export default function DetailIntervention() {
                       style={{ color: (ot.photos ?? []).length === 0 ? '#F59E0B' : '#22C55E' }} />
                     <span>
                       {(ot.photos ?? []).length === 0
-                        ? 'Aucune photo uploadée — recommandé avant clôture'
-                        : `${(ot.photos ?? []).length} photo(s) uploadée(s)`
+                        ? t('photos.blockedStatus')
+                        : `${(ot.photos ?? []).length} ${t('photos.countUploaded')}`
                       }
                     </span>
                   </div>
                   <div className="form-group">
-                    <label>Commentaire de clôture <span style={{ color: '#b91c1c' }}>*</span></label>
+                    <label>{t('interventions.modal.closureComment')} <span style={{ color: '#b91c1c' }}>*</span></label>
                     <textarea
-                      placeholder="Décrivez les travaux effectués (min. 10 caractères)..."
+                      placeholder={t('interventions.modal.closureCommentPlaceholder')}
                       value={cloturerForm.commentaire_cloture}
                       onChange={e => setCloturerForm(f => ({ ...f, commentaire_cloture: e.target.value }))}
                       rows={4}
@@ -758,7 +764,7 @@ export default function DetailIntervention() {
                     </span>
                   </div>
                   <div className="form-group">
-                    <label>Durée réelle (minutes) <span style={{ color: '#b91c1c' }}>*</span></label>
+                    <label>{t('interventions.modal.realDuration')} <span style={{ color: '#b91c1c' }}>*</span></label>
                     <input
                       type="number" min={1} placeholder="Ex: 90"
                       value={cloturerForm.duree_reelle_minutes}
@@ -767,9 +773,9 @@ export default function DetailIntervention() {
                   </div>
                   {errModal && <p style={{ color: '#ef4444', fontSize: '13px' }}>{errModal}</p>}
                   <div className="modal-footer">
-                    <button className="btn-cancel" onClick={fermerModal}>Annuler</button>
+                    <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                     <button className="btn-action-close" onClick={handleCloturer} disabled={submitting}>
-                      {submitting ? 'Clôture...' : 'Clôturer'}
+                      {submitting ? t('common.saving') : t('interventions.actions.close')}
                     </button>
                   </div>
                 </div>
@@ -780,18 +786,18 @@ export default function DetailIntervention() {
             {modal === 'rouvrir' && (
               <>
                 <div className="modal-header">
-                  <h2>Rouvrir l'intervention</h2>
-                  <button onClick={fermerModal}><i className="ti ti-x" /></button>
+                  <h2>{t('interventions.modal.reopenTitle')}</h2>
+                  <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-form">
                   <div className="reouverture-warning">
                     <i className="ti ti-alert-triangle" />
-                    <p>La réouverture invalidera le rapport PDF et repassera l'intervention en "En cours".</p>
+                    <p>{t('interventions.modal.reopenWarning')}</p>
                   </div>
                   <div className="form-group">
-                    <label>Motif de réouverture <span style={{ color: '#b91c1c' }}>*</span> (min. 20 caractères)</label>
+                    <label>{t('interventions.modal.reopenReason')} <span style={{ color: '#b91c1c' }}>*</span></label>
                     <textarea
-                      placeholder="Décrivez la raison de la réouverture..."
+                      placeholder={t('interventions.modal.reopenReasonPlaceholder')}
                       value={rouvrirForm.motif}
                       onChange={e => setRouvrirForm({ motif: e.target.value })}
                       rows={4}
@@ -802,9 +808,9 @@ export default function DetailIntervention() {
                   </div>
                   {errModal && <p style={{ color: '#ef4444', fontSize: '13px' }}>{errModal}</p>}
                   <div className="modal-footer">
-                    <button className="btn-cancel" onClick={fermerModal}>Annuler</button>
+                    <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                     <button className="btn-action-reopen" onClick={handleRouvrir} disabled={submitting}>
-                      {submitting ? 'Réouverture...' : 'Rouvrir'}
+                      {submitting ? t('common.saving') : t('interventions.actions.reopen')}
                     </button>
                   </div>
                 </div>
@@ -815,17 +821,17 @@ export default function DetailIntervention() {
             {modal === 'annuler' && (
               <>
                 <div className="modal-header">
-                  <h2>Annuler l'intervention</h2>
-                  <button onClick={fermerModal}><i className="ti ti-x" /></button>
+                  <h2>{t('interventions.modal.cancelTitle')}</h2>
+                  <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-form">
                   <p style={{ fontSize: 14, color: 'var(--text-primary)', margin: 0, lineHeight: 1.5 }}>
-                    Êtes-vous sûr de vouloir annuler <strong>"{ot.titre}"</strong> ? Cette action est irréversible.
+                    {t('interventions.modal.cancelConfirm')} <strong>"{ot.titre}"</strong> ? {t('interventions.modal.cancelIrreversible')}
                   </p>
                   <div className="modal-footer">
-                    <button className="btn-cancel" onClick={fermerModal}>Non, garder</button>
+                    <button className="btn-cancel" onClick={fermerModal}>{t('interventions.modal.noKeep')}</button>
                     <button className="btn-action-cancel" onClick={handleAnnuler} disabled={submitting}>
-                      {submitting ? 'Annulation...' : 'Oui, annuler'}
+                      {submitting ? t('common.saving') : t('interventions.modal.yesCancel')}
                     </button>
                   </div>
                 </div>

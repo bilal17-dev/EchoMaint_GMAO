@@ -5,6 +5,7 @@ import './Equipements.css'
 
 import { getEquipements, createEquipement, updateEquipement, deleteEquipement } from '../api/equipements.api'
 import { getBatiments } from '../api/batiments.api'
+import Pagination from '../components/Pagination'
 
 const STATUTS = [
   { value: 'actif',        className: 'badge-actif' },
@@ -12,7 +13,7 @@ const STATUTS = [
   { value: 'hors_service', className: 'badge-hors-service' },
 ]
 
-const ITEMS_PER_PAGE = 5
+const ITEMS_PER_PAGE = 6
 
 const emptyForm = {
   nom: '', reference: '', type: '', marque: '', modele: '',
@@ -254,30 +255,7 @@ export default function Equipements() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="equipements-pagination">
-          <p>
-            {t('pagination.showing')} {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} {t('pagination.of')} {filtered.length} {t('pagination.equipments')}
-          </p>
-          <div className="pagination-btns">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
-              <i className="ti ti-chevron-left" aria-hidden="true" />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                className={page === i + 1 ? 'active' : ''}
-                onClick={() => setPage(i + 1)}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
-              <i className="ti ti-chevron-right" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} total={filtered.length} itemsPerPage={ITEMS_PER_PAGE} onChange={setPage} />
 
       {/* Modal */}
       {showModal && (
@@ -285,7 +263,7 @@ export default function Equipements() {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editEquipement ? t('equipements.edit') : t('equipements.new')}</h2>
-              <button onClick={() => setShowModal(false)}>
+              <button className="modal-close-btn" onClick={() => setShowModal(false)}>
                 <i className="ti ti-x" aria-hidden="true" />
               </button>
             </div>

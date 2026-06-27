@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import './DemandesIntervention.css'
 import { getDemandes, convertirDemande, creerDemande, rejeterDemande } from '../api/demandes.api'
 import { getEquipements } from '../api/equipements.api'
+import Pagination from '../components/Pagination'
 
 const PRIORITES_CLASS = {
   basse:   'prio-basse',
@@ -34,7 +35,7 @@ function getUserConnecte() {
 }
 
 const emptyForm = { equipement_id: '', titre: '', description: '', priorite: 'normale' }
-const PER_PAGE = 5
+const ITEMS_PER_PAGE = 8
 
 export default function DemandesIntervention() {
   const { t } = useTranslation()
@@ -57,6 +58,8 @@ export default function DemandesIntervention() {
   const [modalRejet, setModalRejet]     = useState(null)
   const [motifRejet, setMotifRejet]     = useState('')
   const [rejetErreur, setRejetErreur]   = useState('')
+
+  const [detailDI, setDetailDI]         = useState(null)
 
   const chargerDemandes = async () => {
     setLoading(true)
@@ -99,8 +102,8 @@ export default function DemandesIntervention() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(1) }, [search, filterStatut])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
-  const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
+  const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
   const handleSoumettre = async () => {
     const errs = []
@@ -146,10 +149,11 @@ export default function DemandesIntervention() {
     }
     try {
       await rejeterDemande(modalRejet, motifRejet.trim())
-      setDemandes(prev => prev.map(d => d.id === modalRejet ? { ...d, statut: 'rejetee' } : d))
+      setDemandes(prev => prev.map(d => d.id === modalRejet ? { ...d, statut: 'rejetee', motif_rejet: motifRejet.trim() } : d))
       setModalRejet(null)
     } catch (error) {
-      setRejetErreur(error.response?.data?.message || t('common.error'))
+      // Affiche le message précis renvoyé par le backend (ex. colonne manquante, statut invalide)
+      setRejetErreur(error.response?.data?.message || 'Erreur lors du rejet. Veuillez réessayer.')
     }
   }
 
@@ -226,7 +230,12 @@ export default function DemandesIntervention() {
               </thead>
               <tbody>
                 {paginated.map(d => (
-                  <tr key={d.id} className="di-row" data-prio={d.priorite}>
+                  <tr
+                    key={d.id}
+                    className="di-row di-row--clickable"
+                    data-prio={d.priorite}
+                    onClick={() => setDetailDI(d)}
+                  >
                     <td className="di-td di-td-titre">
                       <span className="di-titre">{d.titre}</span>
                       {d.description && (
@@ -253,7 +262,7 @@ export default function DemandesIntervention() {
                         {t(`di.statuts.${d.statut}`)}
                       </span>
                     </td>
-                    <td className="di-td di-td-actions">
+                    <td className="di-td di-td-actions" onClick={e => e.stopPropagation()}>
                       {role === 'admin' && d.statut === 'ouverte' && (
                         <div className="di-row-actions">
                           <button
@@ -279,7 +288,7 @@ export default function DemandesIntervention() {
                       )}
                       {role === 'client' && d.statut === 'rejetee' && (
                         <span className="di-status-badge di-status-badge--ko">
-                          <i className="ti ti-x" /> Rejetée
+                          <i className="ti ti-alert-circle" /> {t('di.statuts.rejetee')}
                         </span>
                       )}
                     </td>
@@ -290,47 +299,7 @@ export default function DemandesIntervention() {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="di-pagination">
-              <span className="di-pagination-info">
-                {Math.min((page - 1) * PER_PAGE + 1, filtered.length)}–{Math.min(page * PER_PAGE, filtered.length)} sur {filtered.length} demandes
-              </span>
-              <div className="di-pagination-controls">
-                <button
-                  className="di-page-btn"
-                  onClick={() => setPage(p => p - 1)}
-                  disabled={page === 1}
-                >
-                  <i className="ti ti-chevron-left" />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                  .reduce((acc, p, idx, arr) => {
-                    if (idx > 0 && arr[idx - 1] !== p - 1) acc.push('…')
-                    acc.push(p)
-                    return acc
-                  }, [])
-                  .map((item, idx) =>
-                    item === '…'
-                      ? <span key={`ellipsis-${idx}`} className="di-page-ellipsis">…</span>
-                      : <button
-                          key={item}
-                          className={`di-page-btn${item === page ? ' active' : ''}`}
-                          onClick={() => setPage(item)}
-                        >
-                          {item}
-                        </button>
-                  )}
-                <button
-                  className="di-page-btn"
-                  onClick={() => setPage(p => p + 1)}
-                  disabled={page === totalPages}
-                >
-                  <i className="ti ti-chevron-right" />
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} total={filtered.length} itemsPerPage={ITEMS_PER_PAGE} onChange={setPage} />
         </>
       )}
 
@@ -340,7 +309,7 @@ export default function DemandesIntervention() {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('di.newModalTitle')}</h2>
-              <button onClick={() => setModalCreer(false)}><i className="ti ti-x" /></button>
+              <button className="modal-close-btn" onClick={() => setModalCreer(false)}><i className="ti ti-x" /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">
@@ -390,13 +359,102 @@ export default function DemandesIntervention() {
         </div>
       )}
 
+      {/* Modal détail DI — ADMIN & CLIENT */}
+      {detailDI && (
+        <div className="modal-overlay" onClick={() => setDetailDI(null)}>
+          <div className="modal modal-lg di-detail-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="di-detail-header-left">
+                <span className={`prio-badge ${PRIORITES_CLASS[detailDI.priorite] || ''}`}>
+                  {t(`interventions.priorites.${detailDI.priorite}`)}
+                </span>
+                <h2 className="di-detail-title">{detailDI.titre}</h2>
+              </div>
+              <button className="modal-close-btn" onClick={() => setDetailDI(null)}>
+                <i className="ti ti-x" />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {/* Statut */}
+              <div className="di-detail-statut-row">
+                <span className={`statut-badge-di ${STATUTS_CLASS[detailDI.statut] || ''}`}>
+                  {t(`di.statuts.${detailDI.statut}`)}
+                </span>
+                <span className="di-detail-date">
+                  <i className="ti ti-calendar" /> {formatDate(detailDI.created_at)} — {formatTime(detailDI.created_at)}
+                </span>
+              </div>
+
+              {/* Métadonnées */}
+              <div className="di-detail-meta-grid">
+                <div className="di-detail-meta-item">
+                  <span className="di-detail-meta-label"><i className="ti ti-cpu" /> {t('di.equipement')}</span>
+                  <strong>{detailDI.equipement_nom || '—'}</strong>
+                  {detailDI.equipement_reference && (
+                    <span className="di-detail-meta-sub">{t('equipements.ref')} {detailDI.equipement_reference}</span>
+                  )}
+                </div>
+                {detailDI.batiment_nom && (
+                  <div className="di-detail-meta-item">
+                    <span className="di-detail-meta-label"><i className="ti ti-building" /> {t('batiments.title')}</span>
+                    <strong>{detailDI.batiment_nom}</strong>
+                  </div>
+                )}
+                {role === 'admin' && detailDI.client_nom && (
+                  <div className="di-detail-meta-item">
+                    <span className="di-detail-meta-label"><i className="ti ti-user" /> {t('batiments.client')}</span>
+                    <strong>{detailDI.client_nom}</strong>
+                  </div>
+                )}
+              </div>
+
+              {/* Description complète */}
+              <div className="di-detail-section">
+                <p className="di-detail-section-label">{t('interventions.description')}</p>
+                <p className="di-detail-desc">{detailDI.description || '—'}</p>
+              </div>
+
+              {/* Motif de rejet — visible admin ET client */}
+              {detailDI.statut === 'rejetee' && detailDI.motif_rejet && (
+                <div className="di-detail-rejet-box">
+                  <div className="di-detail-rejet-header">
+                    <i className="ti ti-alert-circle" />
+                    <strong>{t('di.motifRejet')}</strong>
+                  </div>
+                  <p className="di-detail-rejet-text">{detailDI.motif_rejet}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions admin depuis le modal */}
+            {role === 'admin' && detailDI.statut === 'ouverte' && (
+              <div className="modal-footer">
+                <button
+                  className="di-modal-action-btn di-modal-action-btn--danger"
+                  onClick={() => { setDetailDI(null); ouvrirModalRejet(detailDI.id) }}
+                >
+                  <i className="ti ti-x" /> {t('di.reject')}
+                </button>
+                <button
+                  className="di-modal-action-btn di-modal-action-btn--primary"
+                  onClick={() => { setDetailDI(null); handleConvertir(detailDI.id) }}
+                >
+                  <i className="ti ti-transform" /> {t('di.convert')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Modal rejet — ADMIN */}
       {modalRejet && (
         <div className="modal-overlay" onClick={() => setModalRejet(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('di.rejectTitle')}</h2>
-              <button onClick={() => setModalRejet(null)}><i className="ti ti-x" /></button>
+              <button className="modal-close-btn" onClick={() => setModalRejet(null)}><i className="ti ti-x" /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">

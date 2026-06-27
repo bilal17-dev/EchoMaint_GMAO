@@ -37,6 +37,12 @@ const Intervention = {
     if (filters.technicien_id)
       query.where('interventions.technicien_id', filters.technicien_id);
 
+    // ── Filtre de sécurité client ────────────────────────────────────────────
+    // Restreint la liste aux interventions dont l'équipement appartient à un
+    // bâtiment de CE client. Passé par le contrôleur quand req.user.role === 'client'.
+    if (filters.client_id)
+      query.where('batiments.client_id', filters.client_id);
+
     // ── Filtres de plage de dates (date_planifiee) ───────────────────────────
     // Les dates arrivent en chaîne YYYY-MM-DD depuis les query params.
     // Knex les compare correctement avec les colonnes DATETIME MySQL.
@@ -51,7 +57,13 @@ const Intervention = {
 
   findById: async (id) => {
     const i = await db('interventions')
-      .select('interventions.*', 'equipements.nom as equipement_nom', 'batiments.nom as batiment_nom')
+      .select(
+        'interventions.*',
+        'equipements.nom as equipement_nom',
+        'batiments.nom as batiment_nom',
+        // Exposé pour que le contrôleur puisse vérifier l'appartenance client (GET /:id)
+        'batiments.client_id as batiment_client_id'
+      )
       .join('equipements', 'interventions.equipement_id', 'equipements.id')
       .join('batiments', 'equipements.batiment_id', 'batiments.id')
       .where('interventions.id', id).first();

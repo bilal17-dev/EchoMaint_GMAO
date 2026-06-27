@@ -469,7 +469,7 @@ export default function Planning() {
 
             <div className="modal-header">
               <h2>{t('planning.rescheduleTitle')}</h2>
-              <button onClick={fermerModalReplanif} aria-label={t('common.close')}>
+              <button className="modal-close-btn" onClick={fermerModalReplanif} aria-label={t('common.close')}>
                 <i className="ti ti-x" />
               </button>
             </div>

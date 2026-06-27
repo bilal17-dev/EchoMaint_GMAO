@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next'
 import './Utilisateurs.css'
 import { getUtilisateurs, createUtilisateur, updateUtilisateur, updateStatutUtilisateur } from '../api/utilisateurs.api'
 import { createClient } from '../api/clients.api'
+import Pagination from '../components/Pagination'
+
+const ITEMS_PER_PAGE = 10
 
 const ROLE_COLORS = {
   admin:      { bg: '#F5F3FF', color: '#8B5CF6' },
@@ -30,6 +33,8 @@ export default function Utilisateurs() {
   const [erreurs, setErreurs] = useState([])
   const [submitting, setSubmitting] = useState(false)
 
+  const [page, setPage] = useState(1)
+
   const [userEnEdition,  setUserEnEdition]  = useState(null)
   const [editForm,       setEditForm]       = useState({ nom: '', prenom: '', email: '', role: '', actif: true })
   const [erreurEdit,     setErreurEdit]     = useState('')
@@ -55,6 +60,13 @@ export default function Utilisateurs() {
     const matchRole = filterRole ? u.role === filterRole : true
     return matchSearch && matchRole
   })
+
+  // Remet la pagination à la première page quand les filtres changent
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(1) }, [search, filterRole])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
+  const paginated  = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
   const handleToggleActif = async (id, actifActuel) => {
     try {
@@ -243,7 +255,7 @@ export default function Utilisateurs() {
           <tbody>
             {filtered.length === 0 ? (
               <tr><td colSpan={5} className="table-empty">{t('utilisateurs.empty')}</td></tr>
-            ) : filtered.map(u => (
+            ) : paginated.map(u => (
               <tr key={u.id}>
                 <td>
                   <div className="user-info">
@@ -285,13 +297,15 @@ export default function Utilisateurs() {
         </table>
       </div>
 
+      <Pagination page={page} totalPages={totalPages} total={filtered.length} itemsPerPage={ITEMS_PER_PAGE} onChange={setPage} />
+
       {/* Modal création */}
       {modal === 'creer' && (
         <div className="modal-overlay" onClick={() => { setModal(null); setErreurs([]) }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('utilisateurs.new')}</h2>
-              <button onClick={() => { setModal(null); setErreurs([]) }}>
+              <button className="modal-close-btn" onClick={() => { setModal(null); setErreurs([]) }}>
                 <i className="ti ti-x" />
               </button>
             </div>
@@ -378,7 +392,7 @@ export default function Utilisateurs() {
 
             <div className="modal-header">
               <h2>{t('utilisateurs.editTitle')}</h2>
-              <button onClick={fermerModifier} aria-label={t('common.close')}>
+              <button className="modal-close-btn" onClick={fermerModifier} aria-label={t('common.close')}>
                 <i className="ti ti-x" />
               </button>
             </div>

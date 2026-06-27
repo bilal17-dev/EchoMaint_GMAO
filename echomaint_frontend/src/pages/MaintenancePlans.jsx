@@ -4,6 +4,7 @@ import './MaintenancePlans.css'
 import { useAuth } from '../hooks/useAuth'
 import { getPlans, createPlan, updatePlan, deletePlan } from '../api/plans.api'
 import { getEquipements } from '../api/equipements.api'
+import Pagination from '../components/Pagination'
 
 const PERIODICITE_OPTIONS = [
   { tKey: 'monthly',   value: 30  },
@@ -13,7 +14,7 @@ const PERIODICITE_OPTIONS = [
   { tKey: 'custom',    value: 0   },
 ]
 
-const ITEMS_PER_PAGE = 5
+const ITEMS_PER_PAGE = 8
 
 const emptyForm = {
   equipement_id:      '',
@@ -347,24 +348,7 @@ export default function MaintenancePlans() {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="mplans-pagination">
-              <p>{(page-1)*ITEMS_PER_PAGE+1}–{Math.min(page*ITEMS_PER_PAGE, plans.length)} {t('pagination.of')} {plans.length}</p>
-              <div className="pagination-btns">
-                <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page === 1}>
-                  <i className="ti ti-chevron-left" />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button key={i+1} className={page === i+1 ? 'active' : ''} onClick={() => setPage(i+1)}>
-                    {i+1}
-                  </button>
-                ))}
-                <button onClick={() => setPage(p => Math.min(totalPages, p+1))} disabled={page === totalPages}>
-                  <i className="ti ti-chevron-right" />
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} total={plans.length} itemsPerPage={ITEMS_PER_PAGE} onChange={setPage} />
         </>
       )}
 
@@ -374,7 +358,7 @@ export default function MaintenancePlans() {
           <div className="modal modal--large" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingPlan ? t('plans.editTitle') : t('plans.newTitle')}</h2>
-              <button onClick={closeModal}><i className="ti ti-x" /></button>
+              <button className="modal-close-btn" onClick={closeModal}><i className="ti ti-x" /></button>
             </div>
 
             <div className="modal-body">

@@ -22,7 +22,20 @@ const InterventionController = {
   index: async (req, res) => {
     try {
       const filtres = { ...req.query }
+
+      // Isolation technicien : ne voit que ses propres OT
       if (req.user.role === 'technicien') filtres.technicien_id = req.user.id
+
+      // Isolation client : ne voit que les interventions dont l'équipement
+      // appartient à un bâtiment de SON entreprise (batiments.client_id).
+      // Sans ce filtre un client pourrait lister les OT de toute la base.
+      if (req.user.role === 'client') {
+        if (!req.user.id_client) {
+          return res.status(403).json({ message: "Compte client non associé à une entreprise." })
+        }
+        filtres.client_id = req.user.id_client
+      }
+
       const interventions = await Intervention.findAll(filtres)
       return res.status(200).json({ data: interventions.map(i => ({ ...i, start: i.date_planifiee, title: i.titre })) })
     } catch (error) {
@@ -36,6 +49,15 @@ const InterventionController = {
     try {
       const intervention = await Intervention.findById(req.params.id)
       if (!intervention) return res.status(404).json({ message: "Intervention non trouvée." })
+
+      // Isolation client : on vérifie que l'intervention appartient bien
+      // à un bâtiment de l'entreprise du client connecté.
+      // On retourne 403 (et non 404) pour ne pas divulguer l'existence de l'OT.
+      if (req.user.role === 'client') {
+        if (!req.user.id_client || intervention.batiment_client_id !== req.user.id_client) {
+          return res.status(403).json({ message: "Accès refusé : cette intervention ne vous appartient pas." })
+        }
+      }
 
       // ── Technicien ───────────────────────────────────────────────────────
       // findById ne fait pas de JOIN sur users — on charge séparément pour ne pas

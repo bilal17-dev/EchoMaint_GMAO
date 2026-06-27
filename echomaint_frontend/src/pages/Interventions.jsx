@@ -10,8 +10,9 @@ import {
 import { getTechniciens } from '../api/utilisateurs.api'
 import { getBatiments } from '../api/batiments.api'
 import { getEquipements } from '../api/equipements.api'
+import Pagination from '../components/Pagination'
 
-const ITEMS_PER_PAGE = 5
+const ITEMS_PER_PAGE = 8
 
 export default function Interventions() {
   const { t } = useTranslation()
@@ -297,26 +298,7 @@ export default function Interventions() {
           ))}
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="pagination-wrap">
-              <p className="pagination-info">
-                {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} sur {filtered.length}
-              </p>
-              <div className="pagination-btns">
-                <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-                  <i className="ti ti-chevron-left" />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button key={i} className={page === i + 1 ? 'active' : ''} onClick={() => setPage(i + 1)}>
-                    {i + 1}
-                  </button>
-                ))}
-                <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
-                  <i className="ti ti-chevron-right" />
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination page={page} totalPages={totalPages} total={filtered.length} itemsPerPage={ITEMS_PER_PAGE} onChange={setPage} />
         </div>
 
         {/* ── Detail Panel ──────────────────────────────────────────────── */}

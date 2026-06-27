@@ -6,138 +6,114 @@ const { v4: uuidv4 } = require('uuid');
 
 const DemandeInterventionController = {
 
-  /**
-   * 1. GET /api/v1/demandes — Liste toutes les DI (Filtres pour l'Admin)
-   */
+  // ── GET /demandes-intervention ────────────────────────────────────────────
   index: async (req, res) => {
     try {
-      // Si l'utilisateur connecté est un client, il ne voit QUE ses propres demandes
+      // Client → uniquement ses propres DI ; Admin → tout avec filtres optionnels
       const filtres = {};
       if (req.user.role === 'client') {
-        filtres.client_id = req.user.id_client; // ID de son entreprise stocké dans son compte user
+        filtres.client_id = req.user.id_client;
       } else {
-        // Si c'est l'admin, il peut filtrer par les query params de l'URL
-        if (req.query.statut) filtres.statut = req.query.statut;
+        if (req.query.statut)    filtres.statut    = req.query.statut;
         if (req.query.client_id) filtres.client_id = req.query.client_id;
       }
 
       const demandes = await DemandeIntervention.findAll(filtres);
       return res.status(200).json({ data: demandes });
-    } catch (error) {
-      console.error('[DemandeInterventionController.index]', error);
-      return res.status(500).json({ message: res.translate('error_serveur') });
+    } catch (err) {
+      console.error('[DemandeInterventionController.index]', err.message, err.stack);
+      return res.status(500).json({ message: err.message || 'Erreur serveur.' });
     }
   },
 
-  /**
-   * 2. GET /api/v1/demandes/:id — Fiche détaillée d'une DI
-   */
+  // ── GET /demandes-intervention/:id ────────────────────────────────────────
   show: async (req, res) => {
     try {
       const demande = await DemandeIntervention.findById(req.params.id);
-      if (!demande) {
-        return res.status(404).json({ message: res.translate('not_found') });
-      }
+      if (!demande) return res.status(404).json({ message: 'Demande non trouvée.' });
 
-      // Sécurité : Un client ne peut pas voir la DI d'une autre entreprise
+      // Un client ne peut pas consulter la DI d'une autre entreprise
       if (req.user.role === 'client' && demande.client_id !== req.user.id_client) {
-        return res.status(403).json({ message: res.translate('forbidden') });
+        return res.status(403).json({ message: 'Accès refusé.' });
       }
 
       return res.status(200).json({ data: demande });
-    } catch (error) {
-      console.error('[DemandeInterventionController.show]', error);
-      return res.status(500).json({ message: res.translate('error_serveur') });
+    } catch (err) {
+      console.error('[DemandeInterventionController.show]', err.message, err.stack);
+      return res.status(500).json({ message: err.message || 'Erreur serveur.' });
     }
   },
 
-  /**
-   * 3. POST /api/v1/demandes — Soumission d'une nouvelle DI par le Client
-   */
+  // ── POST /demandes-intervention ───────────────────────────────────────────
   store: async (req, res) => {
     try {
       const { equipement_id, titre, description, priorite } = req.body;
 
-      // Validation des champs obligatoires du CDC
       if (!equipement_id || !titre || !description) {
-        return res.status(400).json({ message: 'L\'équipement, le titre et la description sont obligatoires.' });
+        return res.status(400).json({ message: "L'équipement, le titre et la description sont obligatoires." });
       }
 
-      // Récupération sécurisée du client_id de l'entreprise (via le user authentifié)
+      // Le client_id vient du JWT pour éviter toute usurpation
       const client_id = req.user.id_client;
       if (!client_id && req.user.role === 'client') {
-        return res.status(400).json({ message: 'Votre compte utilisateur n\'est rattaché à aucune entreprise cliente.' });
+        return res.status(400).json({ message: "Votre compte utilisateur n'est rattaché à aucune entreprise cliente." });
       }
 
       const nouvelleDI = {
         id: uuidv4(),
-        client_id: client_id || req.body.client_id, // Permet aussi à l'admin de saisir pour un client
+        client_id: client_id || req.body.client_id,
         equipement_id,
         titre,
         description,
         priorite: priorite || 'normale',
-        statut: 'ouverte' // Forcé à la création
+        statut: 'ouverte',
       };
 
       const resultat = await DemandeIntervention.create(nouvelleDI);
-      return res.status(201).json({ 
-        data: resultat, 
-        message: res.translate('di_creee') 
-      });
-    } catch (error) {
-      console.error('[DemandeInterventionController.store]', error);
-      return res.status(500).json({ message: res.translate('error_serveur') });
+      return res.status(201).json({ data: resultat, message: 'Demande créée avec succès.' });
+    } catch (err) {
+      console.error('[DemandeInterventionController.store]', err.message, err.stack);
+      return res.status(500).json({ message: err.message || 'Erreur serveur.' });
     }
   },
 
-  /**
-   * 4. POST /api/v1/demandes/:id/rejeter — Rejet motivé par l'Admin (CDC J4)
-   */
+  // ── POST /demandes-intervention/:id/rejeter ───────────────────────────────
   rejeter: async (req, res) => {
     try {
       const { motif_rejet } = req.body;
 
-      // Le motif de rejet est une contrainte stricte de gestion
       if (!motif_rejet || motif_rejet.trim().length < 10) {
-        return res.status(422).json({ message: res.translate('motif_requis') });
+        return res.status(422).json({ message: 'Le motif de rejet doit contenir au moins 10 caractères.' });
       }
 
       const demande = await DemandeIntervention.findById(req.params.id);
-      if (!demande) {
-        return res.status(404).json({ message: res.translate('not_found') });
-      }
+      if (!demande) return res.status(404).json({ message: 'Demande non trouvée.' });
 
       if (demande.statut !== 'ouverte') {
-        return res.status(422).json({ message: `Impossible de rejeter une demande déjà traitée (Statut actuel: ${demande.statut}).` });
+        return res.status(422).json({ message: `Impossible de rejeter une demande déjà traitée (statut actuel : ${demande.statut}).` });
       }
 
       const miseAJour = await DemandeIntervention.update(req.params.id, {
         statut: 'rejetee',
-        motif_rejet: motif_rejet.trim()
+        motif_rejet: motif_rejet.trim(),
       });
 
-      return res.status(200).json({ 
-        data: miseAJour, 
-        message: res.translate('di_rejettee') 
-      });
-    } catch (error) {
-      console.error('[DemandeInterventionController.rejeter]', error);
-      return res.status(500).json({ message: res.translate('error_serveur') });
+      return res.status(200).json({ data: miseAJour, message: 'Demande rejetée avec succès.' });
+    } catch (err) {
+      console.error('[DemandeInterventionController.rejeter]', err.message, err.stack);
+      return res.status(500).json({ message: err.message || 'Erreur serveur.' });
     }
   },
 
-  /**
-   * 5. POST /api/v1/demandes/:id/valider — FONCTION CRUCIALE DE CONVERSION EN OT CURATIF
-   */
+  // ── POST /demandes-intervention/:id/valider ───────────────────────────────
+  // Convertit la DI en OT curatif dans une transaction atomique.
   validerEtConvertir: async (req, res) => {
-    // Utilisation d'une transaction Knex pour garantir que TOUT passe ou TOUT échoue (Zéro désynchronisation)
     const transaction = await db.transaction();
-
     try {
       const demande = await DemandeIntervention.findById(req.params.id);
       if (!demande) {
         await transaction.rollback();
-        return res.status(404).json({ message: res.translate('not_found') });
+        return res.status(404).json({ message: 'Demande non trouvée.' });
       }
 
       if (demande.statut !== 'ouverte') {
@@ -145,59 +121,40 @@ const DemandeInterventionController = {
         return res.status(422).json({ message: 'Cette demande a déjà été traitée.' });
       }
 
-      // A. Génération de l'UUID pour le nouvel Ordre de Travail (OT)
       const interventionId = uuidv4();
 
-      // B. Création automatique de l'intervention curative (Héritage des données de la DI)
       await transaction('interventions').insert({
         id: interventionId,
         titre: `[DI-Convertie] ${demande.titre}`,
         description: demande.description,
-        type: 'curatif', // Forcé en curatif selon le CDC
+        type: 'curatif',
         priorite: demande.priorite,
         statut: 'planifiee',
         equipement_id: demande.equipement_id,
-        demande_intervention_id: demande.id, // Liaison bidirectionnelle pour la Journée 4
+        demande_intervention_id: demande.id,
         date_planifiee: new Date(Date.now() + 24 * 60 * 60 * 1000),
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       });
 
-      // C. Mise à jour de la demande d'intervention (Liaison vers l'OT + Statut 'validee')
       await transaction('demandes_intervention')
         .where({ id: req.params.id })
-        .update({
-          statut: 'traitee',
-          intervention_id: interventionId,
-          updated_at: new Date()
-        });
+        .update({ statut: 'traitee', intervention_id: interventionId, updated_at: new Date() });
 
-      // D. Force le statut de l'équipement lié à 'en_panne' (Exigence stricte CDC)
       await transaction('equipements')
         .where({ id: demande.equipement_id })
-        .update({
-          statut: 'en_panne',
-          updated_at: new Date()
-        });
+        .update({ statut: 'en_panne', updated_at: new Date() });
 
-      // Validation définitive de toutes les requêtes en BDD
       await transaction.commit();
 
-      // Récupération de la demande mise à jour pour la réponse
       const demandeTraitee = await DemandeIntervention.findById(req.params.id);
-
-      return res.status(200).json({
-        data: demandeTraitee,
-        message: res.translate('di_validee')
-      });
-
-    } catch (error) {
-      // En cas de bug, on annule tout pour garder une base propre
+      return res.status(200).json({ data: demandeTraitee, message: 'Demande validée et convertie en OT.' });
+    } catch (err) {
       await transaction.rollback();
-      console.error('[DemandeInterventionController.validerEtConvertir]', error);
-      return res.status(500).json({ message: res.translate('error_serveur') });
+      console.error('[DemandeInterventionController.validerEtConvertir]', err.message, err.stack);
+      return res.status(500).json({ message: err.message || 'Erreur serveur.' });
     }
-  }
+  },
 };
 
 module.exports = DemandeInterventionController;

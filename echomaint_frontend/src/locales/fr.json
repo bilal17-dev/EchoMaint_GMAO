@@ -402,7 +402,8 @@
     "deleteConfirm": "Supprimer cette photo ?",
     "errorFormat": "Format non supporté. Utilisez JPEG ou PNG.",
     "errorSize": "Fichier trop lourd (max 5 Mo).",
-    "blockedStatus": "L'upload de photos est uniquement possible sur un OT assigné ou en cours."
+    "blockedStatus": "L'upload de photos est uniquement possible sur un OT assigné ou en cours.",
+    "countUploaded": "photo(s) uploadée(s)"
   },
   "planning": {
     "title": "Planning",

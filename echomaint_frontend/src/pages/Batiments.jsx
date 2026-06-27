@@ -264,7 +264,7 @@ export default function Batiments() {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editBatiment ? t('batiments.edit') : t('batiments.new')}</h2>
-              <button onClick={() => setShowModal(false)}>
+              <button className="modal-close-btn" onClick={() => setShowModal(false)}>
                 <i className="ti ti-x" aria-hidden="true" />
               </button>
             </div>

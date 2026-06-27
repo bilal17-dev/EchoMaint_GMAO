@@ -476,27 +476,85 @@ const StatsController = {
       const terminesOT = parseInt(tauxClotureRow.termines, 10) || 0;
       const taux_cloture = totalOT > 0 ? Math.round((terminesOT / totalOT) * 100) : 0;
 
-      // ─── Activité sur 4 segments couvrant la période sélectionnée ───────────
-      // segmentDays = ceil(periode / 4) ; les 4 segments couvrent toute la fenêtre
-      const segmentDays = Math.ceil(periode / 4);
-      const activite_semaines = await Promise.all(
-        Array.from({ length: 4 }, (_, i) => {
-          const debut = new Date();
-          debut.setDate(debut.getDate() - (4 - i) * segmentDays);
-          debut.setHours(0, 0, 0, 0);
-          const fin = new Date();
-          fin.setDate(fin.getDate() - (3 - i) * segmentDays);
-          fin.setHours(23, 59, 59, 999);
-          const label = debut.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
-          return db('interventions')
-            .where('technicien_id', techId)
-            .where('statut', 'terminee')
-            .whereBetween('updated_at', [debut, fin])
-            .count('id as total')
-            .first()
-            .then(row => ({ semaine: label, nb: parseInt(row.total, 10) || 0 }));
+      // ─── Activité annuelle : OT disponibles vs clôturés mois par mois ────────
+      // Pour chaque mois de l'année en cours, on calcule un "cumul glissant" :
+      // les OT non clôturés d'un mois sont reportés comme stock disponible du mois suivant.
+      const anneeEnCours      = new Date().getFullYear();
+      const moisActuelServeur = new Date().getMonth() + 1; // 1 = Janvier, 12 = Décembre
+      const MOIS_LABELS_ANNUEL = [
+        'Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin',
+        'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc',
+      ];
+
+      // ─ Étape 1 : requêtes en parallèle — données brutes de chaque mois ───────
+      // Pour chaque mois M, on a besoin de deux compteurs :
+      //   · assigne : OT créés ce mois (hors annulés) → ils ENTRENT dans le stock
+      //   · cloture : OT clôturés ce mois (date_fin_reelle dans M) → ils SORTENT du stock
+      const rawMois = await Promise.all(
+        Array.from({ length: 12 }, (_, i) => {
+          // Bornes inclusives du mois (heure locale pour éviter les décalages UTC)
+          const debutMois = new Date(anneeEnCours, i, 1, 0, 0, 0, 0);
+          const finMois   = new Date(anneeEnCours, i + 1, 0, 23, 59, 59, 999);
+
+          return Promise.all([
+            // OT nouvellement assignés à ce technicien ce mois
+            // Les OT annulés sont exclus : ils ne représentent pas de charge réelle
+            db('interventions')
+              .where('technicien_id', techId)
+              .whereNotIn('statut', ['annulee'])
+              .where('created_at', '>=', debutMois)
+              .where('created_at', '<=', finMois)
+              .count('id as total')
+              .first(),
+
+            // OT effectivement clôturés ce mois-ci
+            // On utilise date_fin_reelle (date de vraie clôture), pas updated_at
+            db('interventions')
+              .where('technicien_id', techId)
+              .where('statut', 'terminee')
+              .whereNotNull('date_fin_reelle')
+              .where('date_fin_reelle', '>=', debutMois)
+              .where('date_fin_reelle', '<=', finMois)
+              .count('id as total')
+              .first(),
+          ]).then(([assignesRow, cloturesRow]) => ({
+            label:   MOIS_LABELS_ANNUEL[i],
+            assigne: parseInt(assignesRow.total, 10) || 0, // OT entrant ce mois
+            cloture: parseInt(cloturesRow.total, 10) || 0, // OT sortant ce mois
+          }));
         })
       );
+
+      // ─ Étape 2 : calcul du cumul glissant mois par mois ──────────────────────
+      //
+      // Le stock de départ est 0 en janvier (on ne reprend pas l'année précédente).
+      //
+      // Schéma pour chaque mois passé ou en cours :
+      //   disponibles = report (hérité du mois N-1) + OT entrants ce mois
+      //   clôturés    = min(clôturesBruts, disponibles)  ← on ne peut pas clôturer plus que le stock
+      //   report      = disponibles - clôturés           → passent au mois N+1
+      //
+      // Pour les mois FUTURS : le cumul glissant s'arrête. On affiche uniquement
+      // les données réelles sans propager de stock fictif vers l'avenir.
+      let report = 0; // stock hérité du mois précédent, 0 au départ en janvier
+
+      const activite_annuelle = rawMois.map(({ label, assigne, cloture }, i) => {
+        const numMois = i + 1; // 1 = Janvier … 12 = Décembre
+
+        if (numMois > moisActuelServeur) {
+          // Mois futur : uniquement les données réelles, pas de cumul hérité
+          const disp = assigne;
+          const clot = Math.min(cloture, disp);
+          return { mois: label, disponibles: disp, clotures: clot, reportes: 0 };
+        }
+
+        // Mois passé ou en cours : application du cumul glissant
+        const disponibles = report + assigne;               // stock total ce mois
+        const clotures    = Math.min(cloture, disponibles); // sécurité : jamais > stock
+        report = disponibles - clotures;                    // ce qui reste pour le mois suivant
+
+        return { mois: label, disponibles, clotures, reportes: report };
+      });
 
       return res.status(200).json({
         data: {
@@ -515,8 +573,8 @@ const StatsController = {
           ot_aujourd_hui: otAujourdHui,
           prochains_ot:   prochainsOT,
 
-          // ── Graphique Ligne 4 ───────────────────────────────────────────
-          activite_semaines,
+          // ── Graphique annuel ────────────────────────────────────────────
+          activite_annuelle,
         }
       });
     } catch (error) {

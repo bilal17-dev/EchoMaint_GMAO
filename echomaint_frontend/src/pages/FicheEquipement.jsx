@@ -1,22 +1,23 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import './FicheEquipement.css'
 
 // On remplace mockFiche et mockHistorique par les vraies fonctions backend
 import { getEquipement, getHistorique } from '../api/equipements.api'
 
 const STATUT_LABELS = {
-  actif: { label: 'Actif', className: 'badge-actif' },
-  en_panne: { label: 'En panne', className: 'badge-en-panne' },
-  hors_service: { label: 'Hors service', className: 'badge-hors-service' },
+  actif:        { key: 'actif',        className: 'badge-actif' },
+  en_panne:     { key: 'en_panne',     className: 'badge-en-panne' },
+  hors_service: { key: 'hors_service', className: 'badge-hors-service' },
 }
 
 const OT_STATUT_LABELS = {
-  planifiee: { label: 'Planifiée', className: 'ot-badge-planifiee' },
-  assignee: { label: 'Assignée', className: 'ot-badge-assignee' },
-  en_cours: { label: 'En cours', className: 'ot-badge-en-cours' },
-  terminee: { label: 'Terminée', className: 'ot-badge-terminee' },
-  annulee: { label: 'Annulée', className: 'ot-badge-annulee' },
+  planifiee: { key: 'planifiee', className: 'ot-badge-planifiee' },
+  assignee:  { key: 'assignee',  className: 'ot-badge-assignee' },
+  en_cours:  { key: 'en_cours',  className: 'ot-badge-en-cours' },
+  terminee:  { key: 'terminee',  className: 'ot-badge-terminee' },
+  annulee:   { key: 'annulee',   className: 'ot-badge-annulee' },
 }
 
 function formatDate(dateStr) {
@@ -25,6 +26,7 @@ function formatDate(dateStr) {
 }
 
 export default function FicheEquipement() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -74,18 +76,17 @@ export default function FicheEquipement() {
     return (
       <div className="fiche-equipement">
         <p style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-          Chargement de la fiche équipement...
+          {t('common.loading')}
         </p>
       </div>
     )
   }
 
   if (erreurCode !== null) {
-    // Icône et message adaptés à la nature de l'erreur
     const config = {
-      403: { icone: 'ti-lock',         message: "Vous n'avez pas accès à cet équipement." },
-      404: { icone: 'ti-database-off', message: 'Équipement introuvable.' },
-      reseau: { icone: 'ti-wifi-off',  message: 'Impossible de charger cet équipement. Vérifiez votre connexion.' },
+      403:    { icone: 'ti-lock',         message: t('equipements.loadError') },
+      404:    { icone: 'ti-database-off', message: t('ficheEquipement.noHistory') },
+      reseau: { icone: 'ti-wifi-off',     message: t('equipements.loadError') },
     }
     const { icone, message } = config[erreurCode] ?? config.reseau
     return (
@@ -94,7 +95,7 @@ export default function FicheEquipement() {
           <i className={`ti ${icone}`} aria-hidden="true" />
           <p>{message}</p>
           <button className="btn-outline" onClick={() => navigate('/equipements')}>
-            Retour à la liste
+            {t('common.back')}
           </button>
         </div>
       </div>
@@ -103,7 +104,8 @@ export default function FicheEquipement() {
 
   if (!equipement) return null
 
-  const statutInfo = STATUT_LABELS[equipement.statut] || STATUT_LABELS.actif
+  const statutInfo  = STATUT_LABELS[equipement.statut] || STATUT_LABELS.actif
+  const statutLabel = t(`equipements.statuts.${statutInfo.key}`)
   const nbTotal    = historique.length
   const nbTermines = historique.filter(o => o.statut === 'terminee').length
 
@@ -115,9 +117,9 @@ export default function FicheEquipement() {
         <div className="fiche-hero-top">
           <button className="btn-back" onClick={() => navigate(-1)}>
             <i className="ti ti-arrow-left" aria-hidden="true" />
-            Retour
+            {t('common.back')}
           </button>
-          <span className={`statut-badge ${statutInfo.className}`}>{statutInfo.label}</span>
+          <span className={`statut-badge ${statutInfo.className}`}>{statutLabel}</span>
         </div>
 
         <div className="fiche-hero-body">
@@ -129,7 +131,7 @@ export default function FicheEquipement() {
             <div className="fiche-hero-meta">
               {equipement.reference && (
                 <span className="fiche-meta-chip">
-                  <i className="ti ti-hash" /> Réf. {equipement.reference}
+                  <i className="ti ti-hash" /> {t('equipements.ref')} {equipement.reference}
                 </span>
               )}
               {equipement.type && (
@@ -159,7 +161,7 @@ export default function FicheEquipement() {
             <i className="ti ti-tools" style={{ color: '#2563EB' }} />
           </div>
           <div className="fiche-kpi-body">
-            <p className="fiche-kpi-label">Interventions — 30 jours</p>
+            <p className="fiche-kpi-label">{t('ficheEquipement.lastIntervention')} — 30j</p>
             <p className="fiche-kpi-value">{equipement.nb_interventions_30j ?? 0}</p>
           </div>
         </div>
@@ -168,7 +170,7 @@ export default function FicheEquipement() {
             <i className="ti ti-clipboard-list" style={{ color: '#7C3AED' }} />
           </div>
           <div className="fiche-kpi-body">
-            <p className="fiche-kpi-label">Total interventions</p>
+            <p className="fiche-kpi-label">{t('ficheEquipement.history')}</p>
             <p className="fiche-kpi-value">{nbTotal}</p>
           </div>
         </div>
@@ -177,7 +179,7 @@ export default function FicheEquipement() {
             <i className="ti ti-circle-check" style={{ color: '#059669' }} />
           </div>
           <div className="fiche-kpi-body">
-            <p className="fiche-kpi-label">Interventions terminées</p>
+            <p className="fiche-kpi-label">{t('ficheEquipement.interventionsClosed')}</p>
             <p className="fiche-kpi-value">{nbTermines}</p>
           </div>
         </div>
@@ -186,7 +188,7 @@ export default function FicheEquipement() {
             <i className="ti ti-calendar-event" style={{ color: '#D97706' }} />
           </div>
           <div className="fiche-kpi-body">
-            <p className="fiche-kpi-label">Dernière intervention</p>
+            <p className="fiche-kpi-label">{t('ficheEquipement.lastIntervention')}</p>
             <p className="fiche-kpi-value fiche-kpi-value--sm">{formatDate(equipement.derniere_intervention_date)}</p>
           </div>
         </div>
@@ -199,23 +201,23 @@ export default function FicheEquipement() {
             <div className="fiche-card-icon" style={{ background: '#EFF6FF' }}>
               <i className="ti ti-settings-2" style={{ color: '#2563EB' }} />
             </div>
-            <h2 className="fiche-card-title">Caractéristiques techniques</h2>
+            <h2 className="fiche-card-title">{t('ficheEquipement.technicalSpecs')}</h2>
           </div>
           <div className="fiche-details">
             <div className="fiche-detail">
-              <span>Marque</span>
+              <span>{t('equipements.brand')}</span>
               <strong>{equipement.marque || '—'}</strong>
             </div>
             <div className="fiche-detail">
-              <span>Modèle</span>
+              <span>{t('equipements.model')}</span>
               <strong>{equipement.modele || '—'}</strong>
             </div>
             <div className="fiche-detail">
-              <span>Numéro de série</span>
+              <span>{t('equipements.serialNumber')}</span>
               <strong>{equipement.numero_serie || '—'}</strong>
             </div>
             <div className="fiche-detail">
-              <span>Date d'installation</span>
+              <span>{t('equipements.installDate')}</span>
               <strong>{formatDate(equipement.date_installation)}</strong>
             </div>
           </div>
@@ -232,15 +234,15 @@ export default function FicheEquipement() {
             <div className="fiche-card-icon" style={{ background: '#F0FDF4' }}>
               <i className="ti ti-map-pin" style={{ color: '#059669' }} />
             </div>
-            <h2 className="fiche-card-title">Localisation</h2>
+            <h2 className="fiche-card-title">{t('ficheEquipement.location')}</h2>
           </div>
           <div className="fiche-details">
             <div className="fiche-detail">
-              <span>Bâtiment</span>
+              <span>{t('batiments.title')}</span>
               <strong>{equipement.batiment_nom || '—'}</strong>
             </div>
             <div className="fiche-detail">
-              <span>Client / Organisation</span>
+              <span>{t('batiments.client')}</span>
               <strong>{equipement.client_nom || '—'}</strong>
             </div>
           </div>
@@ -249,8 +251,8 @@ export default function FicheEquipement() {
           <div className={`fiche-statut-visual fiche-statut-visual--${equipement.statut || 'actif'}`}>
             <div className="fiche-statut-dot" />
             <div className="fiche-statut-text">
-              <strong>{statutInfo.label}</strong>
-              <span>État actuel de l'équipement</span>
+              <strong>{statutLabel}</strong>
+              <span>{t('common.status')}</span>
             </div>
           </div>
         </div>
@@ -262,7 +264,7 @@ export default function FicheEquipement() {
           <div className="fiche-card-icon" style={{ background: '#FFF7ED' }}>
             <i className="ti ti-history" style={{ color: '#D97706' }} />
           </div>
-          <h2 className="fiche-card-title">Historique des interventions</h2>
+          <h2 className="fiche-card-title">{t('ficheEquipement.history')}</h2>
           {nbTotal > 0 && (
             <span className="fiche-historique-count">{nbTotal}</span>
           )}
@@ -271,13 +273,14 @@ export default function FicheEquipement() {
         {historique.length === 0 ? (
           <div className="fiche-historique-empty">
             <i className="ti ti-clipboard-off" />
-            <p>Aucune intervention enregistrée pour cet équipement.</p>
+            <p>{t('ficheEquipement.noHistory')}</p>
           </div>
         ) : (
           <div className="historique-timeline">
             {historique.map((ot, idx) => {
-              const otStatutInfo = OT_STATUT_LABELS[ot.statut] || OT_STATUT_LABELS.terminee
-              const isPreventif  = ot.type === 'preventif'
+              const otStatutInfo  = OT_STATUT_LABELS[ot.statut] || OT_STATUT_LABELS.terminee
+              const otStatutLabel = t(`interventions.statuts.${otStatutInfo.key}`)
+              const isPreventif   = ot.type === 'preventif'
               return (
                 <div
                   key={ot.id}
@@ -289,18 +292,18 @@ export default function FicheEquipement() {
                     <div className="timeline-header">
                       <div className="timeline-header-left">
                         <span className={`timeline-type-chip ${isPreventif ? 'chip-type-prev' : 'chip-type-cur'}`}>
-                          {isPreventif ? 'Préventif' : 'Curatif'}
+                          {isPreventif ? t('interventions.types.preventif') : t('interventions.types.curatif')}
                         </span>
                         <p className="timeline-titre">{ot.titre}</p>
                       </div>
                       <div className="timeline-header-right">
-                        <span className={`ot-badge ${otStatutInfo.className}`}>{otStatutInfo.label}</span>
+                        <span className={`ot-badge ${otStatutInfo.className}`}>{otStatutLabel}</span>
                         <i className="ti ti-chevron-right timeline-arrow" />
                       </div>
                     </div>
                     <div className="timeline-meta">
                       <span><i className="ti ti-calendar" /> {formatDate(ot.date_fin_reelle || ot.updated_at)}</span>
-                      <span><i className="ti ti-user" /> {ot.technicien_nom || 'Non assigné'}</span>
+                      <span><i className="ti ti-user" /> {ot.technicien_nom || t('interventions.unassigned')}</span>
                     </div>
                     {ot.commentaire_cloture && (
                       <p className="timeline-commentaire">{ot.commentaire_cloture}</p>

@@ -207,29 +207,29 @@ function DashboardAdmin() {
     {
       label: t('dashboard.otEnRetard'), value: kpi.ot_en_retard,
       subtitle: t('dashboard.otEnRetardSub'),
-      icon: 'ti-alert-circle', color: '#ef4444', bg: '#FEF2F2', bar: '#ef4444',
+      icon: 'ti-alert-circle', color: '#DC2626', bg: '#FEF2F2', bar: '#DC2626',
     },
     {
       label: t('dashboard.equipEnPanneKpi'), value: kpi.nb_equipements_en_panne,
       subtitle: t('dashboard.equipEnPanneKpiSub'),
-      icon: 'ti-alert-triangle', color: '#F59E0B', bg: '#FFFBEB', bar: '#F59E0B',
+      icon: 'ti-alert-triangle', color: '#D97706', bg: '#FFF8EC', bar: '#D97706',
     },
     {
       label: t('dashboard.tauxDispo'),
       value: kpi.taux_curatif != null ? `${(100 - kpi.taux_curatif).toFixed(1)} %` : '—',
       subtitle: t('dashboard.tauxDispoSub'),
-      icon: 'ti-shield-check', color: '#22C55E', bg: '#F0FDF4', bar: '#22C55E',
+      icon: 'ti-shield-check', color: '#359349', bg: '#EDFAF1', bar: '#359349',
     },
     {
       label: t('dashboard.mttrGlobal'),
       value: kpi.mttr_heures != null ? `${kpi.mttr_heures} h` : '—',
       subtitle: t('dashboard.mttrSub'),
-      icon: 'ti-clock', color: '#2563EB', bg: '#EFF6FF', bar: '#2563EB',
+      icon: 'ti-clock', color: '#123658', bg: '#EEF4FF', bar: '#123658',
     },
     {
       label: t('dashboard.reouvertures'), value: kpi.nb_reouvertures_periode ?? 0,
       subtitle: t('dashboard.reouverturesSub', { n: kpi.periode_jours }),
-      icon: 'ti-refresh-alert', color: '#8B5CF6', bg: '#F5F3FF', bar: '#8B5CF6',
+      icon: 'ti-refresh-alert', color: '#7C3AED', bg: '#F3EEFF', bar: '#7C3AED',
     },
   ] : []
 
@@ -302,14 +302,14 @@ function DashboardAdmin() {
       <div className="dashboard-kpi dashboard-kpi--5col">
         {kpiCards.map((c, i) => (
           <div key={i} className="kpi-card">
-            <div className="kpi-card-top">
-              <div className="kpi-icon" style={{ background: c.bg }}>
+            <div className="kpi-card-inner">
+              <div className="kpi-icon-left" style={{ background: c.bg }}>
                 <i className={`ti ${c.icon}`} style={{ color: c.color }} />
               </div>
-              <div className="kpi-info">
+              <div className="kpi-text">
                 <p className="kpi-label">{c.label}</p>
                 <p className="kpi-value">{c.value}</p>
-                <p className="kpi-subtitle">{c.subtitle}</p>
+                <p className="kpi-sublabel">{c.subtitle}</p>
               </div>
             </div>
             <div className="kpi-bar" style={{ background: c.bar }} />
@@ -573,14 +573,14 @@ function DashboardClient() {
       <div className="dashboard-kpi dashboard-kpi--5col">
         {kpiAll.map((c, i) => (
           <div key={i} className="kpi-card">
-            <div className="kpi-card-top">
-              <div className="kpi-icon" style={{ background: c.bg }}>
+            <div className="kpi-card-inner">
+              <div className="kpi-icon-left" style={{ background: c.bg }}>
                 <i className={`ti ${c.icon}`} style={{ color: c.color }} />
               </div>
-              <div className="kpi-info">
+              <div className="kpi-text">
                 <p className="kpi-label">{c.label}</p>
                 <p className="kpi-value" style={{ color: c.color }}>{c.value}</p>
-                <p className="kpi-subtitle">{c.subtitle}</p>
+                <p className="kpi-sublabel">{c.subtitle}</p>
               </div>
             </div>
             <div className="kpi-bar" style={{ background: c.bar }} />
@@ -751,6 +751,28 @@ function DashboardClient() {
   )
 }
 
+// ─── Graphique annuel technicien ─────────────────────────────────────────────
+const MOIS_LABELS_TECH = ['Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
+
+function TooltipAnnuelTech({ active, payload, label }) {
+  if (!active || !payload?.length) return null
+  const disponibles = payload.find(p => p.dataKey === 'disponibles')?.value ?? 0
+  const clotures    = payload.find(p => p.dataKey === 'clotures')?.value ?? 0
+  const reportes    = payload[0]?.payload?.reportes ?? 0
+  const idx         = MOIS_LABELS_TECH.indexOf(label)
+  const moisSuivant = idx >= 0 && idx < 11 ? MOIS_LABELS_TECH[idx + 1] : null
+  return (
+    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, padding: '10px 14px', fontSize: 13, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', minWidth: 180 }}>
+      <p style={{ fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>{label}</p>
+      <p style={{ color: '#123658', margin: '2px 0' }}>● {disponibles} disponible{disponibles !== 1 ? 's' : ''}</p>
+      <p style={{ color: '#359349', margin: '2px 0' }}>● {clotures} clôturé{clotures !== 1 ? 's' : ''}</p>
+      {moisSuivant && reportes > 0 && (
+        <p style={{ color: '#94a3b8', marginTop: 6, fontSize: 12 }}>{reportes} reporté{reportes !== 1 ? 's' : ''} en {moisSuivant}</p>
+      )}
+    </div>
+  )
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // VUE TECHNICIEN
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -783,22 +805,23 @@ function DashboardTechnicien() {
     {
       label:    t('dashboard.tech.todayOT'), value: data.nb_ot_planifies_aujourd_hui,
       subtitle: t('dashboard.tech.todayOTSub'),
-      icon: 'ti-calendar', color: '#3b82f6', bg: '#EFF6FF', bar: '#3b82f6',
+      icon: 'ti-calendar', color: '#123658', bg: '#EEF4FF', bar: '#123658',
     },
     {
       label:    t('dashboard.tech.inProgress'), value: data.nb_ot_en_cours,
       subtitle: t('dashboard.tech.inProgressSub'),
-      icon: 'ti-tools', color: '#8b5cf6', bg: '#F5F3FF', bar: '#8b5cf6',
+      icon: 'ti-tools', color: '#7C3AED', bg: '#F3EEFF', bar: '#7C3AED',
     },
     {
       label:    t('dashboard.tech.terminatedPeriod'), value: data.nb_ot_termines_mois,
       subtitle: t('common.periods.' + periode),
-      icon: 'ti-circle-check', color: '#10b981', bg: '#F0FDF4', bar: '#10b981',
+      icon: 'ti-circle-check', color: '#359349', bg: '#EDFAF1', bar: '#359349',
     },
   ]
 
-  const tauxColor = data.taux_cloture >= 80 ? '#10b981' : data.taux_cloture >= 50 ? '#f59e0b' : '#ef4444'
-  const tauxBg    = data.taux_cloture >= 80 ? '#F0FDF4' : data.taux_cloture >= 50 ? '#FFFBEB' : '#FEF2F2'
+  const tauxColor  = data.taux_cloture >= 80 ? '#10b981' : data.taux_cloture >= 50 ? '#f59e0b' : '#ef4444'
+  const tauxBg     = data.taux_cloture >= 80 ? '#F0FDF4' : data.taux_cloture >= 50 ? '#FFFBEB' : '#FEF2F2'
+  const moisActuel = new Date().getMonth() + 1 // 1 = Janvier, 12 = Décembre
 
   return (
     <div className="dashboard">
@@ -824,14 +847,14 @@ function DashboardTechnicien() {
 
         {kpi4.map((c, i) => (
           <div key={i} className="kpi-card">
-            <div className="kpi-card-top">
-              <div className="kpi-icon" style={{ background: c.bg }}>
+            <div className="kpi-card-inner">
+              <div className="kpi-icon-left" style={{ background: c.bg }}>
                 <i className={`ti ${c.icon}`} style={{ color: c.color }} />
               </div>
-              <div className="kpi-info">
+              <div className="kpi-text">
                 <p className="kpi-label">{c.label}</p>
                 <p className="kpi-value" style={{ color: c.color }}>{c.value}</p>
-                <p className="kpi-subtitle">{c.subtitle}</p>
+                <p className="kpi-sublabel">{c.subtitle}</p>
               </div>
             </div>
             <div className="kpi-bar" style={{ background: c.bar }} />
@@ -839,37 +862,32 @@ function DashboardTechnicien() {
         ))}
 
         <div className="kpi-card">
-          <div className="kpi-card-top">
-            <div className="kpi-icon" style={{ background: tauxBg }}>
-              <i className="ti ti-percentage" style={{ color: tauxColor }} />
+          <div className="kpi-card-inner">
+            <div className="kpi-icon-left" style={{ background: '#FFF8EC' }}>
+              <i className="ti ti-percentage" style={{ color: '#D97706' }} />
             </div>
-            <div className="kpi-info">
+            <div className="kpi-text">
               <p className="kpi-label">{t('dashboard.tech.tauxCloture')}</p>
-              <p className="kpi-value" style={{ color: tauxColor }}>{data.taux_cloture} %</p>
-              <p className="kpi-subtitle">{t('dashboard.tech.tauxClotureSub')}</p>
+              <p className="kpi-value">{data.taux_cloture} %</p>
+              <p className="kpi-sublabel">{t('dashboard.tech.tauxClotureSub')}</p>
             </div>
-          </div>
-          <div className="taux-cloture-bar">
-            <div className="taux-cloture-fill" style={{ width: `${data.taux_cloture}%`, background: tauxColor }} />
           </div>
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-card-top">
-            <div className="kpi-icon" style={{ background: data.nb_ot_en_retard > 0 ? '#FEF2F2' : '#F0FDF4' }}>
-              <i className="ti ti-clock-exclamation" style={{ color: data.nb_ot_en_retard > 0 ? '#ef4444' : '#10b981' }} />
+          <div className="kpi-card-inner">
+            <div className="kpi-icon-left" style={{ background: '#FEF2F2' }}>
+              <i className="ti ti-clock-exclamation" style={{ color: '#DC2626' }} />
             </div>
-            <div className="kpi-info">
+            <div className="kpi-text">
               <p className="kpi-label">{t('dashboard.otEnRetard')}</p>
-              <p className="kpi-value" style={{ color: data.nb_ot_en_retard > 0 ? '#ef4444' : '#10b981' }}>
-                {data.nb_ot_en_retard}
-              </p>
-              <p className="kpi-subtitle">
+              <p className="kpi-value">{data.nb_ot_en_retard}</p>
+              <p className="kpi-sublabel">
                 {data.nb_ot_en_retard > 0 ? t('dashboard.otEnRetardSub') : t('dashboard.tech.noLate')}
               </p>
             </div>
           </div>
-          <div className="kpi-bar" style={{ background: data.nb_ot_en_retard > 0 ? '#ef4444' : '#10b981' }} />
+          <div className="kpi-bar" style={{ background: '#DC2626' }} />
         </div>
 
 
@@ -980,24 +998,50 @@ function DashboardTechnicien() {
       <div className="dashboard-chart">
         <div className="chart-header">
           <div className="chart-header-left">
-            <div className="chart-icon-wrap" style={{ background: '#F0FDF4' }}>
-              <i className="ti ti-chart-bar" style={{ color: '#10b981' }} />
+            <div className="chart-icon-wrap" style={{ background: '#EBF4FF' }}>
+              <i className="ti ti-chart-bar" style={{ color: '#123658' }} />
             </div>
             <div>
-              <p className="chart-title">{t('dashboard.tech.activityTitle')}</p>
-              <p className="chart-subtitle">{t('dashboard.tech.activitySub')}</p>
+              <p className="chart-title">Mes interventions — {new Date().getFullYear()}</p>
+              <p className="chart-subtitle">OT disponibles vs clôturés par mois</p>
             </div>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={data.activite_semaines} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-            <XAxis dataKey="semaine" tick={{ fontSize: 12, fill: '#64748B' }} axisLine={false} tickLine={false} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '13px' }} />
-            <Bar dataKey="nb" name={t('dashboard.tech.otTermines')} fill="#10b981" radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        {data.activite_annuelle.every(m => m.disponibles === 0 && m.clotures === 0) ? (
+          <div className="chart-empty">
+            <i className="ti ti-calendar-off" style={{ fontSize: '2rem', color: '#CBD5E1' }} />
+            <p>Aucune intervention assignée cette année</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart
+              data={data.activite_annuelle}
+              margin={{ top: 10, right: 16, bottom: 0, left: -20 }}
+              barGap={3}
+              barCategoryGap="30%"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+              <XAxis dataKey="mois" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <Tooltip content={<TooltipAnnuelTech />} />
+              <Legend
+                iconType="circle"
+                iconSize={10}
+                formatter={v => <span style={{ color: '#64748B', fontSize: '12px' }}>{v}</span>}
+              />
+              <Bar dataKey="disponibles" name="OT disponibles ce mois" fill="#123658" radius={[4, 4, 0, 0]}>
+                {data.activite_annuelle.map((_, idx) => (
+                  <Cell key={idx} fill="#123658" opacity={idx + 1 > moisActuel ? 0.2 : 1} />
+                ))}
+              </Bar>
+              <Bar dataKey="clotures" name="OT clôturés" fill="#359349" radius={[4, 4, 0, 0]}>
+                {data.activite_annuelle.map((_, idx) => (
+                  <Cell key={idx} fill="#359349" opacity={idx + 1 > moisActuel ? 0.2 : 1} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
     </div>
