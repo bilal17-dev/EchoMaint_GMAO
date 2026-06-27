@@ -94,6 +94,16 @@
     "loggingIn": "Signing in...",
     "invalidCredentials": "Incorrect email or password.",
     "serverError": "An error occurred. Please try again.",
+    "forgotTitle": "Forgot your password?",
+    "forgotSubtitle": "No worries. Enter your email and we'll send you a reset link.",
+    "forgotEmailLabel": "Email address",
+    "forgotEmailPlaceholder": "your@email.com",
+    "forgotSending": "Sending…",
+    "forgotSendLink": "Send reset link",
+    "forgotBackToLogin": "Back to login",
+    "forgotEmailSentTitle": "Email sent!",
+    "forgotEmailSentText": "If an account exists with {{email}}, you will receive an email with reset instructions in a few minutes.",
+    "forgotCheckSpam": "Remember to check your spam folder if you can't find it.",
     "footer": "© 2026 EchoMaint. All rights reserved.",
     "slides": {
       "0": {

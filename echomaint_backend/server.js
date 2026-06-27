@@ -84,7 +84,14 @@ app.use(`${API_BASE}/demandes-intervention`,     demandeRoutes);
 app.use(`${API_BASE}/planning`,     planningRoutes);
 app.use(`${API_BASE}/utilisateurs`, utilisateurRoutes);
 app.use(`${API_BASE}/exports`, exportRoutes);
-app.use('/storage', express.static(path.join(__dirname, 'storage')))
+app.use('/storage', express.static(path.join(__dirname, 'storage')));
+
+// Route de débogage — uniquement chargée en développement
+if (process.env.NODE_ENV === 'development') {
+  const debugRoutes = require('./app/routes/debug.routes');
+  app.use(`${API_BASE}/debug`, debugRoutes);
+  console.log('[DEBUG] Route /api/v1/debug/* activée (NODE_ENV=development)');
+}
 // Route de test générique
 app.get('/', (req, res) => {
   res.json({ 

@@ -13,6 +13,7 @@ const preventiveService = {
    */
   genererInterventionsPreventives: async () => {
     let nombreCreees = 0;
+    const interventionsCreees = [];
 
     try {
       // 1. Récupérer tous les plans actifs
@@ -48,7 +49,7 @@ const preventiveService = {
             description: `Maintenance préventive automatique générée via plan : ${plan.label}`,
             date_planifiee: dateProchaine,
             // Injection de la gamme de tâches (JSON) du plan vers l'OT
-            gamme_taches: plan.gamme_taches 
+            gamme_taches: plan.gamme_taches
           });
 
           // 4. Mise à jour de la dernière génération sur le plan
@@ -56,6 +57,15 @@ const preventiveService = {
             derniere_generation: new Date()
           });
 
+          interventionsCreees.push({
+            id: otId,
+            titre: `[Préventif] ${plan.label}`,
+            plan_id: plan.id,
+            plan_label: plan.label,
+            equipement_id: plan.equipement_id,
+            date_planifiee: dateProchaine.toISOString(),
+            periodicite_jours: plan.periodicite_jours,
+          });
           nombreCreees++;
         }
       }
@@ -63,7 +73,7 @@ const preventiveService = {
       console.error('[preventiveService] Erreur lors du scan automatique :', erreur);
     }
 
-    return { nombreCreees };
+    return { nombreCreees, interventionsCreees };
   },
 
   /**

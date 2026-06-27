@@ -94,6 +94,16 @@
     "loggingIn": "Connexion...",
     "invalidCredentials": "Email ou mot de passe incorrect.",
     "serverError": "Une erreur est survenue. Réessayez.",
+    "forgotTitle": "Mot de passe oublié ?",
+    "forgotSubtitle": "Pas d'inquiétude. Saisissez votre email et nous vous enverrons un lien de réinitialisation.",
+    "forgotEmailLabel": "Adresse email",
+    "forgotEmailPlaceholder": "votre@email.com",
+    "forgotSending": "Envoi en cours…",
+    "forgotSendLink": "Envoyer le lien",
+    "forgotBackToLogin": "Retour à la connexion",
+    "forgotEmailSentTitle": "Email envoyé !",
+    "forgotEmailSentText": "Si un compte existe avec l'adresse {{email}}, vous recevrez un email avec les instructions de réinitialisation dans quelques minutes.",
+    "forgotCheckSpam": "Pensez à vérifier vos spams si vous ne le trouvez pas.",
     "footer": "© 2026 EchoMaint. Tous droits réservés.",
     "slides": {
       "0": {
