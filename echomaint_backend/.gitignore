@@ -5,8 +5,8 @@
 node_modules/
 
 # Photos uploadées — fichiers générés, pas du code source
-storage/photos/
-
+storage/uploads/photos/
+storage/rapports/
 # Fichiers système Mac
 .DS_Store
 
