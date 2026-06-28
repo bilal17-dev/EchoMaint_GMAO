@@ -1099,3 +1099,66 @@ select:not(.form-group select):not(.dashboard-select):focus {
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE — MODALS EN BOTTOM SHEET
+   Exclut .modal-overlay--photo (visionneuse plein écran, pas un formulaire).
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+
+  /* Overlay ancré en bas, fond semi-transparent */
+  .modal-overlay:not(.modal-overlay--photo) {
+    align-items: flex-end !important;
+    padding: 0 !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+  }
+
+  /* Sheet remonte depuis le bas */
+  .modal-overlay:not(.modal-overlay--photo) .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+    padding: 20px 16px 40px !important;
+    animation: slideUpSheet 0.28s cubic-bezier(0.4, 0, 0.2, 1) both !important;
+  }
+
+  @keyframes slideUpSheet {
+    from { transform: translateY(100%); opacity: 0.7; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  /* Poignée (drag handle) centrée en haut du sheet */
+  .modal-overlay:not(.modal-overlay--photo) .modal::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: #E2E8F0;
+    border-radius: 2px;
+    margin: 0 auto 16px;
+    flex-shrink: 0;
+  }
+
+  /* Le sheet entier scrolle — le corps intérieur ne re-scrolle pas */
+  .modal-overlay:not(.modal-overlay--photo) .modal .modal-body,
+  .modal-overlay:not(.modal-overlay--photo) .modal .modal-form {
+    overflow-y: visible !important;
+    max-height: none !important;
+  }
+
+  /* Boutons footer pleine largeur sur mobile */
+  .modal-footer {
+    flex-direction: column-reverse;
+    padding-top: 16px;
+    gap: 8px;
+  }
+  .modal-footer .btn-primary,
+  .modal-footer .btn-secondary,
+  .modal-footer .btn-cancel {
+    width: 100%;
+    justify-content: center;
+  }
+}

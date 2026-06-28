@@ -672,7 +672,7 @@ export default function DetailIntervention() {
 
       {/* ── Zoom photo ─────────────────────────────────────────────────────── */}
       {photoZoom && (
-        <div className="modal-overlay" onClick={() => setPhotoZoom(null)} style={{ zIndex: 900 }}>
+        <div className="modal-overlay modal-overlay--photo" onClick={() => setPhotoZoom(null)} style={{ zIndex: 900 }}>
           <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
             <img
               src={photoZoom}
