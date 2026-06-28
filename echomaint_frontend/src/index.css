@@ -1089,6 +1089,11 @@ select:not(.form-group select):not(.dashboard-select):focus {
 
   /* Garantir que le contenu n'est pas masqué par la bottom nav */
   body { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+
+  /* Cacher le titre+sous-titre de page sur mobile : il apparaît dans la topbar */
+  .page-header-left { display: none; }
+  /* Quand il n'y a que les actions, simplifier la mise en page du header */
+  .page-header:has(> .page-header-actions:only-child) { margin-bottom: 12px; }
 }
 
 @media (max-width: 480px) {

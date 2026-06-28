@@ -179,7 +179,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
             </span>
           </button>
           {showLangMenu && (
-            <div className={`user-dropdown${collapsed ? ' dropdown-right' : ' dropdown-up'}`}>
+            <div className={`user-dropdown${(collapsed && !mobileOpen) ? ' dropdown-right' : ' dropdown-up'}`}>
               <button
                 className={`dropdown-item${i18n.language?.startsWith('fr') ? ' active' : ''}`}
                 onClick={() => changeLang('fr')}
@@ -211,7 +211,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
           </button>
 
           {showUserMenu && (
-            <div className={`user-dropdown dropdown-up${collapsed ? ' dropdown-right' : ''}`}>
+            <div className={`user-dropdown dropdown-up${(collapsed && !mobileOpen) ? ' dropdown-right' : ''}`}>
               <div className="dropdown-header">
                 <div className="d-name">{displayName}</div>
                 <div className="d-email">{user?.email || roleLabel}</div>

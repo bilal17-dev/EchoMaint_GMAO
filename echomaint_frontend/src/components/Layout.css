@@ -65,8 +65,8 @@
 .layout-mobile-bar {
   display: none;
   align-items: center;
-  gap: 12px;
-  padding: 0 20px;
+  justify-content: center;
+  padding: 0 16px;
   height: 56px;
   background: #0C1A2E;
   flex-shrink: 0;
@@ -78,31 +78,12 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.18);
 }
 
-.layout-hamburger {
-  width: 36px; height: 36px;
-  border: none;
-  background: rgba(255,255,255,0.08);
-  cursor: pointer;
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,0.60);
-  transition: background 0.15s, color 0.15s;
-  flex-shrink: 0;
-}
-.layout-hamburger:hover { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.90); }
-.layout-hamburger .ti { font-size: 20px; }
-
-.layout-mobile-brand {
+.layout-mobile-title {
   font-size: 16px;
   font-weight: 700;
-  color: rgba(255,255,255,0.90);
+  color: rgba(255,255,255,0.92);
   letter-spacing: -0.3px;
-}
-
-.layout-mobile-logo {
-  height: 32px;
-  width: auto;
-  object-fit: contain;
+  text-align: center;
 }
 
 /* ── Bottom navigation mobile ────────────────────────────────────────────── */

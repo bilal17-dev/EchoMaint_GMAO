@@ -1,10 +1,23 @@
 import { useState } from 'react'
-import { Outlet, NavLink } from 'react-router-dom'
+import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Sidebar from '../components/Sidebar'
 import { getUser } from '../store/auth.store'
-import logo1 from '../assets/logo1.png'
 import './Layout.css'
+
+// Mapping chemin → clé i18n pour le titre dans la topbar mobile
+// Ordre du plus spécifique au moins spécifique pour éviter les faux positifs startsWith
+const PAGE_TITLES = [
+  ['/demandes-intervention', 'nav.demandes'],
+  ['/interventions',         'nav.interventions'],
+  ['/maintenance-plans',     'nav.maintenanceplans'],
+  ['/dashboard',             'nav.dashboard'],
+  ['/planning',              'nav.planning'],
+  ['/equipements',           'nav.equipements'],
+  ['/batiments',             'nav.batiments'],
+  ['/stats',                 'nav.stats'],
+  ['/utilisateurs',          'nav.utilisateurs'],
+]
 
 const BOTTOM_NAV = {
   admin: [
@@ -32,8 +45,10 @@ export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { t } = useTranslation()
   const user = getUser()
+  const location = useLocation()
 
   const bottomItems = BOTTOM_NAV[user?.role] || BOTTOM_NAV.client
+  const currentPageKey = PAGE_TITLES.find(([path]) => location.pathname.startsWith(path))?.[1] || 'nav.dashboard'
 
   return (
     <div className={`layout${collapsed ? ' layout-collapsed' : ''}`}>
@@ -60,16 +75,9 @@ export default function Layout() {
 
       <div className="main-content">
 
-        {/* Barre mobile uniquement */}
+        {/* Barre mobile — titre de page centré (la navigation est dans la bottom nav) */}
         <div className="layout-mobile-bar">
-          <button
-            className="layout-hamburger"
-            onClick={() => setMobileOpen(o => !o)}
-            aria-label="Menu"
-          >
-            <i className="ti ti-menu-2" aria-hidden="true" />
-          </button>
-          <img src={logo1} alt="EchoMaint" className="layout-mobile-logo" />
+          <span className="layout-mobile-title">{t(currentPageKey)}</span>
         </div>
 
         <Outlet />
