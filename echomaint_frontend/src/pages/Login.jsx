@@ -61,10 +61,11 @@ export default function Login() {
   }
 
   return (
-    <div
-      className="login-page"
-      style={{ backgroundImage: `url(${immeuble})` }}
-    >
+    <div className="login-page">
+      <div
+        className="login-page-bg"
+        style={{ backgroundImage: `url(${immeuble})` }}
+      />
       <div className="login-page-overlay" />
 
       <div className="login-card">

@@ -4,18 +4,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden; /* clip le scale(1.1) pour éviter les bords blancs */
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Image de fond isolée dans son propre calque pour que filter: blur
+   s'applique directement sur le pixel — fiable en dev ET en production.
+   backdrop-filter dépend du contexte de rendu du navigateur et peut
+   être ignoré selon les headers HTTP du serveur de production. */
+.login-page-bg {
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: center;
-  position: relative;
-  font-family: 'Segoe UI', sans-serif;
+  filter: blur(8px);
+  transform: scale(1.1); /* évite les franges blanches en bord de blur */
 }
 
 .login-page-overlay {
   position: absolute;
   inset: 0;
   background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .login-card {
