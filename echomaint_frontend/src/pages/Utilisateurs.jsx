@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import './Utilisateurs.css'
 import { getUtilisateurs, createUtilisateur, updateUtilisateur, updateStatutUtilisateur } from '../api/utilisateurs.api'
-import { createClient } from '../api/clients.api'
+import { createClient, getClient, updateClient } from '../api/clients.api'
 import Pagination from '../components/Pagination'
 
 const ITEMS_PER_PAGE = 10
@@ -36,7 +36,10 @@ export default function Utilisateurs() {
   const [page, setPage] = useState(1)
 
   const [userEnEdition,  setUserEnEdition]  = useState(null)
-  const [editForm,       setEditForm]       = useState({ nom: '', prenom: '', email: '', role: '', actif: true })
+  const [editForm,       setEditForm]       = useState({
+    nom: '', prenom: '', email: '', role: '', actif: true,
+    entreprise_nom: '', entreprise_adresse: '', entreprise_telephone: '', entreprise_email_contact: '',
+  })
   const [erreurEdit,     setErreurEdit]     = useState('')
   const [confirmerRole,  setConfirmerRole]  = useState(false)
 
@@ -125,9 +128,21 @@ export default function Utilisateurs() {
     setModal('creer')
   }
 
-  const ouvrirModifier = (u) => {
+  const ouvrirModifier = async (u) => {
     setUserEnEdition(u)
-    setEditForm({ nom: u.nom, prenom: u.prenom, email: u.email, role: u.role, actif: Boolean(u.actif) })
+    const base = { nom: u.nom, prenom: u.prenom, email: u.email, role: u.role, actif: Boolean(u.actif),
+      entreprise_nom: '', entreprise_adresse: '', entreprise_telephone: '', entreprise_email_contact: '' }
+    if (u.role === 'client' && u.id_client) {
+      try {
+        const res = await getClient(u.id_client)
+        const c = res?.data ?? res
+        base.entreprise_nom            = c?.nom             ?? ''
+        base.entreprise_adresse        = c?.adresse         ?? ''
+        base.entreprise_telephone      = c?.telephone       ?? ''
+        base.entreprise_email_contact  = c?.email_contact   ?? ''
+      } catch { /* client non trouvé — on laisse les champs vides */ }
+    }
+    setEditForm(base)
     setErreurEdit('')
     setConfirmerRole(false)
     setModal('modifier')
@@ -159,6 +174,14 @@ export default function Utilisateurs() {
         nom: editForm.nom, prenom: editForm.prenom, email: editForm.email,
         role: editForm.role, actif: editForm.actif,
       })
+      if (editForm.role === 'client' && userEnEdition.id_client) {
+        await updateClient(userEnEdition.id_client, {
+          nom:           editForm.entreprise_nom           || undefined,
+          adresse:       editForm.entreprise_adresse       || undefined,
+          telephone:     editForm.entreprise_telephone     || undefined,
+          email_contact: editForm.entreprise_email_contact || undefined,
+        })
+      }
       fermerModifier()
       await chargerUtilisateurs()
       setPage(1)
@@ -435,6 +458,33 @@ export default function Utilisateurs() {
                   <span className="toggle-slider" />
                 </label>
               </div>
+
+              {/* Section entreprise — visible si le rôle est client */}
+              {editForm.role === 'client' && (
+                <div className="modal-section-entreprise">
+                  <p className="modal-section-label">
+                    <i className="ti ti-building" /> {t('utilisateurs.clientCompany')}
+                  </p>
+                  <div className="form-group">
+                    <label>{t('utilisateurs.companyName')} <span className="required">*</span></label>
+                    <input type="text" placeholder="Ex: DGS Africa" value={editForm.entreprise_nom} onChange={e => setEditForm(f => ({ ...f, entreprise_nom: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label>{t('utilisateurs.companyEmail')}</label>
+                    <input type="email" placeholder="Ex: contact@dgsafrica.com" value={editForm.entreprise_email_contact} onChange={e => setEditForm(f => ({ ...f, entreprise_email_contact: e.target.value }))} />
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>{t('utilisateurs.phone')}</label>
+                      <input type="text" placeholder="Ex: 338001234" value={editForm.entreprise_telephone} onChange={e => setEditForm(f => ({ ...f, entreprise_telephone: e.target.value }))} />
+                    </div>
+                    <div className="form-group">
+                      <label>{t('utilisateurs.address')}</label>
+                      <input type="text" placeholder="Ex: Route de Ngor, Dakar" value={editForm.entreprise_adresse} onChange={e => setEditForm(f => ({ ...f, entreprise_adresse: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {confirmerRole && (
                 <div className="confirm-role-banner">

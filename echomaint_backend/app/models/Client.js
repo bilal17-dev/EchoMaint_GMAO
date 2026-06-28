@@ -24,13 +24,12 @@ const Client = {
   },
 
   update: async (id, data) => {
-    await db('clients').where({ id }).update({
-      nom: data.nom,
-      email_contact: data.email_contact || null,
-      adresse: data.adresse,
-      telephone: data.telephone,
-      updated_at: db.fn.now()
-    });
+    const champs = { updated_at: db.fn.now() };
+    if (data.nom           !== undefined) champs.nom           = data.nom;
+    if (data.email_contact !== undefined) champs.email_contact = data.email_contact || null;
+    if (data.adresse       !== undefined) champs.adresse       = data.adresse       || null;
+    if (data.telephone     !== undefined) champs.telephone     = data.telephone     || null;
+    await db('clients').where({ id }).update(champs);
     return Client.findById(id);
   },
 

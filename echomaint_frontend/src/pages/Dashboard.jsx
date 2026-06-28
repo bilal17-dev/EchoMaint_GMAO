@@ -246,14 +246,6 @@ function DashboardAdmin() {
           <p className="page-subtitle">{t('dashboard.subtitle')}</p>
         </div>
         <div className="dashboard-header-actions">
-          <button
-            className="btn-refresh-icon"
-            onClick={() => charger(true)}
-            disabled={refreshing}
-            title={refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}
-          >
-            <i className={`ti ${refreshing ? 'ti-loader-2 spin' : 'ti-refresh'}`} />
-          </button>
           <div className="imprimer-wrap" ref={imprimerRef}>
             <button className="btn-imprimer" onClick={() => setShowImprimer(v => !v)}>
               <i className="ti ti-printer" />
