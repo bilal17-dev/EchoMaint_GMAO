@@ -99,6 +99,17 @@
   letter-spacing: -0.3px;
 }
 
+.layout-mobile-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ── Bottom navigation mobile ────────────────────────────────────────────── */
+.bottom-nav {
+  display: none; /* caché sur desktop */
+}
+
 /* ── Backdrop sidebar mobile ─────────────────────────────────────────────── */
 .sidebar-backdrop {
   position: fixed;
@@ -117,7 +128,7 @@
 @media (max-width: 767px) {
   .main-content {
     margin-left: 0 !important;
-    padding: 0 0 36px;
+    padding: 0 0 calc(70px + env(safe-area-inset-bottom));
   }
 
   .layout-mobile-bar {
@@ -127,5 +138,84 @@
 
   .sidebar-toggle-ext {
     display: none;
+  }
+
+  /* Bottom nav visible sur mobile */
+  .bottom-nav {
+    display: flex;
+    align-items: stretch;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 150;
+    background: #0C1A2E;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.30);
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(60px + env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 4px;
+    color: rgba(255,255,255,0.45);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav-item .ti {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .bottom-nav-label {
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .bottom-nav-item:hover,
+  .bottom-nav-item.active {
+    color: #60A5FA;
+    background: rgba(96,165,250,0.08);
+  }
+
+  .bottom-nav-item.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, #2563EB, #7C3AED);
+    border-radius: 0 0 2px 2px;
+  }
+
+  /* Badge indicateur quand le drawer est ouvert */
+  .bottom-nav-badge {
+    position: absolute;
+    top: 6px;
+    right: calc(50% - 14px);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #60A5FA;
+    box-shadow: 0 0 6px rgba(96,165,250,0.70);
   }
 }

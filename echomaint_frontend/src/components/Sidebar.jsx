@@ -103,7 +103,11 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
       if (userRef.current && !userRef.current.contains(e.target)) setShowUserMenu(false)
     }
     document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('touchstart', handleClick)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('touchstart', handleClick)
+    }
   }, [])
 
   const changeLang = (lng) => {
@@ -130,10 +134,8 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
 
       {/* Logo */}
       <div className="sidebar-header">
-        {!collapsed
-          ? <img src={logo1} alt="EchoMaint" className="sidebar-logo-full" />
-          : <img src={logo2} alt="EM" className="sidebar-logo-icon" />
-        }
+        <img src={logo1} alt="EchoMaint" className="sidebar-logo-full" />
+        <img src={logo2} alt="EM" className="sidebar-logo-icon" />
       </div>
 
       {/* Navigation */}
@@ -202,12 +204,10 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
             title={collapsed ? displayName : undefined}
           >
             <div className="user-avatar">{initiales}</div>
-            {!collapsed && (
-              <div className="user-info">
-                <div className="user-name">{displayName}</div>
-                <div className="user-role">{roleLabel}</div>
-              </div>
-            )}
+            <div className="user-info">
+              <div className="user-name">{displayName}</div>
+              <div className="user-role">{roleLabel}</div>
+            </div>
           </button>
 
           {showUserMenu && (

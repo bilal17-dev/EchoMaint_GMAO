@@ -54,7 +54,12 @@
   height: 200px;
   object-fit: contain;
   border-radius: 10px;
+  display: none;
 }
+
+/* État collapsed desktop : cacher le logo full, montrer l'icône */
+.sidebar.collapsed .sidebar-logo-full { display: none; }
+.sidebar.collapsed .sidebar-logo-icon { display: block; }
 
 /* ── Navigation ──────────────────────────────────────────────────────────── */
 .sidebar-nav {
@@ -228,6 +233,9 @@
 .user-profile-btn:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.10); }
 .sidebar.collapsed .user-profile-btn { justify-content: center; padding: 8px 0; background: transparent; border: none; }
 
+/* user-info toujours dans le DOM — caché en mode collapsed desktop */
+.sidebar.collapsed .user-info { display: none; }
+
 .user-avatar {
   width: 34px; height: 34px;
   border-radius: 50%;
@@ -317,21 +325,33 @@
   }
   .sidebar.sidebar-mobile-open { transform: translateX(0); }
 
+  /* Quand le drawer est ouvert en mode collapsed, on force le layout expanded */
   .sidebar.collapsed.sidebar-mobile-open .sidebar-header {
     justify-content: flex-start;
     padding: 0 20px;
   }
+  /* Logos : les deux sont dans le DOM, on contrôle via CSS */
   .sidebar.collapsed.sidebar-mobile-open .sidebar-logo-icon { display: none; }
   .sidebar.collapsed.sidebar-mobile-open .sidebar-logo-full { display: block; }
+
   .sidebar.collapsed.sidebar-mobile-open .sidebar-group { padding: 0 10px; }
   .sidebar.collapsed.sidebar-mobile-open .sidebar-item {
     padding: 0 12px; justify-content: flex-start; overflow: hidden;
+    height: 48px; /* meilleure cible tactile */
   }
   .sidebar.collapsed.sidebar-mobile-open .sidebar-item-label { opacity: 1; width: auto; }
   .sidebar.collapsed.sidebar-mobile-open .nav-active-dot { display: block; }
   .sidebar.collapsed.sidebar-mobile-open .lang-btn { justify-content: flex-start; padding: 0 12px; }
   .sidebar.collapsed.sidebar-mobile-open .lang-label { display: inline; }
-  .sidebar.collapsed.sidebar-mobile-open .user-profile-btn { justify-content: flex-start; padding: 8px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+  .sidebar.collapsed.sidebar-mobile-open .user-profile-btn {
+    justify-content: flex-start; padding: 8px 12px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  }
+  /* user-info est toujours dans le DOM — on l'affiche quand drawer ouvert */
   .sidebar.collapsed.sidebar-mobile-open .user-info { display: block; }
-  .sidebar.collapsed.sidebar-mobile-open .sidebar-bottom { padding: 8px 10px 12px; }
+  .sidebar.collapsed.sidebar-mobile-open .sidebar-bottom { padding: 8px 10px 16px; }
+
+  /* Touch targets : items plus hauts même sans drawer ouvert */
+  .sidebar-item { height: 48px; }
+  .lang-btn { height: 44px; }
 }

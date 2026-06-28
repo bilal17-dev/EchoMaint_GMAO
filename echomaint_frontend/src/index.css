@@ -1060,6 +1060,35 @@ select:not(.form-group select):not(.dashboard-select):focus {
   .modal-footer .btn-cancel { width: 100%; justify-content: center; }
   .page-header { flex-direction: column; align-items: flex-start; }
   .search-box  { max-width: 100%; min-width: 0; width: 100%; }
+
+  /* Tables : scroll horizontal propre */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .echomaint-table { min-width: 600px; }
+
+  /* Filtre bar : chips scrollables horizontalement */
+  .filter-bar-left {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Boutons d'action pleine largeur */
+  .page-header-actions { width: 100%; }
+  .page-header-actions .btn-primary,
+  .page-header-actions .btn-secondary {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* KPI : taille adaptée */
+  .kpi-value { font-size: 24px; }
+
+  /* Garantir que le contenu n'est pas masqué par la bottom nav */
+  body { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
 }
 
 @media (max-width: 480px) {
