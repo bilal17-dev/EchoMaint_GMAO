@@ -46,6 +46,7 @@ export default function Planning() {
   const [filterBatiment, setFilterBatiment] = useState('')
   const [filterTechnicien, setFilterTechnicien] = useState('')
   const [filterStatut, setFilterStatut] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
 
   const [planningOTs, setPlanningOTs] = useState([])
   const [batiments, setBatiments] = useState([])
@@ -188,7 +189,22 @@ export default function Planning() {
       </div>
 
       {/* Filtres */}
-      <div className="planning-filters">
+      <div className="planning-filters-toolbar">
+        {(() => {
+          const n = [filterBatiment, filterTechnicien, filterStatut].filter(Boolean).length
+          return (
+            <button
+              className={`btn-filter-mobile${n > 0 ? ' has-active' : ''}`}
+              onClick={() => setShowFilters(v => !v)}
+            >
+              <i className="ti ti-filter" />
+              {t('common.filters')}
+              {n > 0 && <span className="filter-mobile-badge">{n}</span>}
+            </button>
+          )
+        })()}
+      </div>
+      <div className={`planning-filters${showFilters ? ' is-open' : ''}`}>
         <select value={filterBatiment} onChange={e => setFilterBatiment(e.target.value)}>
           <option value="">{t('interventions.allBatiments')}</option>
           {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
@@ -258,17 +274,20 @@ export default function Planning() {
                 >
                   <span className="cal-day-num">{day}</span>
                   {dayOTs.length > 0 && (
-                    <div className="cal-day-dots">
-                      {dayOTs.slice(0, 3).map(ot => (
-                        <span
-                          key={ot.id}
-                          className={`cal-dot ${ot.type === 'preventif' ? 'dot-preventif' : 'dot-curatif'}`}
-                        />
-                      ))}
-                      {dayOTs.length > 3 && (
-                        <span className="cal-dot-more">+{dayOTs.length - 3}</span>
-                      )}
-                    </div>
+                    <>
+                      <div className="cal-day-dots">
+                        {dayOTs.slice(0, 4).map(ot => (
+                          <span
+                            key={ot.id}
+                            className={`cal-dot ${ot.type === 'preventif' ? 'dot-preventif' : 'dot-curatif'}`}
+                          />
+                        ))}
+                        {dayOTs.length > 4 && (
+                          <span className="cal-dot-more">+{dayOTs.length - 4}</span>
+                        )}
+                      </div>
+                      <span className="cal-day-count">{dayOTs.length}</span>
+                    </>
                   )}
                 </div>
               )

@@ -476,6 +476,28 @@
 @media (max-width: 900px) {
   .di-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .di-table { min-width: 700px; }
-  .demandes-header { flex-direction: column; align-items: stretch; }
-  .demandes-filters { flex-wrap: wrap; }
+  .demandes-header { flex-direction: row; align-items: flex-start; gap: 10px; flex-wrap: nowrap; }
+  .demandes-filters { flex: 1; flex-wrap: wrap; }
+}
+
+@media (max-width: 767px) {
+  /* Sur mobile, le tableau ne scrolle pas — on masque les colonnes secondaires */
+  .di-table-wrap { overflow-x: visible; }
+  .di-table      { min-width: 0; }
+
+  /* Colonnes masquées sur mobile */
+  .di-td-equip,
+  .di-td-date,
+  .di-td-time,
+  .di-td-priorite,
+  .di-th-priorite,
+  .di-table .di-th:nth-child(3),
+  .di-table .di-th:nth-child(4),
+  .di-table .di-th:nth-child(5) {
+    display: none !important;
+  }
+
+  /* Colonne titre : plus de place pour afficher le texte */
+  .di-td-titre { max-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .di-desc-truncate { display: none; }
 }

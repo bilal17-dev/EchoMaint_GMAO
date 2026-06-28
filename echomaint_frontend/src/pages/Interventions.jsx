@@ -36,6 +36,7 @@ export default function Interventions() {
   const [filterPriorite, setFilterPriorite] = useState('')
   const [filterBatiment, setFilterBatiment] = useState('')
   const [page, setPage] = useState(1)
+  const [showFilters, setShowFilters] = useState(false)
 
   const [formAssigner, setFormAssigner] = useState({ technicien_id: '' })
   const [formCloturer, setFormCloturer] = useState({ commentaire_cloture: '', duree_reelle_minutes: '' })
@@ -73,9 +74,10 @@ export default function Interventions() {
     return true
   })
 
-  const totalPages    = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
-  const paginated     = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
-  const batimentsNoms = [...new Set(interventions.map(i => i.batiment_nom).filter(Boolean))]
+  const totalPages      = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
+  const paginated       = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+  const batimentsNoms   = [...new Set(interventions.map(i => i.batiment_nom).filter(Boolean))]
+  const activeFilterCount = [filterStatut, filterType, filterPriorite, filterBatiment].filter(Boolean).length
 
   const fermerModal = () => { setModal(null); setErreurs([]) }
 
@@ -203,7 +205,7 @@ export default function Interventions() {
         </div>
         <div className="page-header-actions">
           {isAdmin && (
-            <button className="btn-primary" onClick={() => { setModal('creer'); setErreurs([]) }}>
+            <button className="btn-primary btn-add-list" onClick={() => { setModal('creer'); setErreurs([]) }}>
               <i className="ti ti-plus" /> {t('interventions.new')}
             </button>
           )}
@@ -212,7 +214,18 @@ export default function Interventions() {
 
       {/* ── Toolbar ─────────────────────────────────────────────────────── */}
       <div className="iv-toolbar">
-        <div className="iv-filters">
+        <div className="iv-toolbar-top">
+          <p className="iv-count">{t('interventions.count', { count: filtered.length })}</p>
+          <button
+            className={`btn-filter-mobile${activeFilterCount > 0 ? ' has-active' : ''}`}
+            onClick={() => setShowFilters(v => !v)}
+          >
+            <i className="ti ti-filter" />
+            {t('common.filters')}
+            {activeFilterCount > 0 && <span className="filter-mobile-badge">{activeFilterCount}</span>}
+          </button>
+        </div>
+        <div className={`iv-filters${showFilters ? ' is-open' : ''}`}>
           <select className="filter-select" value={filterStatut} onChange={e => { setFilterStatut(e.target.value); setPage(1) }}>
             <option value="">{t('interventions.allStatuts')}</option>
             {['planifiee','assignee','en_cours','terminee','annulee'].map(k => (
@@ -235,9 +248,6 @@ export default function Interventions() {
             {batimentsNoms.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
-        <p className="iv-count">
-          {t('interventions.count', { count: filtered.length })}
-        </p>
       </div>
 
       {/* ── Workspace ───────────────────────────────────────────────────── */}

@@ -7,10 +7,15 @@
 /* ── Toolbar ─────────────────────────────────────────────────────────────── */
 .iv-toolbar {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.iv-toolbar-top {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .iv-filters {
@@ -27,6 +32,7 @@
   flex-shrink: 0;
 }
 .iv-count strong { color: var(--text-secondary); }
+
 
 /* ── Workspace ────────────────────────────────────────────────────────────── */
 .iv-workspace {
@@ -445,4 +451,23 @@
 @media (max-width: 640px) {
   .iv-row-date { display: none; }
   .iv-row-badges { gap: 3px; }
+}
+
+@media (max-width: 767px) {
+  /* Bouton filtres visible sur mobile */
+  .btn-filter-mobile { display: flex; }
+
+  /* Filtres cachés par défaut, affichés si .is-open */
+  .iv-filters {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 0 4px;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .iv-filters.is-open { display: flex; }
+
+  /* Selects pleine largeur */
+  .iv-filters .filter-select { width: 100%; min-width: 0; }
 }

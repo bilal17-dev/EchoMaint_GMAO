@@ -339,18 +339,16 @@
 
 @media (max-width: 767px) {
   .utilisateurs-header {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    gap: 10px;
   }
 
   .utilisateurs-filters {
+    flex: 1;
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .utilisateurs-header > .btn-primary {
-    width: 100%;
-    justify-content: center;
   }
 
   /* Table → cartes empilées */

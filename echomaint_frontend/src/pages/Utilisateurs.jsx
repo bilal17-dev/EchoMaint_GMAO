@@ -231,7 +231,7 @@ export default function Utilisateurs() {
             {ROLES.map(r => <option key={r} value={r}>{t(`utilisateurs.roles.${r}`)}</option>)}
           </select>
         </div>
-        <button className="btn-primary" onClick={ouvrirModal}>
+        <button className="btn-primary btn-add-list" onClick={ouvrirModal}>
           <i className="ti ti-plus" /> {t('utilisateurs.new')}
         </button>
       </div>

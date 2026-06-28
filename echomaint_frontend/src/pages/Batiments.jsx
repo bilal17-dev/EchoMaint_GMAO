@@ -5,6 +5,7 @@ import './Batiments.css'
 
 import { getBatiments, createBatiment, updateBatiment, deleteBatiment } from '../api/batiments.api'
 import { getClients } from '../api/clients.api'
+import Pagination from '../components/Pagination'
 
 const ITEMS_PER_PAGE = 6
 
@@ -167,7 +168,7 @@ export default function Batiments() {
           </select>
         </div>
         {user.role === 'admin' && (
-          <button className="btn-primary" onClick={() => {
+          <button className="btn-primary btn-add-list" onClick={() => {
             setEditBatiment(null)
             setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
             setShowModal(true)
@@ -232,30 +233,7 @@ export default function Batiments() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="batiments-pagination">
-          <p>
-            {t('pagination.showing')} {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} {t('pagination.of')} {filtered.length} {t('pagination.buildings')}
-          </p>
-          <div className="pagination-btns">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
-              <i className="ti ti-chevron-left" aria-hidden="true" />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                className={page === i + 1 ? 'active' : ''}
-                onClick={() => setPage(i + 1)}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
-              <i className="ti ti-chevron-right" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} total={filtered.length} itemsPerPage={ITEMS_PER_PAGE} onChange={setPage} />
 
       {/* Modal */}
       {showModal && (

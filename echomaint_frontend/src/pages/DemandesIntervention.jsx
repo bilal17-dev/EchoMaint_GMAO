@@ -202,7 +202,7 @@ export default function DemandesIntervention() {
         </div>
 
         {role === 'client' && (
-          <button className="btn-primary" onClick={() => setModalCreer(true)}>
+          <button className="btn-primary btn-add-list" onClick={() => setModalCreer(true)}>
             <i className="ti ti-plus" /> {t('di.new')}
           </button>
         )}
@@ -225,7 +225,7 @@ export default function DemandesIntervention() {
                   <th className="di-th">{t('di.table.equipement')}</th>
                   <th className="di-th">{t('di.table.date')}</th>
                   <th className="di-th">{t('di.table.heure')}</th>
-                  <th className="di-th">{t('di.table.priorite')}</th>
+                  <th className="di-th di-th-priorite">{t('di.table.priorite')}</th>
                   <th className="di-th">{t('di.table.statut')}</th>
                   <th className="di-th di-th-actions">{t('di.table.actions')}</th>
                 </tr>
@@ -254,7 +254,7 @@ export default function DemandesIntervention() {
                     </td>
                     <td className="di-td di-td-date">{formatDate(d.created_at)}</td>
                     <td className="di-td di-td-time">{formatTime(d.created_at)}</td>
-                    <td className="di-td">
+                    <td className="di-td di-td-priorite">
                       <span className={`prio-badge ${PRIORITES_CLASS[d.priorite] || ''}`}>
                         {t(`interventions.priorites.${d.priorite}`)}
                       </span>

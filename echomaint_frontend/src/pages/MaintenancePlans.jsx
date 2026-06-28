@@ -247,7 +247,7 @@ export default function MaintenancePlans() {
           <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.maintenancePlans.subtitle')}</p>
         </div>
         {user?.role === 'admin' && (
-          <button className="btn-primary" onClick={handleNouveauPlan}>
+          <button className="btn-primary btn-add-list" onClick={handleNouveauPlan}>
             <i className="ti ti-plus" /> {t('plans.new')}
           </button>
         )}

@@ -333,21 +333,22 @@
 
   .login-left {
     flex: none;
-    min-height: 200px;
-    max-height: 220px;
+    min-height: 160px;
+    max-height: 170px;
   }
 
   .login-right {
     flex: 1;
-    padding: 2rem 1.5rem;
+    padding: 1.25rem 1.5rem 2rem;
     justify-content: flex-start;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .login-logo { margin-bottom: 1.25rem; }
-  .logo-img { height: 72px; }
-  .login-title { font-size: 20px; }
-  .login-subtitle { margin-bottom: 1.25rem; }
+  .login-logo { margin-bottom: 0.75rem; }
+  .logo-img { height: 60px; }
+  .login-title { font-size: 18px; margin-bottom: 4px; }
+  .login-subtitle { margin-bottom: 1rem; font-size: 13px; }
 }
 
 @media (max-width: 400px) {

@@ -189,7 +189,7 @@ export default function Equipements() {
           </select>
         </div>
         {user.role === 'admin' && (
-          <button className="btn-primary" onClick={() => {
+          <button className="btn-primary btn-add-list" onClick={() => {
             setEditEquipement(null)
             setForm(emptyForm)
             setShowModal(true)
