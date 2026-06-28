@@ -1076,24 +1076,11 @@ select:not(.form-group select):not(.dashboard-select):focus {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Boutons d'action pleine largeur */
-  .page-header-actions { width: 100%; }
-  .page-header-actions .btn-primary,
-  .page-header-actions .btn-secondary {
-    flex: 1;
-    justify-content: center;
-  }
+  /* Boutons d'action : compacts sur mobile, pas pleine largeur sur les pages */
+  .page-header-actions { width: auto; }
 
   /* KPI : taille adaptée */
   .kpi-value { font-size: 24px; }
-
-  /* Garantir que le contenu n'est pas masqué par la bottom nav */
-  body { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
-
-  /* Cacher le titre+sous-titre de page sur mobile : il apparaît dans la topbar */
-  .page-header-left { display: none; }
-  /* Quand il n'y a que les actions, simplifier la mise en page du header */
-  .page-header:has(> .page-header-actions:only-child) { margin-bottom: 12px; }
 }
 
 @media (max-width: 480px) {

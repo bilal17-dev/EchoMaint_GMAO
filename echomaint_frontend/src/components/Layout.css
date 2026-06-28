@@ -4,7 +4,7 @@
   position: relative;
 }
 
-/* ── Zone de contenu : margin-left suit la sidebar flottante ─────────────── */
+/* ── Zone de contenu ─────────────────────────────────────────────────────── */
 /* Sidebar: left:12px + width:252px + gap:24px = 288px */
 .main-content {
   margin-left: 288px;
@@ -18,7 +18,7 @@
   margin-left: 108px;
 }
 
-/* Page entry animation */
+/* Entrée de page animée */
 .main-content > *:not(.layout-mobile-bar) {
   animation: contentFadeUp 0.32s ease both;
 }
@@ -28,7 +28,7 @@
   to   { opacity: 1; }
 }
 
-/* ── Toggle desktop — positionné sur le bord droit de la sidebar ─────────── */
+/* ── Toggle desktop ──────────────────────────────────────────────────────── */
 /* Right edge expanded:  12px + 252px = 264px → left = 264px - 14px = 250px */
 /* Right edge collapsed: 12px +  72px =  84px → left =  84px - 14px =  70px */
 .sidebar-toggle-ext {
@@ -45,10 +45,7 @@
   z-index: 201;
   transition:
     left 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    background 0.15s,
-    color 0.15s,
-    transform 0.15s,
-    box-shadow 0.15s;
+    background 0.15s, color 0.15s, transform 0.15s, box-shadow 0.15s;
   box-shadow: 0 2px 10px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .sidebar-toggle-ext:hover {
@@ -61,43 +58,56 @@
 .sidebar-toggle-ext .ti { font-size: 12px; }
 .layout-collapsed .sidebar-toggle-ext { left: 70px; }
 
-/* ── Barre mobile ────────────────────────────────────────────────────────── */
+/* ── Topbar mobile ───────────────────────────────────────────────────────── */
 .layout-mobile-bar {
   display: none;
   align-items: center;
-  justify-content: center;
-  padding: 0 16px;
+  justify-content: space-between;
+  padding: 0 16px 0 14px;
   height: 56px;
   background: #0C1A2E;
   flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  margin: -36px -40px 28px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  margin: 0 -20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.22);
 }
 
-.layout-mobile-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.92);
-  letter-spacing: -0.3px;
-  text-align: center;
+.layout-mobile-logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
 }
 
-/* ── Bottom navigation mobile ────────────────────────────────────────────── */
-.bottom-nav {
-  display: none; /* caché sur desktop */
+.layout-hamburger {
+  width: 38px; height: 38px;
+  border: none;
+  background: rgba(255,255,255,0.07);
+  cursor: pointer;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.65);
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
+.layout-hamburger:hover,
+.layout-hamburger.is-open {
+  background: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.95);
+}
+.layout-hamburger .ti { font-size: 20px; }
 
 /* ── Backdrop sidebar mobile ─────────────────────────────────────────────── */
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.40);
   z-index: 299;
   animation: fadeIn 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @keyframes fadeIn {
@@ -109,94 +119,14 @@
 @media (max-width: 767px) {
   .main-content {
     margin-left: 0 !important;
-    padding: 0 0 calc(70px + env(safe-area-inset-bottom));
+    padding: 0 20px 40px;
   }
 
   .layout-mobile-bar {
     display: flex;
-    margin: 0 0 24px;
   }
 
   .sidebar-toggle-ext {
     display: none;
-  }
-
-  /* Bottom nav visible sur mobile */
-  .bottom-nav {
-    display: flex;
-    align-items: stretch;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 150;
-    background: #0C1A2E;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.30);
-    padding-bottom: env(safe-area-inset-bottom);
-    height: calc(60px + env(safe-area-inset-bottom));
-  }
-
-  .bottom-nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    padding: 6px 4px;
-    color: rgba(255,255,255,0.45);
-    text-decoration: none;
-    font-size: 10px;
-    font-weight: 500;
-    font-family: 'Inter', sans-serif;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: color 0.15s, background 0.15s;
-    position: relative;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .bottom-nav-item .ti {
-    font-size: 22px;
-    line-height: 1;
-  }
-
-  .bottom-nav-label {
-    font-size: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-
-  .bottom-nav-item:hover,
-  .bottom-nav-item.active {
-    color: #60A5FA;
-    background: rgba(96,165,250,0.08);
-  }
-
-  .bottom-nav-item.active::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 20%;
-    right: 20%;
-    height: 2px;
-    background: linear-gradient(90deg, #2563EB, #7C3AED);
-    border-radius: 0 0 2px 2px;
-  }
-
-  /* Badge indicateur quand le drawer est ouvert */
-  .bottom-nav-badge {
-    position: absolute;
-    top: 6px;
-    right: calc(50% - 14px);
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #60A5FA;
-    box-shadow: 0 0 6px rgba(96,165,250,0.70);
   }
 }

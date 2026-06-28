@@ -168,59 +168,92 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMob
 
         {/* Sélecteur de langue */}
         <div className="sidebar-lang-wrap" ref={langRef}>
-          <button
-            className="lang-btn"
-            onClick={() => setShowLangMenu(v => !v)}
-            title={collapsed ? t('nav.language') : undefined}
-          >
-            <i className="ti ti-world" aria-hidden="true" />
-            <span className="lang-label">
-              {currentLang === 'EN' ? '🇬🇧 English' : '🇫🇷 Français'}
-            </span>
-          </button>
-          {showLangMenu && (
-            <div className={`user-dropdown${(collapsed && !mobileOpen) ? ' dropdown-right' : ' dropdown-up'}`}>
+          {mobileOpen ? (
+            /* Mobile : deux boutons inline — pas de dropdown, pas de clipping */
+            <div className="mobile-lang-row">
               <button
-                className={`dropdown-item${i18n.language?.startsWith('fr') ? ' active' : ''}`}
+                className={`mobile-lang-opt${i18n.language?.startsWith('fr') ? ' active' : ''}`}
                 onClick={() => changeLang('fr')}
-              >
-                🇫🇷 {t('lang.fr')}
-              </button>
+              >🇫🇷 Français</button>
               <button
-                className={`dropdown-item${i18n.language?.startsWith('en') ? ' active' : ''}`}
+                className={`mobile-lang-opt${i18n.language?.startsWith('en') ? ' active' : ''}`}
                 onClick={() => changeLang('en')}
-              >
-                🇬🇧 {t('lang.en')}
-              </button>
+              >🇬🇧 English</button>
             </div>
+          ) : (
+            /* Desktop : dropdown classique */
+            <>
+              <button
+                className="lang-btn"
+                onClick={() => setShowLangMenu(v => !v)}
+                title={collapsed ? t('nav.language') : undefined}
+              >
+                <i className="ti ti-world" aria-hidden="true" />
+                <span className="lang-label">
+                  {currentLang === 'EN' ? '🇬🇧 English' : '🇫🇷 Français'}
+                </span>
+              </button>
+              {showLangMenu && (
+                <div className={`user-dropdown${collapsed ? ' dropdown-right' : ' dropdown-up'}`}>
+                  <button
+                    className={`dropdown-item${i18n.language?.startsWith('fr') ? ' active' : ''}`}
+                    onClick={() => changeLang('fr')}
+                  >🇫🇷 {t('lang.fr')}</button>
+                  <button
+                    className={`dropdown-item${i18n.language?.startsWith('en') ? ' active' : ''}`}
+                    onClick={() => changeLang('en')}
+                  >🇬🇧 {t('lang.en')}</button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* Profil utilisateur */}
         <div className="sidebar-user-wrap" ref={userRef}>
-          <button
-            className="user-profile-btn"
-            onClick={() => setShowUserMenu(v => !v)}
-            title={collapsed ? displayName : undefined}
-          >
-            <div className="user-avatar">{initiales}</div>
-            <div className="user-info">
-              <div className="user-name">{displayName}</div>
-              <div className="user-role">{roleLabel}</div>
-            </div>
-          </button>
-
-          {showUserMenu && (
-            <div className={`user-dropdown dropdown-up${(collapsed && !mobileOpen) ? ' dropdown-right' : ''}`}>
-              <div className="dropdown-header">
-                <div className="d-name">{displayName}</div>
-                <div className="d-email">{user?.email || roleLabel}</div>
+          {mobileOpen ? (
+            /* Mobile : profil + déconnexion inline — garanti visible */
+            <div className="mobile-profile-section">
+              <div className="mobile-profile-info">
+                <div className="user-avatar">{initiales}</div>
+                <div className="user-info">
+                  <div className="user-name">{displayName}</div>
+                  <div className="user-role">{user?.email || roleLabel}</div>
+                </div>
               </div>
-              <button className="dropdown-item dropdown-logout" onClick={handleLogout}>
+              <button className="mobile-logout-btn" onClick={handleLogout}>
                 <i className="ti ti-logout" aria-hidden="true" />
                 {t('nav.logout')}
               </button>
             </div>
+          ) : (
+            /* Desktop : dropdown classique */
+            <>
+              <button
+                className="user-profile-btn"
+                onClick={() => setShowUserMenu(v => !v)}
+                title={collapsed ? displayName : undefined}
+              >
+                <div className="user-avatar">{initiales}</div>
+                <div className="user-info">
+                  <div className="user-name">{displayName}</div>
+                  <div className="user-role">{roleLabel}</div>
+                </div>
+              </button>
+
+              {showUserMenu && (
+                <div className={`user-dropdown dropdown-up${collapsed ? ' dropdown-right' : ''}`}>
+                  <div className="dropdown-header">
+                    <div className="d-name">{displayName}</div>
+                    <div className="d-email">{user?.email || roleLabel}</div>
+                  </div>
+                  <button className="dropdown-item dropdown-logout" onClick={handleLogout}>
+                    <i className="ti ti-logout" aria-hidden="true" />
+                    {t('nav.logout')}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
