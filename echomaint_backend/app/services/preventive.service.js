@@ -41,14 +41,16 @@ const preventiveService = {
           await Intervention.create({
             id: otId,
             equipement_id: plan.equipement_id,
-            plan_maintenance_id: plan.id, // Lien vers le plan
+            // FK vers le plan source — permet de retrouver l'origine de l'OT
+            plan_maintenance_id: plan.id,
             type: 'preventif',
             priorite: 'normale',
             statut: 'planifiee',
             titre: `[Préventif] ${plan.label}`,
             description: `Maintenance préventive automatique générée via plan : ${plan.label}`,
             date_planifiee: dateProchaine,
-            // Injection de la gamme de tâches (JSON) du plan vers l'OT
+            // Snapshot de la gamme au moment de la génération : si le plan est
+            // modifié plus tard, cet OT conserve la liste de tâches originale.
             gamme_taches: plan.gamme_taches
           });
 
@@ -97,6 +99,8 @@ const preventiveService = {
         titre: `[Préventif] ${plan.label}`,
         description: `Maintenance préventive régénérée suite à clôture.`,
         date_planifiee: futureDate,
+        // Même principe que la génération initiale : snapshot figé de la gamme
+        // au moment du nouveau cycle, indépendant des modifications futures du plan.
         gamme_taches: plan.gamme_taches
       });
 
