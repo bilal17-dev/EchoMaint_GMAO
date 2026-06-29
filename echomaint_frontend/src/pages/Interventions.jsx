@@ -79,7 +79,7 @@ export default function Interventions() {
   const batimentsNoms   = [...new Set(interventions.map(i => i.batiment_nom).filter(Boolean))]
   const activeFilterCount = [filterStatut, filterType, filterPriorite, filterBatiment].filter(Boolean).length
 
-  const fermerModal = () => { setModal(null); setErreurs([]) }
+  const fermerModal = () => { setModal(null); setErreurs([]); document.body.classList.remove('modal-open') }
 
   const handleAssigner = async () => {
     if (!formAssigner.technicien_id) { setErreurs([t('interventions.errors.selectTech')]); return }
@@ -163,7 +163,7 @@ export default function Interventions() {
     return (
       <div className="iv-action-btns">
         {ot.statut === 'planifiee' && isAdmin && (
-          <button className="btn-primary" onClick={() => { setSelected(ot); setModal('assigner') }}>
+          <button className="btn-primary" onClick={() => { setSelected(ot); setModal('assigner'); document.body.classList.add('modal-open') }}>
             <i className="ti ti-user-plus" /> {t('interventions.actions.assign')}
           </button>
         )}
@@ -173,17 +173,17 @@ export default function Interventions() {
           </button>
         )}
         {ot.statut === 'en_cours' && (isAdmin || (isTech && isAssignedTech)) && (
-          <button className="btn-success" onClick={() => { setSelected(ot); setModal('cloturer') }}>
+          <button className="btn-success" onClick={() => { setSelected(ot); setModal('cloturer'); document.body.classList.add('modal-open') }}>
             <i className="ti ti-check" /> {t('interventions.actions.close')}
           </button>
         )}
         {ot.statut === 'terminee' && isAdmin && (
-          <button className="btn-secondary" onClick={() => { setSelected(ot); setModal('rouvrir') }}>
+          <button className="btn-secondary" onClick={() => { setSelected(ot); setModal('rouvrir'); document.body.classList.add('modal-open') }}>
             <i className="ti ti-refresh" /> {t('interventions.actions.reopen')}
           </button>
         )}
         {['planifiee', 'assignee'].includes(ot.statut) && isAdmin && (
-          <button className="btn-danger" onClick={() => { setSelected(ot); setModal('annuler') }}>
+          <button className="btn-danger" onClick={() => { setSelected(ot); setModal('annuler'); document.body.classList.add('modal-open') }}>
             <i className="ti ti-x" /> {t('interventions.actions.cancel')}
           </button>
         )}
@@ -205,7 +205,7 @@ export default function Interventions() {
         </div>
         <div className="page-header-actions">
           {isAdmin && (
-            <button className="btn-primary btn-add-list" onClick={() => { setModal('creer'); setErreurs([]) }}>
+            <button className="btn-primary btn-add-list" onClick={() => { setModal('creer'); setErreurs([]); document.body.classList.add('modal-open') }}>
               <i className="ti ti-plus" /> {t('interventions.new')}
             </button>
           )}
@@ -462,7 +462,7 @@ export default function Interventions() {
       {/* ── Modals ──────────────────────────────────────────────────────── */}
       {modal && (
         <div className="modal-overlay" onClick={fermerModal}>
-          <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
+          <div className="modal modal-lg modal-content" onClick={e => e.stopPropagation()}>
 
             {modal === 'assigner' && (
               <>
@@ -470,7 +470,7 @@ export default function Interventions() {
                   <h2>{t('interventions.modal.assignTitle')}</h2>
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
-                <div className="modal-form">
+                <div className="modal-body">
                   <div className="form-group">
                     <label>{t('interventions.technicien')}</label>
                     <select value={formAssigner.technicien_id} onChange={e => setFormAssigner({ technicien_id: e.target.value })}>
@@ -481,8 +481,8 @@ export default function Interventions() {
                   {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                 </div>
                 <div className="modal-footer">
-                  <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                   <button className="btn-primary" onClick={handleAssigner}>{t('interventions.actions.assign')}</button>
+                  <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                 </div>
               </>
             )}
@@ -493,7 +493,7 @@ export default function Interventions() {
                   <h2>{t('interventions.modal.closeTitle')}</h2>
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
-                <div className="modal-form">
+                <div className="modal-body">
                   <div className="form-group">
                     <label>{t('interventions.modal.closureComment')} <span className="iv-required">*</span></label>
                     <textarea
@@ -515,8 +515,8 @@ export default function Interventions() {
                   {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                 </div>
                 <div className="modal-footer">
-                  <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                   <button className="btn-primary" onClick={handleCloturer}>{t('interventions.actions.close')}</button>
+                  <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                 </div>
               </>
             )}
@@ -527,7 +527,7 @@ export default function Interventions() {
                   <h2>{t('interventions.modal.reopenTitle')}</h2>
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
-                <div className="modal-form">
+                <div className="modal-body">
                   <div className="warning-box">
                     <i className="ti ti-alert-triangle" />
                     <p>{t('interventions.modal.reopenWarning')}</p>
@@ -545,8 +545,8 @@ export default function Interventions() {
                   {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                 </div>
                 <div className="modal-footer">
-                  <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                   <button className="btn-primary iv-btn-danger-confirm" onClick={handleRouvrir}>{t('interventions.actions.reopen')}</button>
+                  <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                 </div>
               </>
             )}
@@ -557,14 +557,14 @@ export default function Interventions() {
                   <h2>{t('interventions.modal.cancelTitle')}</h2>
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
-                <div className="modal-form">
+                <div className="modal-body">
                   <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                     {t('interventions.modal.cancelConfirm')} <strong>"{selected?.titre}"</strong> ? {t('interventions.modal.cancelIrreversible')}
                   </p>
                 </div>
                 <div className="modal-footer">
-                  <button className="btn-cancel" onClick={fermerModal}>{t('interventions.modal.noKeep')}</button>
                   <button className="btn-primary iv-btn-danger-confirm" onClick={handleAnnuler}>{t('interventions.modal.yesCancel')}</button>
+                  <button className="btn-cancel" onClick={fermerModal}>{t('interventions.modal.noKeep')}</button>
                 </div>
               </>
             )}
@@ -575,7 +575,7 @@ export default function Interventions() {
                   <h2>{t('interventions.newOT')}</h2>
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
-                <div className="modal-form">
+                <div className="modal-body">
                   <div className="form-group">
                     <label>{t('interventions.titre')} <span className="iv-required">*</span></label>
                     <input
@@ -647,8 +647,8 @@ export default function Interventions() {
                   {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                 </div>
                 <div className="modal-footer">
-                  <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                   <button className="btn-primary" onClick={handleCreer}>{t('interventions.createOT')}</button>
+                  <button className="btn-cancel" onClick={fermerModal}>{t('common.cancel')}</button>
                 </div>
               </>
             )}

@@ -109,11 +109,10 @@ export default function Equipements() {
     setEditEquipement(equipement)
     setForm({ ...equipement })
     setShowModal(true)
+    document.body.classList.add('modal-open')
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
+  const handleSubmit = async () => {
     if (form.date_installation && new Date(form.date_installation) > new Date()) {
       window.alert(t('equipements.installDateFuture'))
       return
@@ -126,6 +125,7 @@ export default function Equipements() {
         await createEquipement(form)
       }
       setShowModal(false)
+      document.body.classList.remove('modal-open')
       setEditEquipement(null)
       setForm(emptyForm)
       await chargerDonnees()
@@ -169,6 +169,7 @@ export default function Equipements() {
             setEditEquipement(null)
             setForm(emptyForm)
             setShowModal(true)
+            document.body.classList.add('modal-open')
           }}>
             <i className="ti ti-plus" aria-hidden="true" />
             {t('equipements.new')}
@@ -270,15 +271,15 @@ export default function Equipements() {
 
       {/* Modal */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => { setShowModal(false); document.body.classList.remove('modal-open') }}>
+          <div className="modal modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editEquipement ? t('equipements.edit') : t('equipements.new')}</h2>
-              <button className="modal-close-btn" onClick={() => setShowModal(false)}>
+              <button className="modal-close-btn" onClick={() => { setShowModal(false); document.body.classList.remove('modal-open') }}>
                 <i className="ti ti-x" aria-hidden="true" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="modal-form">
+            <div className="modal-body">
               <div className="form-row">
                 <div className="form-group">
                   <label>{t('equipements.name')}</label>
@@ -287,7 +288,6 @@ export default function Equipements() {
                     placeholder={t('equipements.namePlaceholder')}
                     value={form.nom}
                     onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
-                    required
                   />
                 </div>
                 <div className="form-group">
@@ -297,7 +297,6 @@ export default function Equipements() {
                     placeholder={t('equipements.referencePlaceholder')}
                     value={form.reference}
                     onChange={e => setForm(f => ({ ...f, reference: e.target.value }))}
-                    required
                   />
                 </div>
               </div>
@@ -317,7 +316,6 @@ export default function Equipements() {
                   <select
                     value={form.batiment_id}
                     onChange={e => setForm(f => ({ ...f, batiment_id: e.target.value }))}
-                    required
                   >
                     <option value="">{t('equipements.selectBatiment')}</option>
                     {batiments.map(b => (
@@ -374,7 +372,6 @@ export default function Equipements() {
                 <select
                   value={form.statut}
                   onChange={e => setForm(f => ({ ...f, statut: e.target.value }))}
-                  required
                 >
                   {STATUTS.map(s => (
                     <option key={s.value} value={s.value}>{t(`equipements.statuts.${s.value}`)}</option>
@@ -391,16 +388,15 @@ export default function Equipements() {
                   rows={3}
                 />
               </div>
-
-              <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>
-                  {t('common.cancel')}
-                </button>
-                <button type="submit" className="btn-primary">
-                  {editEquipement ? t('common.save') : t('common.create')}
-                </button>
-              </div>
-            </form>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn-primary" onClick={handleSubmit}>
+                {editEquipement ? t('common.save') : t('common.create')}
+              </button>
+              <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); document.body.classList.remove('modal-open') }}>
+                {t('common.cancel')}
+              </button>
+            </div>
           </div>
         </div>
       )}

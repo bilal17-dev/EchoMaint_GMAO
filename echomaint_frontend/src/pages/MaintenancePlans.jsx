@@ -95,6 +95,7 @@ export default function MaintenancePlans() {
 
   const closeModal = () => {
     setShowModal(false)
+    document.body.classList.remove('modal-open')
     setEditingPlan(null)
     setForm(emptyForm)
     setPeriodiciteMode(30)
@@ -125,6 +126,7 @@ export default function MaintenancePlans() {
     setPeriodiciteMode(30)
     setSubmitErr('')
     setShowModal(true)
+    document.body.classList.add('modal-open')
   }
 
   const handleEdit = (plan) => {
@@ -142,6 +144,7 @@ export default function MaintenancePlans() {
     setPeriodiciteMode(detecterModePeriodicite(plan.periodicite_jours))
     setSubmitErr('')
     setShowModal(true)
+    document.body.classList.add('modal-open')
   }
 
   const handleSubmit = async () => {
@@ -213,6 +216,7 @@ export default function MaintenancePlans() {
   const handleDeleteConfirm = async () => {
     const plan = confirmDeletePlan
     setConfirmDeletePlan(null)
+    document.body.classList.remove('modal-open')
 
     if (plan._isMock) {
       setPlans(prev => prev.filter(p => p.id !== plan.id))
@@ -334,7 +338,7 @@ export default function MaintenancePlans() {
                               {t('common.edit')}
                             </button>
 
-                            <button className="btn-delete-plan" onClick={() => setConfirmDeletePlan(plan)} title={t('common.delete')}>
+                            <button className="btn-delete-plan" onClick={() => { setConfirmDeletePlan(plan); document.body.classList.add('modal-open') }} title={t('common.delete')}>
                               <i className="ti ti-trash" />
                               {t('common.delete')}
                             </button>
@@ -355,7 +359,7 @@ export default function MaintenancePlans() {
       {/* Modal création / modification */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal modal--large" onClick={e => e.stopPropagation()}>
+          <div className="modal modal--large modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingPlan ? t('plans.editTitle') : t('plans.newTitle')}</h2>
               <button className="modal-close-btn" onClick={closeModal}><i className="ti ti-x" /></button>
@@ -460,7 +464,6 @@ export default function MaintenancePlans() {
             </div>
 
             <div className="modal-footer">
-              <button className="btn-cancel" onClick={closeModal} disabled={submitting}>{t('common.cancel')}</button>
               <button className="btn-primary" onClick={handleSubmit} disabled={submitting}>
                 {submitting
                   ? t('plans.saving')
@@ -468,6 +471,7 @@ export default function MaintenancePlans() {
                     ? t('plans.saveChanges')
                     : (backendDispo ? t('plans.createPlan') : t('plans.addMock'))}
               </button>
+              <button className="btn-cancel" onClick={closeModal} disabled={submitting}>{t('common.cancel')}</button>
             </div>
           </div>
         </div>
@@ -475,7 +479,7 @@ export default function MaintenancePlans() {
 
       {/* Dialog de confirmation de suppression */}
       {confirmDeletePlan && (
-        <div className="modal-overlay" onClick={() => setConfirmDeletePlan(null)}>
+        <div className="modal-overlay" onClick={() => { setConfirmDeletePlan(null); document.body.classList.remove('modal-open') }}>
           <div className="confirm-dialog" onClick={e => e.stopPropagation()}>
             <div className="confirm-dialog__icon">
               <i className="ti ti-alert-triangle" />
@@ -485,7 +489,7 @@ export default function MaintenancePlans() {
               <strong>« {confirmDeletePlan.label} »</strong> — {t('plans.deleteBody')}
             </p>
             <div className="confirm-dialog__actions">
-              <button className="btn-cancel" onClick={() => setConfirmDeletePlan(null)}>
+              <button className="btn-cancel" onClick={() => { setConfirmDeletePlan(null); document.body.classList.remove('modal-open') }}>
                 {t('common.cancel')}
               </button>
               <button className="btn-danger" onClick={handleDeleteConfirm}>

@@ -118,6 +118,7 @@ export default function DemandesIntervention() {
     try {
       await creerDemande(form)
       setModalCreer(false)
+      document.body.classList.remove('modal-open')
       setForm(emptyForm)
       await chargerDemandes()
       setPage(1)
@@ -141,6 +142,7 @@ export default function DemandesIntervention() {
 
   const ouvrirModalRejet = (id) => {
     setModalRejet(id)
+    document.body.classList.add('modal-open')
     setMotifRejet('')
     setRejetErreur('')
   }
@@ -153,6 +155,7 @@ export default function DemandesIntervention() {
     try {
       await rejeterDemande(modalRejet, motifRejet.trim())
       setModalRejet(null)
+      document.body.classList.remove('modal-open')
       await chargerDemandes()
       setPage(1)
     } catch (error) {
@@ -208,7 +211,7 @@ export default function DemandesIntervention() {
           </select>
         </div>
         {role === 'client' && (
-          <button className="btn-primary btn-add-list" onClick={() => setModalCreer(true)}>
+          <button className="btn-primary btn-add-list" onClick={() => { setModalCreer(true); document.body.classList.add('modal-open') }}>
             <i className="ti ti-plus" /> {t('di.new')}
           </button>
         )}
@@ -242,7 +245,7 @@ export default function DemandesIntervention() {
                     key={d.id}
                     className="di-row di-row--clickable"
                     data-prio={d.priorite}
-                    onClick={() => setDetailDI(d)}
+                    onClick={() => { setDetailDI(d); document.body.classList.add('modal-open') }}
                   >
                     <td className="di-td di-td-titre">
                       <span className="di-titre">{d.titre}</span>
@@ -313,11 +316,11 @@ export default function DemandesIntervention() {
 
       {/* Modal création DI — CLIENT */}
       {modalCreer && (
-        <div className="modal-overlay" onClick={() => setModalCreer(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => { setModalCreer(false); document.body.classList.remove('modal-open') }}>
+          <div className="modal modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('di.newModalTitle')}</h2>
-              <button className="modal-close-btn" onClick={() => setModalCreer(false)}><i className="ti ti-x" /></button>
+              <button className="modal-close-btn" onClick={() => { setModalCreer(false); document.body.classList.remove('modal-open') }}><i className="ti ti-x" /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">
@@ -358,10 +361,10 @@ export default function DemandesIntervention() {
               {formErreurs.map((e, i) => <p key={i} className="erreur">{e}</p>)}
             </div>
             <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => setModalCreer(false)}>{t('common.cancel')}</button>
               <button className="btn-primary" onClick={handleSoumettre} disabled={submitting}>
                 {submitting ? t('di.submitting') : t('di.submit')}
               </button>
+              <button className="btn-cancel" onClick={() => { setModalCreer(false); document.body.classList.remove('modal-open') }}>{t('common.cancel')}</button>
             </div>
           </div>
         </div>
@@ -369,8 +372,8 @@ export default function DemandesIntervention() {
 
       {/* Modal détail DI — ADMIN & CLIENT */}
       {detailDI && (
-        <div className="modal-overlay" onClick={() => setDetailDI(null)}>
-          <div className="modal modal-lg di-detail-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => { setDetailDI(null); document.body.classList.remove('modal-open') }}>
+          <div className="modal modal-lg di-detail-modal modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div className="di-detail-header-left">
                 <span className={`prio-badge ${PRIORITES_CLASS[detailDI.priorite] || ''}`}>
@@ -378,7 +381,7 @@ export default function DemandesIntervention() {
                 </span>
                 <h2 className="di-detail-title">{detailDI.titre}</h2>
               </div>
-              <button className="modal-close-btn" onClick={() => setDetailDI(null)}>
+              <button className="modal-close-btn" onClick={() => { setDetailDI(null); document.body.classList.remove('modal-open') }}>
                 <i className="ti ti-x" />
               </button>
             </div>
@@ -439,16 +442,16 @@ export default function DemandesIntervention() {
             {role === 'admin' && detailDI.statut === 'ouverte' && (
               <div className="modal-footer">
                 <button
-                  className="di-modal-action-btn di-modal-action-btn--danger"
-                  onClick={() => { setDetailDI(null); ouvrirModalRejet(detailDI.id) }}
-                >
-                  <i className="ti ti-x" /> {t('di.reject')}
-                </button>
-                <button
                   className="di-modal-action-btn di-modal-action-btn--primary"
-                  onClick={() => { setDetailDI(null); handleConvertir(detailDI.id) }}
+                  onClick={() => { setDetailDI(null); document.body.classList.remove('modal-open'); handleConvertir(detailDI.id) }}
                 >
                   <i className="ti ti-transform" /> {t('di.convert')}
+                </button>
+                <button
+                  className="di-modal-action-btn di-modal-action-btn--danger"
+                  onClick={() => { setDetailDI(null); document.body.classList.remove('modal-open'); ouvrirModalRejet(detailDI.id) }}
+                >
+                  <i className="ti ti-x" /> {t('di.reject')}
                 </button>
               </div>
             )}
@@ -458,11 +461,11 @@ export default function DemandesIntervention() {
 
       {/* Modal rejet — ADMIN */}
       {modalRejet && (
-        <div className="modal-overlay" onClick={() => setModalRejet(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => { setModalRejet(null); document.body.classList.remove('modal-open') }}>
+          <div className="modal modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('di.rejectTitle')}</h2>
-              <button className="modal-close-btn" onClick={() => setModalRejet(null)}><i className="ti ti-x" /></button>
+              <button className="modal-close-btn" onClick={() => { setModalRejet(null); document.body.classList.remove('modal-open') }}><i className="ti ti-x" /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">
@@ -477,8 +480,8 @@ export default function DemandesIntervention() {
               {rejetErreur && <p className="erreur">{rejetErreur}</p>}
             </div>
             <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => setModalRejet(null)}>{t('common.cancel')}</button>
               <button className="btn-primary" onClick={handleRejeter}>{t('di.confirmRejet')}</button>
+              <button className="btn-cancel" onClick={() => { setModalRejet(null); document.body.classList.remove('modal-open') }}>{t('common.cancel')}</button>
             </div>
           </div>
         </div>

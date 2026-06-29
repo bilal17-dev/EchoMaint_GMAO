@@ -113,6 +113,7 @@ export default function Utilisateurs() {
 
       await createUtilisateur(payload)
       setModal(null)
+      document.body.classList.remove('modal-open')
       setForm(emptyForm)
       await chargerUtilisateurs()
       setPage(1)
@@ -127,6 +128,7 @@ export default function Utilisateurs() {
     setForm(emptyForm)
     setErreurs([])
     setModal('creer')
+    document.body.classList.add('modal-open')
   }
 
   const ouvrirModifier = async (u) => {
@@ -147,10 +149,12 @@ export default function Utilisateurs() {
     setErreurEdit('')
     setConfirmerRole(false)
     setModal('modifier')
+    document.body.classList.add('modal-open')
   }
 
   const fermerModifier = () => {
     setModal(null)
+    document.body.classList.remove('modal-open')
     setUserEnEdition(null)
     setErreurEdit('')
     setConfirmerRole(false)
@@ -331,11 +335,11 @@ export default function Utilisateurs() {
 
       {/* Modal création */}
       {modal === 'creer' && (
-        <div className="modal-overlay" onClick={() => { setModal(null); setErreurs([]) }}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => { setModal(null); setErreurs([]); document.body.classList.remove('modal-open') }}>
+          <div className="modal modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{t('utilisateurs.new')}</h2>
-              <button className="modal-close-btn" onClick={() => { setModal(null); setErreurs([]) }}>
+              <button className="modal-close-btn" onClick={() => { setModal(null); setErreurs([]); document.body.classList.remove('modal-open') }}>
                 <i className="ti ti-x" />
               </button>
             </div>
@@ -404,11 +408,11 @@ export default function Utilisateurs() {
             </div>
 
             <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => { setModal(null); setErreurs([]) }}>
-                {t('common.cancel')}
-              </button>
               <button className="btn-primary" onClick={handleCreer} disabled={submitting}>
                 {submitting ? t('utilisateurs.creating') : t('common.create')}
+              </button>
+              <button className="btn-cancel" onClick={() => { setModal(null); setErreurs([]); document.body.classList.remove('modal-open') }}>
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -418,7 +422,7 @@ export default function Utilisateurs() {
       {/* Modal modification */}
       {modal === 'modifier' && userEnEdition && (
         <div className="modal-overlay" onClick={fermerModifier}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal modal-content" onClick={e => e.stopPropagation()}>
 
             <div className="modal-header">
               <h2>{t('utilisateurs.editTitle')}</h2>
@@ -516,10 +520,10 @@ export default function Utilisateurs() {
             </div>
 
             <div className="modal-footer">
-              <button className="btn-cancel" onClick={fermerModifier}>{t('common.cancel')}</button>
               <button className="btn-primary" onClick={handleModifier} disabled={submitting}>
                 {submitting ? t('utilisateurs.saving') : t('common.save')}
               </button>
+              <button className="btn-cancel" onClick={fermerModifier}>{t('common.cancel')}</button>
             </div>
 
           </div>

@@ -376,9 +376,6 @@
   .table-actions { flex-wrap: wrap; gap: 4px; }
   .btn-toggle { font-size: 11px; padding: 4px 8px; }
 
-  /* Modal bottom-sheet sur mobile */
-  .modal-overlay { align-items: flex-end; }
-  .modal { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
   .form-row { grid-template-columns: 1fr; }
 }
 
