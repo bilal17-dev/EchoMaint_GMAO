@@ -721,7 +721,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -741,7 +741,7 @@ body {
   border: 1px solid rgba(255,255,255,0.8);
   position: relative;
   flex-shrink: 0;
-  max-height: 92dvh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1179,6 +1179,22 @@ select:not(.form-group select):not(.dashboard-select):focus {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   MODAL — GLOBAL (toutes tailles d'écran)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Bloque le scroll de la page sur toutes tailles quand un modal est ouvert */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* contentFadeUp utilise transform: translateY() → crée un containing block
+   CSS pour position:fixed → l'overlay se positionne relativement à l'élément
+   animé au lieu du viewport. On désactive l'animation quand un modal est ouvert. */
+body.modal-open .main-content > *:not(.layout-mobile-bar) {
+  animation: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    MOBILE — MODALS (structure propre, scroll fiable iOS)
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
@@ -1186,8 +1202,8 @@ select:not(.form-group select):not(.dashboard-select):focus {
     overflow: hidden;
   }
 
-  /* L'animation contentFadeUp utilise transform ce qui crée un containing block
-     pour position:fixed et décale la modal. On la désactive sur mobile. */
+  /* Sur mobile, l'animation est désactivée en permanence (pas seulement
+     modal-open) pour éviter tout décalage sur les transitions de page. */
   .main-content > *:not(.layout-mobile-bar) {
     animation: none !important;
   }
@@ -1357,5 +1373,51 @@ select:not(.form-group select):not(.dashboard-select):focus {
     flex-direction: column !important;
     overflow: hidden !important;
     animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESKTOP — Modal centré, jamais coupé (déclaré en dernier pour gagner)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 640px) {
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    /* 'safe' : si le modal dépasse la hauteur du viewport, bascule sur flex-start
+       au lieu de centrer et couper le haut. Fallback gracieux sur anciens navigateurs. */
+    align-items: safe center;
+    justify-content: safe center;
+    padding: 16px;
+    /* Filet de sécurité : si 'safe' non supporté et modal trop grand,
+       l'overlay défile au lieu de la page */
+    overflow-y: auto;
+  }
+
+  .modal,
+  .modal-content {
+    max-height: 85vh;
+    border-radius: 20px !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin: 0;
+    background: #ffffff;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+    /* Empêche le modal de s'étirer sur toute la hauteur du flex overlay */
+    align-self: center;
+  }
+
+  .modal-header,
+  .modal-footer {
+    flex-shrink: 0;
+  }
+
+  .modal-body,
+  .modal-form {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
   }
 }
