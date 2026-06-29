@@ -50,6 +50,7 @@ export default function DemandesIntervention() {
   const [filterStatut, setFilterStatut] = useState('')
   const [page, setPage]                 = useState(1)
 
+  const [showFilters, setShowFilters]   = useState(false)
   const [modalCreer, setModalCreer]     = useState(false)
   const [form, setForm]                 = useState(emptyForm)
   const [formErreurs, setFormErreurs]   = useState([])
@@ -183,16 +184,22 @@ export default function DemandesIntervention() {
 
       {/* Header */}
       <div className="demandes-header">
-        <div className="demandes-filters">
-          <div className="search-box">
-            <i className="ti ti-search" />
-            <input
-              type="text"
-              placeholder={t('di.searchPlaceholder')}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
+        <div className="search-box">
+          <i className="ti ti-search" />
+          <input
+            type="text"
+            placeholder={t('di.searchPlaceholder')}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <button className={`btn-filter-mobile${filterStatut ? ' has-active' : ''}`}
+          onClick={() => setShowFilters(v => !v)}>
+          <i className="ti ti-filter" />
+          {t('common.filters')}
+          {filterStatut && <span className="filter-mobile-badge">1</span>}
+        </button>
+        <div className={`list-filter-selects${showFilters ? ' is-open' : ''}`}>
           <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
             <option value="">{t('interventions.allStatuts')}</option>
             <option value="ouverte">{t('di.statuts.ouvertePlural')}</option>
@@ -200,7 +207,6 @@ export default function DemandesIntervention() {
             <option value="rejetee">{t('di.statuts.rejeteePlural')}</option>
           </select>
         </div>
-
         {role === 'client' && (
           <button className="btn-primary btn-add-list" onClick={() => setModalCreer(true)}>
             <i className="ti ti-plus" /> {t('di.new')}

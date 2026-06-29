@@ -36,12 +36,13 @@ function fmtDateTime(d) {
   return new Date(d).toLocaleString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-const STORAGE_URL = 'http://localhost:5000/storage'
+const SERVER_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '')
+const STORAGE_URL = `${SERVER_URL}/storage`
 function getPhotoUrl(chemin) {
   if (!chemin) return ''
   const normalise = chemin.replace(/\\/g, '/')
   const idx = normalise.indexOf('storage/')
-  if (idx !== -1) return `http://localhost:5000/${normalise.slice(idx)}`
+  if (idx !== -1) return `${SERVER_URL}/${normalise.slice(idx)}`
   return `${STORAGE_URL}/${normalise}`
 }
 
@@ -231,7 +232,7 @@ export default function DetailIntervention() {
   const handleSupprimerPhoto = async (photoId) => {
     if (!window.confirm(t('photos.deleteConfirm'))) return
     try {
-      await fetch(`http://localhost:5000/api/v1/interventions/photos/${photoId}`, {
+      await fetch(`${SERVER_URL}/api/v1/interventions/photos/${photoId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${localStorage.getItem('echomaint_token')}` }
       })
@@ -457,7 +458,7 @@ export default function DetailIntervention() {
                 try {
                   const token = localStorage.getItem('echomaint_token')
                   const res = await fetch(
-                    `http://localhost:5000${ot.rapport_url}`,
+                    `${SERVER_URL}${ot.rapport_url}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                   )
                   if (!res.ok) {

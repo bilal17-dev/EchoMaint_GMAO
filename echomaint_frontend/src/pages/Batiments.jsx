@@ -21,6 +21,7 @@ export default function Batiments() {
   const [filterClient, setFilterClient] = useState('')
   const [page, setPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const [editBatiment, setEditBatiment] = useState(null)
   const [form, setForm] = useState({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
   const user = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
@@ -147,24 +148,27 @@ export default function Batiments() {
 
       {/* Header */}
       <div className="batiments-header">
-        <div className="batiments-filters">
-          <div className="search-box">
-            <i className="ti ti-search" aria-hidden="true" />
-            <input
-              type="text"
-              placeholder={t('batiments.search')}
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1) }}
-            />
-          </div>
-          <select
-            value={filterClient}
-            onChange={e => { setFilterClient(e.target.value); setPage(1) }}
-          >
+        <div className="search-box">
+          <i className="ti ti-search" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder={t('batiments.search')}
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1) }}
+          />
+        </div>
+        <button
+          className={`btn-filter-mobile${filterClient ? ' has-active' : ''}`}
+          onClick={() => setShowFilters(v => !v)}
+        >
+          <i className="ti ti-filter" />
+          {t('common.filters')}
+          {filterClient && <span className="filter-mobile-badge">1</span>}
+        </button>
+        <div className={`list-filter-selects${showFilters ? ' is-open' : ''}`}>
+          <select value={filterClient} onChange={e => { setFilterClient(e.target.value); setPage(1) }}>
             <option value="">{t('batiments.allClients')}</option>
-            {clients.map(c => (
-              <option key={c.id} value={c.id}>{c.nom}</option>
-            ))}
+            {clients.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
           </select>
         </div>
         {user.role === 'admin' && (

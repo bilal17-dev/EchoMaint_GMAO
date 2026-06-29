@@ -7,18 +7,12 @@
 /* ── Filtres ─────────────────────────────────────────────────────────────── */
 .demandes-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.demandes-filters {
-  display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
+
+.demandes-header .search-box { flex: 1; min-width: 200px; }
 
 /* ── Table wrapper ───────────────────────────────────────────────────────── */
 .di-table-wrap {
@@ -476,11 +470,10 @@
 @media (max-width: 900px) {
   .di-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .di-table { min-width: 700px; }
-  .demandes-header { flex-direction: row; align-items: flex-start; gap: 10px; flex-wrap: nowrap; }
-  .demandes-filters { flex: 1; flex-wrap: wrap; }
 }
 
 @media (max-width: 767px) {
+  .demandes-header .search-box { flex: 0 0 100%; }
   /* Sur mobile, le tableau ne scrolle pas — on masque les colonnes secondaires */
   .di-table-wrap { overflow-x: visible; }
   .di-table      { min-width: 0; }

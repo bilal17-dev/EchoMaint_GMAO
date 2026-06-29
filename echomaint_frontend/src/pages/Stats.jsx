@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import './Stats.css'
 import { getInterventions } from '../api/interventions.api'
@@ -42,6 +42,10 @@ export default function Stats() {
   const [loading,          setLoading]          = useState(true)
   const [erreur,           setErreur]           = useState('')
 
+  const [showStatsFilters, setShowStatsFilters] = useState(false)
+  const [showExports,      setShowExports]      = useState(false)
+  const exportsRef = useRef(null)
+
   const [periode,          setPeriode]          = useState('30')
 
   const [filterStatut,     setFilterStatut]     = useState('')
@@ -50,6 +54,12 @@ export default function Stats() {
   const [filterTechnicien, setFilterTechnicien] = useState('')
   const [dateDebut,        setDateDebut]        = useState('')
   const [dateFin,          setDateFin]          = useState('')
+
+  useEffect(() => {
+    const h = (e) => { if (exportsRef.current && !exportsRef.current.contains(e.target)) setShowExports(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { chargerDonnees() }, [periode])
@@ -126,6 +136,45 @@ export default function Stats() {
           <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.stats.subtitle')}</p>
         </div>
       </div>
+
+      {/* Toolbar mobile — Filtres gauche, Exporter droite */}
+      {(() => {
+        const n = [filterStatut, filterType, filterBatiment, filterTechnicien, dateDebut, dateFin].filter(Boolean).length
+        return (
+          <div className="stats-mobile-toolbar">
+            <button className={`btn-filter-mobile${n > 0 ? ' has-active' : ''}`}
+              onClick={() => setShowStatsFilters(v => !v)}>
+              <i className="ti ti-filter" />
+              {t('common.filters')}
+              {n > 0 && <span className="filter-mobile-badge">{n}</span>}
+            </button>
+            <div className="imprimer-wrap" ref={exportsRef}>
+              <button className="btn-imprimer" onClick={() => setShowExports(v => !v)}>
+                <i className="ti ti-printer" />
+                <span>{t('common.print')}</span>
+              </button>
+              {showExports && (
+                <div className="imprimer-dropdown">
+                  <button className="imprimer-item" onClick={() => {
+                    doExport(`${API_URL}/exports/interventions?${buildExportParams('csv')}`,
+                      `echomaint_interventions_${new Date().toISOString().split('T')[0]}.csv`)
+                    setShowExports(false)
+                  }}>
+                    <i className="ti ti-file-type-csv" />{t('stats.exportCsvOT')}
+                  </button>
+                  <button className="imprimer-item" onClick={() => {
+                    doExport(`${API_URL}/exports/interventions?${buildExportParams('pdf')}`,
+                      `echomaint_interventions_${new Date().toISOString().split('T')[0]}.pdf`)
+                    setShowExports(false)
+                  }}>
+                    <i className="ti ti-file-type-pdf" />{t('stats.exportPdfOT')}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Résumé KPI ───────────────────────────────────────────────────────── */}
       <div className="stats-section stats-kpi-resume">
@@ -209,7 +258,7 @@ export default function Stats() {
           </div>
         </div>
 
-        <div className="stats-filters">
+        <div className={`stats-filters${showStatsFilters ? ' is-open' : ''}`}>
           <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
             <option value="">{t('interventions.allStatuts')}</option>
             {STATUTS.map(s => <option key={s} value={s}>{t(`interventions.statuts.${s}`)}</option>)}

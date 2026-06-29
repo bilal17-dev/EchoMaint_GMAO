@@ -1102,6 +1102,14 @@ select:not(.form-group select):not(.dashboard-select):focus {
 .warning-box .ti { font-size: 18px; color: var(--warning); flex-shrink: 0; }
 .warning-box p   { font-size: 13px; color: #92400E; margin: 0; line-height: 1.5; }
 
+/* ─── Header de liste : filtres collapsibles mobile ─────────────────────── */
+.list-filter-selects {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -1120,6 +1128,17 @@ select:not(.form-group select):not(.dashboard-select):focus {
   .page-header-left h1, .page-header-left .page-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 17px !important; }
   .page-header-subtitle { display: none; }
   .search-box  { max-width: 100%; min-width: 0; width: 100%; }
+
+  /* Filtres collapsibles */
+  .list-filter-selects {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .list-filter-selects.is-open { display: flex; }
+  .list-filter-selects select  { width: 100%; min-width: 0; }
 
   /* Tables : scroll horizontal propre */
   .table-wrap {
@@ -1176,14 +1195,15 @@ select:not(.form-group select):not(.dashboard-select):focus {
     background: rgba(0, 0, 0, 0.50) !important;
   }
 
-  /* Sheet — flex colonne, overflow hidden pour que le body scroll */
+  /* Sheet — flex colonne, overflow clip pour cliper les coins SANS bloquer le scroll iOS */
   .modal-overlay:not(.modal-overlay--photo) .modal {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
     border-radius: 20px 20px 0 0 !important;
     max-height: 92vh !important;
-    overflow: hidden !important;
+    max-height: 92svh !important;          /* svh = viewport visible sans la barre du navigateur */
+    overflow: clip !important;             /* Clips les coins sans bloquer le touch-scroll des enfants */
     padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
@@ -1237,8 +1257,11 @@ select:not(.form-group select):not(.dashboard-select):focus {
   /* Zone de contenu scrollable */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-body,
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-form {
-    flex: 1 !important;
-    overflow-y: auto !important;
+    flex: 1 1 0 !important;           /* base 0 = flex calcule la hauteur réelle */
+    min-height: 0 !important;         /* autorise le shrink en flex column */
+    overflow-y: scroll !important;    /* scroll (pas auto) — fiable sur iOS Safari */
+    -webkit-overflow-scrolling: touch !important;  /* momentum scrolling iOS */
+    overscroll-behavior-y: contain !important;     /* empêche le scroll du fond */
     max-height: none !important;
     padding: 20px 16px !important;
   }

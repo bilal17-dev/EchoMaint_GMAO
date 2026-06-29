@@ -29,6 +29,7 @@ export default function Utilisateurs() {
   const [search, setSearch] = useState('')
   const [filterRole, setFilterRole] = useState('')
   const [modal, setModal] = useState(null)
+  const [showFilters, setShowFilters] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [erreurs, setErreurs] = useState([])
   const [submitting, setSubmitting] = useState(false)
@@ -216,16 +217,22 @@ export default function Utilisateurs() {
 
       {/* Header */}
       <div className="utilisateurs-header">
-        <div className="utilisateurs-filters">
-          <div className="search-box">
-            <i className="ti ti-search" />
-            <input
-              type="text"
-              placeholder={t('utilisateurs.search')}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
+        <div className="search-box">
+          <i className="ti ti-search" />
+          <input
+            type="text"
+            placeholder={t('utilisateurs.search')}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <button className={`btn-filter-mobile${filterRole ? ' has-active' : ''}`}
+          onClick={() => setShowFilters(v => !v)}>
+          <i className="ti ti-filter" />
+          {t('common.filters')}
+          {filterRole && <span className="filter-mobile-badge">1</span>}
+        </button>
+        <div className={`list-filter-selects${showFilters ? ' is-open' : ''}`}>
           <select value={filterRole} onChange={e => setFilterRole(e.target.value)}>
             <option value="">{t('utilisateurs.allRoles')}</option>
             {ROLES.map(r => <option key={r} value={r}>{t(`utilisateurs.roles.${r}`)}</option>)}

@@ -6,17 +6,12 @@
 
 .batiments-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.batiments-filters {
-  display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
+
+.batiments-header .search-box { flex: 1; min-width: 200px; }
 
 /* Grille de cartes */
 .batiments-grid {
@@ -159,6 +154,5 @@
 
 @media (max-width: 600px) {
   .batiments-grid { grid-template-columns: 1fr; }
-  .batiments-header { flex-direction: row; align-items: flex-start; gap: 10px; flex-wrap: nowrap; }
-  .batiments-filters { flex: 1; flex-wrap: wrap; }
+  .batiments-header .search-box { flex: 0 0 100%; }
 }

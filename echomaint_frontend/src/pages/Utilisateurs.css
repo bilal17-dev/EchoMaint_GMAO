@@ -6,16 +6,12 @@
 
 .utilisateurs-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.utilisateurs-filters {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
+.utilisateurs-header .search-box { flex: 1; min-width: 200px; }
 
 /* Petites cartes stats en haut de la page */
 .utilisateurs-stats {
@@ -338,18 +334,7 @@
 }
 
 @media (max-width: 767px) {
-  .utilisateurs-header {
-    flex-direction: row;
-    align-items: flex-start;
-    flex-wrap: nowrap;
-    gap: 10px;
-  }
-
-  .utilisateurs-filters {
-    flex: 1;
-    flex-direction: column;
-    align-items: stretch;
-  }
+  .utilisateurs-header .search-box { flex: 0 0 100%; }
 
   /* Table → cartes empilées */
   .utilisateurs-table thead { display: none; }

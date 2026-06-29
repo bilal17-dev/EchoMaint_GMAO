@@ -142,6 +142,7 @@ function DashboardAdmin() {
   const [refreshing,     setRefreshing]     = useState(false)
   const [erreur,         setErreur]         = useState('')
   const [showImprimer,   setShowImprimer]   = useState(false)
+  const [showDashFilters, setShowDashFilters] = useState(false)
   const imprimerRef = useRef(null)
 
   useEffect(() => {
@@ -272,8 +273,46 @@ function DashboardAdmin() {
         </div>
       </div>
 
+      {/* Toolbar mobile — Filtres gauche, Imprimer droite */}
+      <div className="dashboard-mobile-toolbar">
+        {(() => {
+          const n = [filterBatiment, periode !== '30' ? periode : ''].filter(Boolean).length
+          return (
+            <button className={`btn-filter-mobile${n > 0 ? ' has-active' : ''}`}
+              onClick={() => setShowDashFilters(v => !v)}>
+              <i className="ti ti-filter" />
+              {t('common.filters')}
+              {n > 0 && <span className="filter-mobile-badge">{n}</span>}
+            </button>
+          )
+        })()}
+        <div className="imprimer-wrap" ref={imprimerRef}>
+          <button className="btn-imprimer" onClick={() => setShowImprimer(v => !v)}>
+            <i className="ti ti-printer" />
+            <span>{t('common.print')}</span>
+          </button>
+          {showImprimer && (
+            <div className="imprimer-dropdown">
+              <button className="imprimer-item" onClick={() => {
+                exportKpiCSV(kpi, periode, batimentNom)
+                setShowImprimer(false)
+              }}>
+                <i className="ti ti-file-type-csv" />{t('dashboard.exportCsv')}
+              </button>
+              <button className="imprimer-item" onClick={() => {
+                const url = `${import.meta.env.VITE_API_URL}/exports/kpi?format=pdf&periode=${periode}${filterBatiment ? `&batiment_id=${filterBatiment}` : ''}`
+                exportAvecToken(url, `echomaint_kpi_${new Date().toISOString().split('T')[0]}.pdf`, t('common.error'))
+                setShowImprimer(false)
+              }}>
+                <i className="ti ti-file-type-pdf" />{t('dashboard.exportPdf')}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Barre de filtres — carte blanche style UpFix */}
-      <div className="dashboard-filter-card">
+      <div className={`dashboard-filter-card${showDashFilters ? ' is-open' : ''}`}>
         <div className="dashboard-filter-group">
           <span className="filter-label-sm">{t('common.period')}</span>
           <select value={periode} onChange={e => setPeriode(e.target.value)} className="dashboard-select">

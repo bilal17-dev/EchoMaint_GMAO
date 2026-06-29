@@ -35,6 +35,7 @@ export default function Equipements() {
   const [filterStatut, setFilterStatut] = useState('')
   const [page, setPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const [editEquipement, setEditEquipement] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const user = JSON.parse(localStorage.getItem('echomaint_user') || '{}')
@@ -167,16 +168,27 @@ export default function Equipements() {
 
       {/* Header */}
       <div className="equipements-header">
-        <div className="equipements-filters">
-          <div className="search-box">
-            <i className="ti ti-search" aria-hidden="true" />
-            <input
-              type="text"
-              placeholder={t('equipements.search')}
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1) }}
-            />
-          </div>
+        <div className="search-box">
+          <i className="ti ti-search" aria-hidden="true" />
+          <input
+            type="text"
+            placeholder={t('equipements.search')}
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1) }}
+          />
+        </div>
+        {(() => {
+          const n = [filterBatiment, filterStatut].filter(Boolean).length
+          return (
+            <button className={`btn-filter-mobile${n > 0 ? ' has-active' : ''}`}
+              onClick={() => setShowFilters(v => !v)}>
+              <i className="ti ti-filter" />
+              {t('common.filters')}
+              {n > 0 && <span className="filter-mobile-badge">{n}</span>}
+            </button>
+          )
+        })()}
+        <div className={`list-filter-selects${showFilters ? ' is-open' : ''}`}>
           <select value={filterBatiment} onChange={e => handleBatimentFilterChange(e.target.value)}>
             <option value="">{t('equipements.allBatiments')}</option>
             {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}

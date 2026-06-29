@@ -6,18 +6,12 @@
 
 .equipements-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.equipements-filters {
-  display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
+
+.equipements-header .search-box { flex: 1; min-width: 200px; }
 
 /* ── Grille de cartes ────────────────────────────────────────────────────── */
 .equipements-grid {
@@ -226,4 +220,5 @@
 }
 @media (max-width: 600px) {
   .equipements-grid { grid-template-columns: 1fr; }
+  .equipements-header .search-box { flex: 0 0 100%; }
 }
