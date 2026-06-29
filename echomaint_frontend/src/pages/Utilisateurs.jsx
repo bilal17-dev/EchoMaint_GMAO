@@ -213,6 +213,9 @@ export default function Utilisateurs() {
           <h1 className="page-title">{t('layout.utilisateurs.title')}</h1>
           <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.utilisateurs.subtitle')}</p>
         </div>
+        <button className="btn-primary btn-add-list" onClick={ouvrirModal}>
+          <i className="ti ti-plus" /> {t('utilisateurs.new')}
+        </button>
       </div>
 
       {/* Header */}
@@ -238,9 +241,6 @@ export default function Utilisateurs() {
             {ROLES.map(r => <option key={r} value={r}>{t(`utilisateurs.roles.${r}`)}</option>)}
           </select>
         </div>
-        <button className="btn-primary btn-add-list" onClick={ouvrirModal}>
-          <i className="ti ti-plus" /> {t('utilisateurs.new')}
-        </button>
       </div>
 
       {/* Stats */}

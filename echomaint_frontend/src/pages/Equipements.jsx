@@ -164,6 +164,16 @@ export default function Equipements() {
           <h1 className="page-title">{t('layout.equipements.title')}</h1>
           <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.equipements.subtitle')}</p>
         </div>
+        {user.role === 'admin' && (
+          <button className="btn-primary btn-add-list" onClick={() => {
+            setEditEquipement(null)
+            setForm(emptyForm)
+            setShowModal(true)
+          }}>
+            <i className="ti ti-plus" aria-hidden="true" />
+            {t('equipements.new')}
+          </button>
+        )}
       </div>
 
       {/* Header */}
@@ -200,16 +210,6 @@ export default function Equipements() {
             ))}
           </select>
         </div>
-        {user.role === 'admin' && (
-          <button className="btn-primary btn-add-list" onClick={() => {
-            setEditEquipement(null)
-            setForm(emptyForm)
-            setShowModal(true)
-          }}>
-            <i className="ti ti-plus" aria-hidden="true" />
-            {t('equipements.new')}
-          </button>
-        )}
       </div>
 
       {/* Grille */}

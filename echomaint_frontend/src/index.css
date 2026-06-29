@@ -1168,7 +1168,6 @@ select:not(.form-group select):not(.dashboard-select):focus {
     justify-content: center !important;
     flex-shrink: 0 !important;
     align-self: center !important;
-    margin-left: auto !important;   /* Pousse le bouton + à l'extrême droite */
   }
   .btn-add-list .ti {
     font-size: 20px !important;
@@ -1183,34 +1182,39 @@ select:not(.form-group select):not(.dashboard-select):focus {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE — MODALS PLEIN ÉCRAN (page entière scrollable)
-   L'overlay est le conteneur de scroll. Le modal remplit 100% de l'écran.
-   Header collant en haut. Champs dans le flux. Boutons dans le flux en bas.
-   Exclut .modal-overlay--photo (visionneuse plein écran).
+   MOBILE — MODALS PLEIN ÉCRAN
+   L'overlay = conteneur fixe plein écran.
+   Le modal = height 100%, display flex column, overflow hidden.
+   Le body = flex 1, min-height 0, overflow-y auto → scroll fiable iOS.
+   Le footer = flex-shrink 0, toujours visible en bas.
+   Exclut .modal-overlay--photo (visionneuse photo).
    ═══════════════════════════════════════════════════════════════════════════ */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
 
-  /* L'overlay devient la zone de scroll — plein écran */
+  /* Overlay : plein écran, pas de scroll (le body interne scrolle) */
   .modal-overlay:not(.modal-overlay--photo) {
-    align-items: flex-start !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    align-items: stretch !important;
     justify-content: flex-start !important;
     padding: 0 !important;
-    overflow-y: scroll !important;
-    -webkit-overflow-scrolling: touch !important;
-    background: var(--surface) !important;
+    overflow: hidden !important;
   }
 
-  /* Le modal couvre tout l'écran — aucune contrainte de hauteur */
+  /* Modal : remplit l'overlay entier (stretch), flex column */
   .modal-overlay:not(.modal-overlay--photo) .modal {
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 100vh !important;
-    min-height: 100svh !important;
+    height: 100% !important;
+    min-height: 0 !important;
     max-height: none !important;
     border-radius: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     box-shadow: none !important;
     border: none !important;
     animation: none !important;
@@ -1218,8 +1222,9 @@ select:not(.form-group select):not(.dashboard-select):focus {
     flex-direction: column !important;
   }
 
-  /* Header : collant en haut de l'écran */
+  /* Header : fixé en haut du modal */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-header {
+    flex-shrink: 0 !important;
     position: sticky !important;
     top: 0 !important;
     z-index: 2 !important;
@@ -1228,10 +1233,9 @@ select:not(.form-group select):not(.dashboard-select):focus {
     padding: 14px 16px 16px !important;
     margin-bottom: 0 !important;
     border-bottom: none !important;
-    flex-shrink: 0 !important;
   }
 
-  /* Pas de drag handle (plus un bottom sheet) */
+  /* Pas de drag handle */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-header::before {
     display: none !important;
   }
@@ -1254,19 +1258,22 @@ select:not(.form-group select):not(.dashboard-select):focus {
     color: #ffffff !important;
   }
 
-  /* Corps du formulaire : dans le flux normal, NE scrolle PAS (c'est l'overlay qui scrolle) */
+  /* Corps : prend tout l'espace restant, scroll interne fiable sur iOS */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-body,
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-form {
     flex: 1 !important;
-    overflow-y: visible !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
     max-height: none !important;
     padding: 20px 16px !important;
-    min-height: 0 !important;
   }
 
-  /* Footer dans le flux — boutons accessibles en bas de page après scroll */
+  /* Footer : toujours visible en bas, jamais caché derrière le contenu */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-footer {
     flex-shrink: 0 !important;
+    position: relative !important;
+    bottom: auto !important;
     flex-direction: column-reverse !important;
     padding: 16px 16px 40px !important;
     gap: 10px !important;

@@ -144,6 +144,16 @@ export default function Batiments() {
           <h1 className="page-title">{t('layout.batiments.title')}</h1>
           <p className="text-muted" style={{ fontSize: '13px', marginTop: '3px' }}>{t('layout.batiments.subtitle')}</p>
         </div>
+        {user.role === 'admin' && (
+          <button className="btn-primary btn-add-list" onClick={() => {
+            setEditBatiment(null)
+            setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
+            setShowModal(true)
+          }}>
+            <i className="ti ti-plus" aria-hidden="true" />
+            {t('batiments.new')}
+          </button>
+        )}
       </div>
 
       {/* Header */}
@@ -171,16 +181,6 @@ export default function Batiments() {
             {clients.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
           </select>
         </div>
-        {user.role === 'admin' && (
-          <button className="btn-primary btn-add-list" onClick={() => {
-            setEditBatiment(null)
-            setForm({ nom: '', adresse: '', ville: '', client_id: '', description: '' })
-            setShowModal(true)
-          }}>
-            <i className="ti ti-plus" aria-hidden="true" />
-            {t('batiments.new')}
-          </button>
-        )}
       </div>
 
       {/* Grille */}

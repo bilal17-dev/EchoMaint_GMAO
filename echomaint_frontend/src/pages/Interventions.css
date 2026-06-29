@@ -187,7 +187,7 @@
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  overflow: clip;          /* clip = clippe les coins sans bloquer le scroll interne */
+  overflow: hidden;
   position: sticky;
   top: 24px;
   max-height: calc(100vh - 110px);
@@ -443,31 +443,29 @@
   display: none;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 768px) {
   .iv-detail-backdrop {
     display: block;
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.45);
-    z-index: 399;
+    z-index: 499;
   }
   .iv-detail {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: 8svh;              /* bottom sheet à 92% de hauteur */
-    top: 8vh;
-    width: 100%;
-    height: auto;
-    max-height: none;
-    border-radius: 20px 20px 0 0;
-    border: none;
-    z-index: 400;
-    /* Pas d'overflow sur le conteneur — le body scrolle librement */
-    overflow: visible;
-    /* Clip uniquement les coins arrondis du haut */
-    clip-path: inset(0 round 20px 20px 0 0);
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    height: 85vh !important;
+    max-height: 85vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border: none !important;
+    z-index: 500 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
     animation: ivSheetIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   @keyframes ivSheetIn {
@@ -476,13 +474,11 @@
   }
   .iv-detail .iv-detail-hero {
     border-radius: 20px 20px 0 0;
+    flex-shrink: 0;
   }
   .iv-detail .iv-detail-body {
-    flex: 1 1 0;
+    overflow-y: visible;
     min-height: 0;
-    overflow-y: scroll;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
   }
 }
 
