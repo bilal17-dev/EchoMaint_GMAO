@@ -190,7 +190,7 @@
   overflow: hidden;
   position: sticky;
   top: 24px;
-  max-height: calc(100vh - 110px);
+  height: calc(100vh - 110px);
   animation: ivPanelIn 0.24s cubic-bezier(0.4, 0, 0.2, 1) both;
   background: var(--surface);
 }
