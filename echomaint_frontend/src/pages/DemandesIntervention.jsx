@@ -323,40 +323,46 @@ export default function DemandesIntervention() {
               <button className="modal-close-btn" onClick={() => { setModalCreer(false); document.body.classList.remove('modal-open') }}><i className="ti ti-x" /></button>
             </div>
             <div className="modal-body">
-              <div className="form-group">
-                <label>{t('di.equipement')} <span className="required">*</span></label>
-                <select value={form.equipement_id} onChange={e => setForm(f => ({ ...f, equipement_id: e.target.value }))}>
-                  <option value="">{t('di.selectEquipement')}</option>
-                  {equipements.map(eq => (
-                    <option key={eq.id} value={eq.id}>{eq.nom} — {eq.batiment_nom}</option>
-                  ))}
-                </select>
+              <div className="modal-section">
+                <p className="modal-section-title">{t('di.equipement')} / {t('interventions.titre')}</p>
+                <div className="form-group">
+                  <label>{t('di.equipement')} <span className="required">*</span></label>
+                  <select value={form.equipement_id} onChange={e => setForm(f => ({ ...f, equipement_id: e.target.value }))}>
+                    <option value="">{t('di.selectEquipement')}</option>
+                    {equipements.map(eq => (
+                      <option key={eq.id} value={eq.id}>{eq.nom} — {eq.batiment_nom}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>{t('interventions.titre')} <span className="required">*</span></label>
+                  <input
+                    type="text"
+                    placeholder={t('interventions.titrePlaceholder')}
+                    value={form.titre}
+                    onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
+                  />
+                </div>
               </div>
-              <div className="form-group">
-                <label>{t('interventions.titre')} <span className="required">*</span></label>
-                <input
-                  type="text"
-                  placeholder={t('interventions.titrePlaceholder')}
-                  value={form.titre}
-                  onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label>{t('interventions.description')} <span className="required">*</span></label>
-                <textarea
-                  placeholder={t('interventions.descriptionPlaceholder')}
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  rows={4}
-                />
-              </div>
-              <div className="form-group">
-                <label>{t('interventions.priorite')}</label>
-                <select value={form.priorite} onChange={e => setForm(f => ({ ...f, priorite: e.target.value }))}>
-                  {['basse', 'normale', 'haute', 'urgente'].map(p => (
-                    <option key={p} value={p}>{t(`interventions.priorites.${p}`)}</option>
-                  ))}
-                </select>
+              <div className="modal-section">
+                <p className="modal-section-title">{t('interventions.description')} / {t('interventions.priorite')}</p>
+                <div className="form-group">
+                  <label>{t('interventions.description')} <span className="required">*</span></label>
+                  <textarea
+                    placeholder={t('interventions.descriptionPlaceholder')}
+                    value={form.description}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    rows={4}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>{t('interventions.priorite')}</label>
+                  <select value={form.priorite} onChange={e => setForm(f => ({ ...f, priorite: e.target.value }))}>
+                    {['basse', 'normale', 'haute', 'urgente'].map(p => (
+                      <option key={p} value={p}>{t(`interventions.priorites.${p}`)}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               {formErreurs.map((e, i) => <p key={i} className="erreur">{e}</p>)}
             </div>
@@ -387,7 +393,6 @@ export default function DemandesIntervention() {
             </div>
 
             <div className="modal-body">
-              {/* Statut */}
               <div className="di-detail-statut-row">
                 <span className={`statut-badge-di ${STATUTS_CLASS[detailDI.statut] || ''}`}>
                   {t(`di.statuts.${detailDI.statut}`)}
@@ -397,45 +402,44 @@ export default function DemandesIntervention() {
                 </span>
               </div>
 
-              {/* Métadonnées */}
-              <div className="di-detail-meta-grid">
-                <div className="di-detail-meta-item">
-                  <span className="di-detail-meta-label"><i className="ti ti-cpu" /> {t('di.equipement')}</span>
-                  <strong>{detailDI.equipement_nom || '—'}</strong>
-                  {detailDI.equipement_reference && (
-                    <span className="di-detail-meta-sub">{t('equipements.ref')} {detailDI.equipement_reference}</span>
+              <div className="modal-section">
+                <p className="modal-section-title">{t('di.equipement')}</p>
+                <div className="di-detail-meta-grid">
+                  <div className="di-detail-meta-item">
+                    <span className="di-detail-meta-label"><i className="ti ti-cpu" /> {t('di.equipement')}</span>
+                    <strong>{detailDI.equipement_nom || '—'}</strong>
+                    {detailDI.equipement_reference && (
+                      <span className="di-detail-meta-sub">{t('equipements.ref')} {detailDI.equipement_reference}</span>
+                    )}
+                  </div>
+                  {detailDI.batiment_nom && (
+                    <div className="di-detail-meta-item">
+                      <span className="di-detail-meta-label"><i className="ti ti-building" /> {t('batiments.title')}</span>
+                      <strong>{detailDI.batiment_nom}</strong>
+                    </div>
+                  )}
+                  {role === 'admin' && detailDI.client_nom && (
+                    <div className="di-detail-meta-item">
+                      <span className="di-detail-meta-label"><i className="ti ti-user" /> {t('batiments.client')}</span>
+                      <strong>{detailDI.client_nom}</strong>
+                    </div>
                   )}
                 </div>
-                {detailDI.batiment_nom && (
-                  <div className="di-detail-meta-item">
-                    <span className="di-detail-meta-label"><i className="ti ti-building" /> {t('batiments.title')}</span>
-                    <strong>{detailDI.batiment_nom}</strong>
-                  </div>
-                )}
-                {role === 'admin' && detailDI.client_nom && (
-                  <div className="di-detail-meta-item">
-                    <span className="di-detail-meta-label"><i className="ti ti-user" /> {t('batiments.client')}</span>
-                    <strong>{detailDI.client_nom}</strong>
-                  </div>
-                )}
               </div>
 
-              {/* Description complète */}
-              <div className="di-detail-section">
-                <p className="di-detail-section-label">{t('interventions.description')}</p>
+              <div className="modal-section">
+                <p className="modal-section-title">{t('interventions.description')}</p>
                 <p className="di-detail-desc">{detailDI.description || '—'}</p>
-              </div>
-
-              {/* Motif de rejet — visible admin ET client */}
-              {detailDI.statut === 'rejetee' && detailDI.motif_rejet && (
-                <div className="di-detail-rejet-box">
-                  <div className="di-detail-rejet-header">
-                    <i className="ti ti-alert-circle" />
-                    <strong>{t('di.motifRejet')}</strong>
+                {detailDI.statut === 'rejetee' && detailDI.motif_rejet && (
+                  <div className="di-detail-rejet-box">
+                    <div className="di-detail-rejet-header">
+                      <i className="ti ti-alert-circle" />
+                      <strong>{t('di.motifRejet')}</strong>
+                    </div>
+                    <p className="di-detail-rejet-text">{detailDI.motif_rejet}</p>
                   </div>
-                  <p className="di-detail-rejet-text">{detailDI.motif_rejet}</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Actions admin depuis le modal */}
@@ -468,14 +472,17 @@ export default function DemandesIntervention() {
               <button className="modal-close-btn" onClick={() => { setModalRejet(null); document.body.classList.remove('modal-open') }}><i className="ti ti-x" /></button>
             </div>
             <div className="modal-body">
-              <div className="form-group">
-                <label>{t('di.motifRejet')} <span className="required">*</span></label>
-                <textarea
-                  placeholder={t('di.motifRejetPlaceholder')}
-                  value={motifRejet}
-                  onChange={e => setMotifRejet(e.target.value)}
-                  rows={4}
-                />
+              <div className="modal-section">
+                <p className="modal-section-title">{t('di.motifRejet')}</p>
+                <div className="form-group">
+                  <label>{t('di.motifRejet')} <span className="required">*</span></label>
+                  <textarea
+                    placeholder={t('di.motifRejetPlaceholder')}
+                    value={motifRejet}
+                    onChange={e => setMotifRejet(e.target.value)}
+                    rows={4}
+                  />
+                </div>
               </div>
               {rejetErreur && <p className="erreur">{rejetErreur}</p>}
             </div>

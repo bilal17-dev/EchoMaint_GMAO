@@ -366,69 +366,69 @@ export default function MaintenancePlans() {
             </div>
 
             <div className="modal-body">
-              {!editingPlan && (
+              <div className="modal-section">
+                <p className="modal-section-title">{t('plans.label')}</p>
+                {!editingPlan && (
+                  <div className="form-group">
+                    <label>{t('plans.equipement')} <span className="required">*</span></label>
+                    <select value={form.equipement_id} onChange={e => setForm(f => ({ ...f, equipement_id: e.target.value }))}>
+                      <option value="">{t('plans.selectEquipement')}</option>
+                      {equipements.map(eq => (
+                        <option key={eq.id} value={eq.id}>{eq.nom} — {eq.reference}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="form-group">
-                  <label>{t('plans.equipement')} <span className="required">*</span></label>
-                  <select value={form.equipement_id} onChange={e => setForm(f => ({ ...f, equipement_id: e.target.value }))}>
-                    <option value="">{t('plans.selectEquipement')}</option>
-                    {equipements.map(eq => (
-                      <option key={eq.id} value={eq.id}>{eq.nom} — {eq.reference}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="form-group">
-                <label>{t('plans.label')} <span className="required">*</span></label>
-                <input
-                  type="text"
-                  placeholder={t('plans.labelPlaceholder')}
-                  value={form.label}
-                  onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>{t('plans.periodiciteLabel')}</label>
-                <div className="mplans-periodo-grid">
-                  {PERIODICITE_OPTIONS.map(opt => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      className={`mplans-periodo-btn ${periodiciteMode === opt.value ? 'active' : ''}`}
-                      onClick={() => setPeriodiciteMode(opt.value)}
-                    >
-                      {t(`plans.periodicites.${opt.tKey}`)}
-                    </button>
-                  ))}
-                </div>
-                {periodiciteMode === 0 && (
+                  <label>{t('plans.label')} <span className="required">*</span></label>
                   <input
-                    type="number"
-                    min="1"
-                    placeholder={t('plans.nombreJours')}
-                    value={form.periodicite_custom}
-                    onChange={e => setForm(f => ({ ...f, periodicite_custom: e.target.value }))}
-                    style={{ marginTop: '8px' }}
+                    type="text"
+                    placeholder={t('plans.labelPlaceholder')}
+                    value={form.label}
+                    onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
                   />
+                </div>
+                <div className="form-group">
+                  <label>{t('plans.periodiciteLabel')}</label>
+                  <div className="mplans-periodo-grid">
+                    {PERIODICITE_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`mplans-periodo-btn ${periodiciteMode === opt.value ? 'active' : ''}`}
+                        onClick={() => setPeriodiciteMode(opt.value)}
+                      >
+                        {t(`plans.periodicites.${opt.tKey}`)}
+                      </button>
+                    ))}
+                  </div>
+                  {periodiciteMode === 0 && (
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder={t('plans.nombreJours')}
+                      value={form.periodicite_custom}
+                      onChange={e => setForm(f => ({ ...f, periodicite_custom: e.target.value }))}
+                      style={{ marginTop: '8px' }}
+                    />
+                  )}
+                </div>
+                {editingPlan && (
+                  <div className="form-group">
+                    <label className="mplans-tache-oblig" style={{ fontSize: '13px' }}>
+                      <input
+                        type="checkbox"
+                        checked={form.actif}
+                        onChange={e => setForm(f => ({ ...f, actif: e.target.checked }))}
+                      />
+                      {t('plans.actifLabel')}
+                    </label>
+                  </div>
                 )}
               </div>
 
-              {editingPlan && (
-                <div className="form-group">
-                  <label className="mplans-tache-oblig" style={{ fontSize: '13px' }}>
-                    <input
-                      type="checkbox"
-                      checked={form.actif}
-                      onChange={e => setForm(f => ({ ...f, actif: e.target.checked }))}
-                    />
-                    {t('plans.actifLabel')}
-                  </label>
-                </div>
-              )}
-
-              <div className="form-group">
-                <label>{t('plans.gammeTaches')} <span className="required">*</span></label>
+              <div className="modal-section">
+                <p className="modal-section-title">{t('plans.gammeTaches')} <span className="required">*</span></p>
                 <div className="mplans-taches">
                   {form.gamme_taches.map((tache, i) => (
                     <div key={i} className="mplans-tache-row">

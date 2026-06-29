@@ -345,9 +345,8 @@ export default function Utilisateurs() {
             </div>
 
             <div className="modal-body">
-              <p className="modal-section-label">{t('utilisateurs.loginInfo')}</p>
-
-              <div className="form-row">
+              <div className="modal-section">
+                <p className="modal-section-title">{t('utilisateurs.sectionIdentity')}</p>
                 <div className="form-group">
                   <label>{t('utilisateurs.firstName')} <span className="required">*</span></label>
                   <input type="text" placeholder="Ex: Mamadou" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} />
@@ -358,12 +357,12 @@ export default function Utilisateurs() {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Email <span className="required">*</span></label>
-                <input type="email" placeholder="Ex: mamadou@echomaint.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-              </div>
-
-              <div className="form-row">
+              <div className="modal-section">
+                <p className="modal-section-title">{t('utilisateurs.sectionAccess')}</p>
+                <div className="form-group">
+                  <label>Email <span className="required">*</span></label>
+                  <input type="email" placeholder="Ex: mamadou@echomaint.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                </div>
                 <div className="form-group">
                   <label>{t('utilisateurs.role')}</label>
                   <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
@@ -377,11 +376,8 @@ export default function Utilisateurs() {
               </div>
 
               {form.role === 'client' && (
-                <div className="modal-section-entreprise">
-                  <p className="modal-section-label">
-                    <i className="ti ti-building" /> {t('utilisateurs.clientCompany')}
-                  </p>
-
+                <div className="modal-section">
+                  <p className="modal-section-title">{t('utilisateurs.clientCompany')}</p>
                   <div className="form-group">
                     <label>{t('utilisateurs.companyName')} <span className="required">*</span></label>
                     <input type="text" placeholder="Ex: DGS Africa" value={form.entreprise_nom} onChange={e => setForm(f => ({ ...f, entreprise_nom: e.target.value }))} />
@@ -390,16 +386,13 @@ export default function Utilisateurs() {
                     <label>{t('utilisateurs.companyEmail')}</label>
                     <input type="email" placeholder="Ex: contact@dgsafrica.com" value={form.entreprise_email_contact} onChange={e => setForm(f => ({ ...f, entreprise_email_contact: e.target.value }))} />
                   </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>{t('utilisateurs.phone')}</label>
-                      <input type="text" placeholder="Ex: 338001234" value={form.entreprise_telephone} onChange={e => setForm(f => ({ ...f, entreprise_telephone: e.target.value }))} />
-                    </div>
-                    <div className="form-group">
-                      <label>{t('utilisateurs.address')}</label>
-                      <input type="text" placeholder="Ex: Route de Ngor, Dakar" value={form.entreprise_adresse} onChange={e => setForm(f => ({ ...f, entreprise_adresse: e.target.value }))} />
-                    </div>
+                  <div className="form-group">
+                    <label>{t('utilisateurs.phone')}</label>
+                    <input type="text" placeholder="Ex: 338001234" value={form.entreprise_telephone} onChange={e => setForm(f => ({ ...f, entreprise_telephone: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label>{t('utilisateurs.address')}</label>
+                    <input type="text" placeholder="Ex: Route de Ngor, Dakar" value={form.entreprise_adresse} onChange={e => setForm(f => ({ ...f, entreprise_adresse: e.target.value }))} />
                   </div>
                 </div>
               )}
@@ -432,9 +425,8 @@ export default function Utilisateurs() {
             </div>
 
             <div className="modal-body">
-              <p className="modal-section-label">{t('utilisateurs.sectionIdentity')}</p>
-
-              <div className="form-row">
+              <div className="modal-section">
+                <p className="modal-section-title">{t('utilisateurs.sectionIdentity')}</p>
                 <div className="form-group">
                   <label>{t('utilisateurs.firstName')} <span className="required">*</span></label>
                   <input type="text" value={editForm.prenom} onChange={e => { setEditForm(f => ({ ...f, prenom: e.target.value })); setConfirmerRole(false) }} />
@@ -443,39 +435,35 @@ export default function Utilisateurs() {
                   <label>{t('utilisateurs.lastName')} <span className="required">*</span></label>
                   <input type="text" value={editForm.nom} onChange={e => { setEditForm(f => ({ ...f, nom: e.target.value })); setConfirmerRole(false) }} />
                 </div>
+                <div className="form-group">
+                  <label>Email <span className="required">*</span></label>
+                  <input type="email" value={editForm.email} onChange={e => { setEditForm(f => ({ ...f, email: e.target.value })); setConfirmerRole(false) }} />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label>Email <span className="required">*</span></label>
-                <input type="email" value={editForm.email} onChange={e => { setEditForm(f => ({ ...f, email: e.target.value })); setConfirmerRole(false) }} />
+              <div className="modal-section">
+                <p className="modal-section-title">{t('utilisateurs.sectionAccess')}</p>
+                <div className="form-group">
+                  <label>{t('utilisateurs.role')}</label>
+                  <select value={editForm.role} onChange={e => { setEditForm(f => ({ ...f, role: e.target.value })); setConfirmerRole(false) }}>
+                    {ROLES.map(r => <option key={r} value={r}>{t(`utilisateurs.roles.${r}`)}</option>)}
+                  </select>
+                </div>
+                <div className="toggle-row">
+                  <span className="toggle-row-label">
+                    <i className="ti ti-power" style={{ marginRight: 6, color: editForm.actif ? '#22C55E' : '#94a3b8' }} />
+                    {editForm.actif ? t('utilisateurs.accountActive') : t('utilisateurs.accountDisabled')}
+                  </span>
+                  <label className="toggle-switch">
+                    <input type="checkbox" checked={editForm.actif} onChange={e => setEditForm(f => ({ ...f, actif: e.target.checked }))} />
+                    <span className="toggle-slider" />
+                  </label>
+                </div>
               </div>
 
-              <p className="modal-section-label" style={{ marginTop: '0.25rem' }}>{t('utilisateurs.sectionAccess')}</p>
-
-              <div className="form-group">
-                <label>{t('utilisateurs.role')}</label>
-                <select value={editForm.role} onChange={e => { setEditForm(f => ({ ...f, role: e.target.value })); setConfirmerRole(false) }}>
-                  {ROLES.map(r => <option key={r} value={r}>{t(`utilisateurs.roles.${r}`)}</option>)}
-                </select>
-              </div>
-
-              <div className="toggle-row">
-                <span className="toggle-row-label">
-                  <i className="ti ti-power" style={{ marginRight: 6, color: editForm.actif ? '#22C55E' : '#94a3b8' }} />
-                  {editForm.actif ? t('utilisateurs.accountActive') : t('utilisateurs.accountDisabled')}
-                </span>
-                <label className="toggle-switch">
-                  <input type="checkbox" checked={editForm.actif} onChange={e => setEditForm(f => ({ ...f, actif: e.target.checked }))} />
-                  <span className="toggle-slider" />
-                </label>
-              </div>
-
-              {/* Section entreprise — visible si le rôle est client */}
               {editForm.role === 'client' && (
-                <div className="modal-section-entreprise">
-                  <p className="modal-section-label">
-                    <i className="ti ti-building" /> {t('utilisateurs.clientCompany')}
-                  </p>
+                <div className="modal-section">
+                  <p className="modal-section-title">{t('utilisateurs.clientCompany')}</p>
                   <div className="form-group">
                     <label>{t('utilisateurs.companyName')} <span className="required">*</span></label>
                     <input type="text" placeholder="Ex: DGS Africa" value={editForm.entreprise_nom} onChange={e => setEditForm(f => ({ ...f, entreprise_nom: e.target.value }))} />
@@ -484,15 +472,13 @@ export default function Utilisateurs() {
                     <label>{t('utilisateurs.companyEmail')}</label>
                     <input type="email" placeholder="Ex: contact@dgsafrica.com" value={editForm.entreprise_email_contact} onChange={e => setEditForm(f => ({ ...f, entreprise_email_contact: e.target.value }))} />
                   </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>{t('utilisateurs.phone')}</label>
-                      <input type="text" placeholder="Ex: 338001234" value={editForm.entreprise_telephone} onChange={e => setEditForm(f => ({ ...f, entreprise_telephone: e.target.value }))} />
-                    </div>
-                    <div className="form-group">
-                      <label>{t('utilisateurs.address')}</label>
-                      <input type="text" placeholder="Ex: Route de Ngor, Dakar" value={editForm.entreprise_adresse} onChange={e => setEditForm(f => ({ ...f, entreprise_adresse: e.target.value }))} />
-                    </div>
+                  <div className="form-group">
+                    <label>{t('utilisateurs.phone')}</label>
+                    <input type="text" placeholder="Ex: 338001234" value={editForm.entreprise_telephone} onChange={e => setEditForm(f => ({ ...f, entreprise_telephone: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label>{t('utilisateurs.address')}</label>
+                    <input type="text" placeholder="Ex: Route de Ngor, Dakar" value={editForm.entreprise_adresse} onChange={e => setEditForm(f => ({ ...f, entreprise_adresse: e.target.value }))} />
                   </div>
                 </div>
               )}

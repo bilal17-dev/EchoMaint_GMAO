@@ -484,7 +484,7 @@ export default function Planning() {
       {/* Modal de replanification */}
       {otReplanifier && (
         <div className="modal-overlay" onClick={fermerModalReplanif}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal modal-content" onClick={e => e.stopPropagation()}>
 
             <div className="modal-header">
               <h2>{t('planning.rescheduleTitle')}</h2>
@@ -494,52 +494,49 @@ export default function Planning() {
             </div>
 
             <div className="modal-body">
-              <div className="replanif-info">
-                <p className="replanif-titre">{otReplanifier.titre}</p>
-                <p className="replanif-meta">
-                  <i className="ti ti-settings" aria-hidden="true" /> {otReplanifier.equipement_nom}
-                  {' · '}
-                  <i className="ti ti-building" aria-hidden="true" /> {otReplanifier.batiment_nom}
-                </p>
-                {otReplanifier.date_planifiee && (
-                  <p className="replanif-date-actuelle">
-                    {t('planning.currentDate')} :{' '}
-                    <strong>
-                      {new Date(otReplanifier.date_planifiee).toLocaleDateString()}
-                    </strong>
+              <div className="modal-section">
+                <p className="modal-section-title">{t('interventions.titre')}</p>
+                <div className="replanif-info">
+                  <p className="replanif-titre">{otReplanifier.titre}</p>
+                  <p className="replanif-meta">
+                    <i className="ti ti-settings" aria-hidden="true" /> {otReplanifier.equipement_nom}
+                    {' · '}
+                    <i className="ti ti-building" aria-hidden="true" /> {otReplanifier.batiment_nom}
                   </p>
-                )}
+                  {otReplanifier.date_planifiee && (
+                    <p className="replanif-date-actuelle">
+                      {t('planning.currentDate')} :{' '}
+                      <strong>{new Date(otReplanifier.date_planifiee).toLocaleDateString()}</strong>
+                    </p>
+                  )}
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="replanif-date">
-                  {t('planning.newDate')}{' '}
-                  <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  id="replanif-date"
-                  type="date"
-                  min={new Date().toISOString().split('T')[0]}
-                  value={nouvelleDate}
-                  onChange={e => setNouvelleDate(e.target.value)}
-                />
+              <div className="modal-section">
+                <p className="modal-section-title">{t('planning.newDate')}</p>
+                <div className="form-group">
+                  <label htmlFor="replanif-date">
+                    {t('planning.newDate')} <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <input
+                    id="replanif-date"
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    value={nouvelleDate}
+                    onChange={e => setNouvelleDate(e.target.value)}
+                  />
+                </div>
               </div>
 
-              {erreurReplanif && (
-                <p className="erreur">{erreurReplanif}</p>
-              )}
+              {erreurReplanif && <p className="erreur">{erreurReplanif}</p>}
             </div>
 
             <div className="modal-footer">
+              <button className="btn-primary" onClick={handleReplanifier} disabled={submittingReplanif}>
+                {submittingReplanif ? t('common.saving') : t('common.confirm')}
+              </button>
               <button className="btn-cancel" onClick={fermerModalReplanif}>
                 {t('common.cancel')}
-              </button>
-              <button
-                className="btn-primary"
-                onClick={handleReplanifier}
-                disabled={submittingReplanif}
-              >
-                {submittingReplanif ? t('common.saving') : t('common.confirm')}
               </button>
             </div>
 
