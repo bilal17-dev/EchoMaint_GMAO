@@ -1168,6 +1168,7 @@ select:not(.form-group select):not(.dashboard-select):focus {
     justify-content: center !important;
     flex-shrink: 0 !important;
     align-self: center !important;
+    margin-left: auto !important;   /* Pousse le bouton + à l'extrême droite */
   }
   .btn-add-list .ti {
     font-size: 20px !important;
@@ -1182,61 +1183,60 @@ select:not(.form-group select):not(.dashboard-select):focus {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE — MODALS EN BOTTOM SHEET (UpFix style)
-   Header coloré · Corps scrollable · Footer fixe
+   MOBILE — MODALS PLEIN ÉCRAN (page entière scrollable)
+   L'overlay est le conteneur de scroll. Le modal remplit 100% de l'écran.
+   Header collant en haut. Champs dans le flux. Boutons dans le flux en bas.
    Exclut .modal-overlay--photo (visionneuse plein écran).
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 767px) {
 
-  /* Overlay ancré en bas */
+  /* L'overlay devient la zone de scroll — plein écran */
   .modal-overlay:not(.modal-overlay--photo) {
-    align-items: flex-end !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
     padding: 0 !important;
-    background: rgba(0, 0, 0, 0.50) !important;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    background: var(--surface) !important;
   }
 
-  /* Sheet — flex colonne, overflow clip pour cliper les coins SANS bloquer le scroll iOS */
+  /* Le modal couvre tout l'écran — aucune contrainte de hauteur */
   .modal-overlay:not(.modal-overlay--photo) .modal {
     width: 100% !important;
     max-width: 100% !important;
+    min-height: 100vh !important;
+    min-height: 100svh !important;
+    max-height: none !important;
+    border-radius: 0 !important;
     margin: 0 !important;
-    border-radius: 20px 20px 0 0 !important;
-    max-height: 92vh !important;
-    max-height: 92svh !important;          /* svh = viewport visible sans la barre du navigateur */
-    overflow: clip !important;             /* Clips les coins sans bloquer le touch-scroll des enfants */
     padding: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    animation: none !important;
     display: flex !important;
     flex-direction: column !important;
-    animation: slideUpSheet 0.3s cubic-bezier(0.22, 1, 0.36, 1) both !important;
   }
 
-  @keyframes slideUpSheet {
-    from { transform: translateY(60px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-
-  /* Header coloré avec drag handle intégré */
+  /* Header : collant en haut de l'écran */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2 !important;
+    border-radius: 0 !important;
     background: linear-gradient(135deg, #0C1A2E 0%, #1E3A5F 100%) !important;
-    border-radius: 20px 20px 0 0 !important;
-    padding: 12px 16px 16px !important;
+    padding: 14px 16px 16px !important;
     margin-bottom: 0 !important;
     border-bottom: none !important;
     flex-shrink: 0 !important;
   }
 
-  /* Drag handle blanc discret en haut du header */
+  /* Pas de drag handle (plus un bottom sheet) */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-header::before {
-    content: '';
-    display: block;
-    width: 36px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 2px;
-    margin: 0 auto 12px;
+    display: none !important;
   }
 
-  /* Titre et sous-titre blancs */
+  /* Titre blanc */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-header h2,
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-header h3 {
     color: rgba(255, 255, 255, 0.95) !important;
@@ -1254,27 +1254,24 @@ select:not(.form-group select):not(.dashboard-select):focus {
     color: #ffffff !important;
   }
 
-  /* Zone de contenu scrollable */
+  /* Corps du formulaire : dans le flux normal, NE scrolle PAS (c'est l'overlay qui scrolle) */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-body,
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-form {
-    flex: 1 1 0 !important;           /* base 0 = flex calcule la hauteur réelle */
-    min-height: 0 !important;         /* autorise le shrink en flex column */
-    overflow-y: scroll !important;    /* scroll (pas auto) — fiable sur iOS Safari */
-    -webkit-overflow-scrolling: touch !important;  /* momentum scrolling iOS */
-    overscroll-behavior-y: contain !important;     /* empêche le scroll du fond */
+    flex: 1 !important;
+    overflow-y: visible !important;
     max-height: none !important;
     padding: 20px 16px !important;
+    min-height: 0 !important;
   }
 
-  /* Footer fixe en bas du sheet */
+  /* Footer dans le flux — boutons accessibles en bas de page après scroll */
   .modal-overlay:not(.modal-overlay--photo) .modal .modal-footer {
     flex-shrink: 0 !important;
     flex-direction: column-reverse !important;
-    padding: 12px 16px 28px !important;
-    margin-top: 0 !important;
+    padding: 16px 16px 40px !important;
+    gap: 10px !important;
     background: var(--surface) !important;
     border-top: 1px solid var(--border) !important;
-    gap: 8px !important;
   }
 
   /* Boutons footer pleine largeur */

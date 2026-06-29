@@ -439,15 +439,50 @@
   .iv-row-tech { display: none; }
 }
 
+.iv-detail-backdrop {
+  display: none;
+}
+
 @media (max-width: 860px) {
-  .iv-detail {
+  .iv-detail-backdrop {
+    display: block;
     position: fixed;
     inset: 0;
-    border-radius: 0;
-    z-index: 400;
-    max-height: 100vh;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 399;
+  }
+  .iv-detail {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: 8svh;              /* bottom sheet à 92% de hauteur */
+    top: 8vh;
     width: 100%;
+    height: auto;
+    max-height: none;
+    border-radius: 20px 20px 0 0;
     border: none;
+    z-index: 400;
+    /* Pas d'overflow sur le conteneur — le body scrolle librement */
+    overflow: visible;
+    /* Clip uniquement les coins arrondis du haut */
+    clip-path: inset(0 round 20px 20px 0 0);
+    animation: ivSheetIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes ivSheetIn {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .iv-detail .iv-detail-hero {
+    border-radius: 20px 20px 0 0;
+  }
+  .iv-detail .iv-detail-body {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
 }
 

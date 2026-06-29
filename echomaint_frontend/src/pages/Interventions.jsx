@@ -315,6 +315,8 @@ export default function Interventions() {
 
         {/* ── Detail Panel ──────────────────────────────────────────────── */}
         {selected && (
+          <>
+          <div className="iv-detail-backdrop" onClick={() => setSelected(null)} />
           <div className="iv-detail">
 
             {/* Hero */}
@@ -453,6 +455,7 @@ export default function Interventions() {
 
             </div>
           </div>
+          </>
         )}
       </div>
 

@@ -524,6 +524,7 @@ export default function DetailIntervention() {
                         <img
                           src={getPhotoUrl(p.chemin_fichier)}
                           alt="avant"
+                          loading="lazy"
                           onClick={() => setPhotoZoom(getPhotoUrl(p.chemin_fichier))}
                           onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
                         />
@@ -568,6 +569,7 @@ export default function DetailIntervention() {
                         <img
                           src={getPhotoUrl(p.chemin_fichier)}
                           alt="après"
+                          loading="lazy"
                           onClick={() => setPhotoZoom(getPhotoUrl(p.chemin_fichier))}
                           onError={e => { e.target.style.background = '#f1f5f9'; e.target.alt = 'Image non disponible' }}
                         />
