@@ -251,58 +251,61 @@ export default function Batiments() {
               </button>
             </div>
             <div className="modal-body">
-              <div className="form-group">
-                <label>{t('batiments.name')}</label>
-                <input
-                  type="text"
-                  placeholder={t('batiments.namePlaceholder')}
-                  value={form.nom}
-                  onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
-                />
-              </div>
-
-              <div className="form-row">
+              <div className="modal-section">
+                <p className="modal-section-title">{t('batiments.name')}</p>
                 <div className="form-group">
-                  <label>{t('batiments.address')}</label>
+                  <label>{t('batiments.name')}</label>
                   <input
                     type="text"
-                    placeholder={t('batiments.addressPlaceholder')}
-                    value={form.adresse}
-                    onChange={e => setForm(f => ({ ...f, adresse: e.target.value }))}
+                    placeholder={t('batiments.namePlaceholder')}
+                    value={form.nom}
+                    onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
                   />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>{t('batiments.address')}</label>
+                    <input
+                      type="text"
+                      placeholder={t('batiments.addressPlaceholder')}
+                      value={form.adresse}
+                      onChange={e => setForm(f => ({ ...f, adresse: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>{t('batiments.city')}</label>
+                    <input
+                      type="text"
+                      placeholder={t('batiments.cityPlaceholder')}
+                      value={form.ville}
+                      onChange={e => setForm(f => ({ ...f, ville: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-section">
+                <p className="modal-section-title">{t('batiments.client')}</p>
+                <div className="form-group">
+                  <label>{t('batiments.client')}</label>
+                  <select
+                    value={form.client_id}
+                    onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))}
+                  >
+                    <option value="">{t('batiments.selectClient')}</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>{c.nom}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
-                  <label>{t('batiments.city')}</label>
-                  <input
-                    type="text"
-                    placeholder={t('batiments.cityPlaceholder')}
-                    value={form.ville}
-                    onChange={e => setForm(f => ({ ...f, ville: e.target.value }))}
+                  <label>{t('batiments.description')} <span style={{ color: '#94a3b8', fontSize: '12px' }}>({t('common.optional')})</span></label>
+                  <textarea
+                    placeholder={t('batiments.descriptionPlaceholder')}
+                    value={form.description}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    rows={3}
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>{t('batiments.client')}</label>
-                <select
-                  value={form.client_id}
-                  onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))}
-                >
-                  <option value="">{t('batiments.selectClient')}</option>
-                  {clients.map(c => (
-                    <option key={c.id} value={c.id}>{c.nom}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>{t('batiments.description')} <span style={{ color: '#94a3b8', fontSize: '12px' }}>({t('common.optional')})</span></label>
-                <textarea
-                  placeholder={t('batiments.descriptionPlaceholder')}
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  rows={3}
-                />
               </div>
             </div>
             <div className="modal-footer">

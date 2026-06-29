@@ -280,7 +280,8 @@ export default function Equipements() {
               </button>
             </div>
             <div className="modal-body">
-              <div className="form-row">
+              <div className="modal-section">
+                <p className="modal-section-title">{t('equipements.name')} / {t('equipements.reference')}</p>
                 <div className="form-group">
                   <label>{t('equipements.name')}</label>
                   <input
@@ -301,7 +302,8 @@ export default function Equipements() {
                 </div>
               </div>
 
-              <div className="form-row">
+              <div className="modal-section">
+                <p className="modal-section-title">{t('equipements.type')} / {t('batiments.name')}</p>
                 <div className="form-group">
                   <label>{t('equipements.type')}</label>
                   <input
@@ -325,68 +327,72 @@ export default function Equipements() {
                 </div>
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>{t('equipements.brand')}</label>
-                  <input
-                    type="text"
-                    placeholder={t('equipements.brandPlaceholder')}
-                    value={form.marque}
-                    onChange={e => setForm(f => ({ ...f, marque: e.target.value }))}
-                  />
+              <div className="modal-section">
+                <p className="modal-section-title">{t('equipements.brand')} / {t('equipements.model')}</p>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>{t('equipements.brand')}</label>
+                    <input
+                      type="text"
+                      placeholder={t('equipements.brandPlaceholder')}
+                      value={form.marque}
+                      onChange={e => setForm(f => ({ ...f, marque: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>{t('equipements.model')}</label>
+                    <input
+                      type="text"
+                      placeholder={t('equipements.modelPlaceholder')}
+                      value={form.modele}
+                      onChange={e => setForm(f => ({ ...f, modele: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>{t('equipements.model')}</label>
-                  <input
-                    type="text"
-                    placeholder={t('equipements.modelPlaceholder')}
-                    value={form.modele}
-                    onChange={e => setForm(f => ({ ...f, modele: e.target.value }))}
-                  />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>{t('equipements.serialNumber')}</label>
+                    <input
+                      type="text"
+                      placeholder={t('equipements.serialPlaceholder')}
+                      value={form.numero_serie}
+                      onChange={e => setForm(f => ({ ...f, numero_serie: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>{t('equipements.installDate')}</label>
+                    <input
+                      type="date"
+                      value={form.date_installation}
+                      max={new Date().toISOString().split('T')[0]}
+                      onChange={e => setForm(f => ({ ...f, date_installation: e.target.value }))}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="form-row">
+              <div className="modal-section">
+                <p className="modal-section-title">{t('equipements.status')}</p>
                 <div className="form-group">
-                  <label>{t('equipements.serialNumber')}</label>
-                  <input
-                    type="text"
-                    placeholder={t('equipements.serialPlaceholder')}
-                    value={form.numero_serie}
-                    onChange={e => setForm(f => ({ ...f, numero_serie: e.target.value }))}
-                  />
+                  <label>{t('equipements.status')}</label>
+                  <select
+                    value={form.statut}
+                    onChange={e => setForm(f => ({ ...f, statut: e.target.value }))}
+                  >
+                    {STATUTS.map(s => (
+                      <option key={s.value} value={s.value}>{t(`equipements.statuts.${s.value}`)}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
-                  <label>{t('equipements.installDate')}</label>
-                  <input
-                    type="date"
-                    value={form.date_installation}
-                    max={new Date().toISOString().split('T')[0]}
-                    onChange={e => setForm(f => ({ ...f, date_installation: e.target.value }))}
+                  <label>{t('equipements.description')} <span style={{ color: '#94a3b8', fontSize: '12px' }}>({t('common.optional')})</span></label>
+                  <textarea
+                    placeholder={t('equipements.descriptionPlaceholder')}
+                    value={form.description}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    rows={3}
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>{t('equipements.status')}</label>
-                <select
-                  value={form.statut}
-                  onChange={e => setForm(f => ({ ...f, statut: e.target.value }))}
-                >
-                  {STATUTS.map(s => (
-                    <option key={s.value} value={s.value}>{t(`equipements.statuts.${s.value}`)}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>{t('equipements.description')} <span style={{ color: '#94a3b8', fontSize: '12px' }}>({t('common.optional')})</span></label>
-                <textarea
-                  placeholder={t('equipements.descriptionPlaceholder')}
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  rows={3}
-                />
               </div>
             </div>
             <div className="modal-footer">

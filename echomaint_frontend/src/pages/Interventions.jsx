@@ -471,14 +471,17 @@ export default function Interventions() {
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-body">
-                  <div className="form-group">
-                    <label>{t('interventions.technicien')}</label>
-                    <select value={formAssigner.technicien_id} onChange={e => setFormAssigner({ technicien_id: e.target.value })}>
-                      <option value="">{t('interventions.modal.selectTech')}</option>
-                      {techniciens.map(tc => <option key={tc.id} value={tc.id}>{tc.prenom} {tc.nom}</option>)}
-                    </select>
+                  <div className="modal-section">
+                    <p className="modal-section-title">{t('interventions.technicien')}</p>
+                    <div className="form-group">
+                      <label>{t('interventions.technicien')}</label>
+                      <select value={formAssigner.technicien_id} onChange={e => setFormAssigner({ technicien_id: e.target.value })}>
+                        <option value="">{t('interventions.modal.selectTech')}</option>
+                        {techniciens.map(tc => <option key={tc.id} value={tc.id}>{tc.prenom} {tc.nom}</option>)}
+                      </select>
+                    </div>
+                    {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                   </div>
-                  {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                 </div>
                 <div className="modal-footer">
                   <button className="btn-primary" onClick={handleAssigner}>{t('interventions.actions.assign')}</button>
@@ -494,25 +497,28 @@ export default function Interventions() {
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-body">
-                  <div className="form-group">
-                    <label>{t('interventions.modal.closureComment')} <span className="iv-required">*</span></label>
-                    <textarea
-                      placeholder={t('interventions.modal.closureCommentPlaceholder')}
-                      value={formCloturer.commentaire_cloture}
-                      onChange={e => setFormCloturer(f => ({ ...f, commentaire_cloture: e.target.value }))}
-                      rows={3}
-                    />
-                    <span className="iv-char-count">{formCloturer.commentaire_cloture.length} / 10 min</span>
+                  <div className="modal-section">
+                    <p className="modal-section-title">{t('interventions.rapportCloture')}</p>
+                    <div className="form-group">
+                      <label>{t('interventions.modal.closureComment')} <span className="iv-required">*</span></label>
+                      <textarea
+                        placeholder={t('interventions.modal.closureCommentPlaceholder')}
+                        value={formCloturer.commentaire_cloture}
+                        onChange={e => setFormCloturer(f => ({ ...f, commentaire_cloture: e.target.value }))}
+                        rows={3}
+                      />
+                      <span className="iv-char-count">{formCloturer.commentaire_cloture.length} / 10 min</span>
+                    </div>
+                    <div className="form-group">
+                      <label>{t('interventions.modal.realDuration')} <span className="iv-required">*</span></label>
+                      <input
+                        type="number" min="1" placeholder="Ex: 90"
+                        value={formCloturer.duree_reelle_minutes}
+                        onChange={e => setFormCloturer(f => ({ ...f, duree_reelle_minutes: e.target.value }))}
+                      />
+                    </div>
+                    {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                   </div>
-                  <div className="form-group">
-                    <label>{t('interventions.modal.realDuration')} <span className="iv-required">*</span></label>
-                    <input
-                      type="number" min="1" placeholder="Ex: 90"
-                      value={formCloturer.duree_reelle_minutes}
-                      onChange={e => setFormCloturer(f => ({ ...f, duree_reelle_minutes: e.target.value }))}
-                    />
-                  </div>
-                  {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                 </div>
                 <div className="modal-footer">
                   <button className="btn-primary" onClick={handleCloturer}>{t('interventions.actions.close')}</button>
@@ -528,21 +534,23 @@ export default function Interventions() {
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-body">
-                  <div className="warning-box">
-                    <i className="ti ti-alert-triangle" />
-                    <p>{t('interventions.modal.reopenWarning')}</p>
+                  <div className="modal-section">
+                    <div className="warning-box">
+                      <i className="ti ti-alert-triangle" />
+                      <p>{t('interventions.modal.reopenWarning')}</p>
+                    </div>
+                    <div className="form-group">
+                      <label>{t('interventions.modal.reopenReason')} <span className="iv-required">*</span></label>
+                      <textarea
+                        placeholder={t('interventions.modal.reopenReasonPlaceholder')}
+                        value={formRouvrir.motif}
+                        onChange={e => setFormRouvrir({ motif: e.target.value })}
+                        rows={3}
+                      />
+                      <span className="iv-char-count">{formRouvrir.motif.length} / 20 min</span>
+                    </div>
+                    {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                   </div>
-                  <div className="form-group">
-                    <label>{t('interventions.modal.reopenReason')} <span className="iv-required">*</span></label>
-                    <textarea
-                      placeholder={t('interventions.modal.reopenReasonPlaceholder')}
-                      value={formRouvrir.motif}
-                      onChange={e => setFormRouvrir({ motif: e.target.value })}
-                      rows={3}
-                    />
-                    <span className="iv-char-count">{formRouvrir.motif.length} / 20 min</span>
-                  </div>
-                  {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                 </div>
                 <div className="modal-footer">
                   <button className="btn-primary iv-btn-danger-confirm" onClick={handleRouvrir}>{t('interventions.actions.reopen')}</button>
@@ -558,9 +566,11 @@ export default function Interventions() {
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-body">
-                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    {t('interventions.modal.cancelConfirm')} <strong>"{selected?.titre}"</strong> ? {t('interventions.modal.cancelIrreversible')}
-                  </p>
+                  <div className="modal-section">
+                    <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                      {t('interventions.modal.cancelConfirm')} <strong>"{selected?.titre}"</strong> ? {t('interventions.modal.cancelIrreversible')}
+                    </p>
+                  </div>
                 </div>
                 <div className="modal-footer">
                   <button className="btn-primary iv-btn-danger-confirm" onClick={handleAnnuler}>{t('interventions.modal.yesCancel')}</button>
@@ -576,50 +586,63 @@ export default function Interventions() {
                   <button className="modal-close-btn" onClick={fermerModal}><i className="ti ti-x" /></button>
                 </div>
                 <div className="modal-body">
-                  <div className="form-group">
-                    <label>{t('interventions.titre')} <span className="iv-required">*</span></label>
-                    <input
-                      type="text" placeholder={t('interventions.titrePlaceholder')}
-                      value={formCreer.titre}
-                      onChange={e => setFormCreer(f => ({ ...f, titre: e.target.value }))}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>{t('interventions.equipement')} <span className="iv-required">*</span></label>
-                    <select value={formCreer.equipement_id} onChange={e => setFormCreer(f => ({ ...f, equipement_id: e.target.value }))}>
-                      <option value="">{t('interventions.modal.selectEquip')}</option>
-                      {equipements.map(eq => (
-                        <option key={eq.id} value={eq.id}>{eq.nom} ({eq.reference}) — {eq.batiment_nom}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-row">
+                  <div className="modal-section">
+                    <p className="modal-section-title">{t('interventions.titre')}</p>
                     <div className="form-group">
-                      <label>{t('interventions.type')}</label>
-                      <select value={formCreer.type} onChange={e => setFormCreer(f => ({ ...f, type: e.target.value }))}>
-                        <option value="preventif">{t('interventions.types.preventif')}</option>
-                        <option value="curatif">{t('interventions.types.curatif')}</option>
-                      </select>
+                      <label>{t('interventions.titre')} <span className="iv-required">*</span></label>
+                      <input
+                        type="text" placeholder={t('interventions.titrePlaceholder')}
+                        value={formCreer.titre}
+                        onChange={e => setFormCreer(f => ({ ...f, titre: e.target.value }))}
+                      />
                     </div>
                     <div className="form-group">
-                      <label>{t('interventions.priorite')}</label>
-                      <select value={formCreer.priorite} onChange={e => setFormCreer(f => ({ ...f, priorite: e.target.value }))}>
-                        {['basse','normale','haute','urgente'].map(p => (
-                          <option key={p} value={p}>{t(`interventions.priorites.${p}`)}</option>
+                      <label>{t('interventions.equipement')} <span className="iv-required">*</span></label>
+                      <select value={formCreer.equipement_id} onChange={e => setFormCreer(f => ({ ...f, equipement_id: e.target.value }))}>
+                        <option value="">{t('interventions.modal.selectEquip')}</option>
+                        {equipements.map(eq => (
+                          <option key={eq.id} value={eq.id}>{eq.nom} ({eq.reference}) — {eq.batiment_nom}</option>
                         ))}
                       </select>
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label>{t('interventions.description')}</label>
-                    <textarea
-                      placeholder={t('interventions.descriptionPlaceholder')}
-                      value={formCreer.description}
-                      onChange={e => setFormCreer(f => ({ ...f, description: e.target.value }))}
-                      rows={2}
-                    />
+                  <div className="modal-section">
+                    <p className="modal-section-title">{t('interventions.type')} & {t('interventions.priorite')}</p>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>{t('interventions.type')}</label>
+                        <select value={formCreer.type} onChange={e => setFormCreer(f => ({ ...f, type: e.target.value }))}>
+                          <option value="preventif">{t('interventions.types.preventif')}</option>
+                          <option value="curatif">{t('interventions.types.curatif')}</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>{t('interventions.priorite')}</label>
+                        <select value={formCreer.priorite} onChange={e => setFormCreer(f => ({ ...f, priorite: e.target.value }))}>
+                          {['basse','normale','haute','urgente'].map(p => (
+                            <option key={p} value={p}>{t(`interventions.priorites.${p}`)}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>{t('interventions.description')}</label>
+                      <textarea
+                        placeholder={t('interventions.descriptionPlaceholder')}
+                        value={formCreer.description}
+                        onChange={e => setFormCreer(f => ({ ...f, description: e.target.value }))}
+                        rows={2}
+                      />
+                    </div>
+                    {formCreer.type === 'curatif' && (
+                      <div className="info-box">
+                        <i className="ti ti-info-circle" />
+                        <p>{t('interventions.modal.curatifInfo')}</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="form-row">
+                  <div className="modal-section">
+                    <p className="modal-section-title">{t('interventions.datePlanifiee')}</p>
                     <div className="form-group">
                       <label>{t('interventions.datePlanifiee')} <span className="iv-required">*</span></label>
                       <input
@@ -638,12 +661,6 @@ export default function Interventions() {
                       </div>
                     )}
                   </div>
-                  {formCreer.type === 'curatif' && (
-                    <div className="info-box">
-                      <i className="ti ti-info-circle" />
-                      <p>{t('interventions.modal.curatifInfo')}</p>
-                    </div>
-                  )}
                   {erreurs.map((e, i) => <p key={i} className="iv-erreur">{e}</p>)}
                 </div>
                 <div className="modal-footer">
